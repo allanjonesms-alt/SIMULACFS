@@ -1,5 +1,5 @@
 {
-  "name": "SimulaCFS - Simulados para o Curso de Formação de Sargentos",
+  "name": "SimulaCFS",
   "description": "Plataforma de simulados com painel administrativo, ranking anônimo e gestão de usuários.",
   "requestFramePermissions": []
 }

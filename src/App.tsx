@@ -94,6 +94,14 @@ const ErrorBoundary = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const SergeantIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="10" y="20" width="80" height="10" fill="white" />
+    <rect x="10" y="45" width="80" height="10" fill="white" />
+    <rect x="10" y="70" width="80" height="10" fill="white" />
+  </svg>
+);
+
 // --- Main App ---
 
 export default function App() {
@@ -631,9 +639,9 @@ export default function App() {
         <nav className="w-full md:w-72 bg-white border-r border-slate-200 p-6 flex flex-col gap-2">
           <div className="flex items-center gap-3 mb-10 px-2">
             <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
-              <BookOpen className="w-6 h-6 text-white" />
+              <SergeantIcon />
             </div>
-            <span className="text-xl font-bold text-slate-900">SimuProvas</span>
+            <span className="text-xl font-bold text-slate-900">SimulaCFS</span>
           </div>
 
           <NavItem active={view === 'dashboard'} onClick={() => setView('dashboard')} icon={<LayoutDashboard />} label="Dashboard" />
