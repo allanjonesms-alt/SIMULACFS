@@ -22,6 +22,8 @@ import {
   CheckCircle2, 
   XCircle, 
   ChevronRight, 
+  ChevronDown,
+  ChevronUp,
   Play,
   ShieldCheck,
   UserCheck,
@@ -114,6 +116,7 @@ export default function App() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
   const [activeSimulation, setActiveSimulation] = useState<ActiveSimulation | null>(null);
+  const [expandedLaws, setExpandedLaws] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -1166,78 +1169,92 @@ export default function App() {
                     if (!acc[law]) acc[law] = [];
                     acc[law].push(q);
                     return acc;
-                  }, {} as Record<string, Question[]>)) as [string, Question[]][]).map(([law, lawQuestions]) => (
+                  }, {} as Record<string, Question[]>)) as [string, Question[]][]).map(([law, lawQuestions]) => {
+                    const isExpanded = expandedLaws[law] ?? false;
+                    return (
                     <div key={law} className="space-y-6">
-                      <div className="flex items-center gap-4">
+                      <div 
+                        className="flex items-center gap-4 cursor-pointer group"
+                        onClick={() => setExpandedLaws(prev => ({ ...prev, [law]: !isExpanded }))}
+                      >
                         <div className="h-px flex-1 bg-slate-200"></div>
-                        <h3 className="text-xl font-black text-slate-400 uppercase tracking-widest px-4 bg-slate-50/50 rounded-full py-1 border border-slate-200">
-                          {law} ({lawQuestions.length})
-                        </h3>
+                        <div className="flex items-center gap-2 px-4 bg-slate-50/50 rounded-full py-1 border border-slate-200 hover:bg-slate-100 transition-colors">
+                          <h3 className="text-xl font-black text-slate-400 uppercase tracking-widest">
+                            {law} ({lawQuestions.length})
+                          </h3>
+                          {isExpanded ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+                        </div>
                         <div className="h-px flex-1 bg-slate-200"></div>
                       </div>
                       
-                      <div className="grid grid-cols-1 gap-6">
-                        {lawQuestions.map((q) => (
-                          <div key={q.id} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm group">
-                            <div className="flex justify-between items-start mb-4">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded uppercase">
-                                    ID: {q.id.slice(0, 5)}
-                                  </span>
-                                  {q.law && (
+                      {isExpanded && (
+                        <div className="grid grid-cols-1 gap-6">
+                          {lawQuestions.map((q) => (
+                            <div key={q.id} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm group">
+                              <div className="flex justify-between items-start mb-4">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-2">
                                     <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded uppercase">
-                                      {q.law}
+                                      ID: {q.id.slice(0, 5)}
                                     </span>
-                                  )}
-                                  {q.category && (
-                                    <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded uppercase">
-                                      {q.category}
-                                    </span>
-                                  )}
+                                    {q.law && (
+                                      <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded uppercase">
+                                        {q.law}
+                                      </span>
+                                    )}
+                                    {q.category && (
+                                      <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded uppercase">
+                                        {q.category}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="font-bold text-slate-900 whitespace-pre-wrap">{q.text}</p>
                                 </div>
-                                <p className="font-bold text-slate-900 whitespace-pre-wrap">{q.text}</p>
-                              </div>
-                              <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button 
-                                  onClick={() => setEditingQuestion(q)}
-                                  className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg"
-                                >
-                                  <Settings className="w-5 h-5" />
-                                </button>
-                                <button 
-                                  onClick={() => {
-                                    setConfirmModal({
-                                      title: "Excluir Questão",
-                                      message: "Tem certeza que deseja excluir esta questão permanentemente?",
-                                      onConfirm: async () => {
-                                        try {
-                                          await deleteDoc(doc(db, 'questions', q.id));
-                                          setNotification({ message: 'Questão excluída', type: 'success' });
-                                        } catch (e) {
-                                          setNotification({ message: 'Erro ao excluir', type: 'error' });
+                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEditingQuestion(q);
+                                    }}
+                                    className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg"
+                                  >
+                                    <Settings className="w-5 h-5" />
+                                  </button>
+                                  <button 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setConfirmModal({
+                                        title: "Excluir Questão",
+                                        message: "Tem certeza que deseja excluir esta questão permanentemente?",
+                                        onConfirm: async () => {
+                                          try {
+                                            await deleteDoc(doc(db, 'questions', q.id));
+                                            setNotification({ message: 'Questão excluída', type: 'success' });
+                                          } catch (e) {
+                                            setNotification({ message: 'Erro ao excluir', type: 'error' });
+                                          }
                                         }
-                                      }
-                                    });
-                                  }}
-                                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
-                                >
-                                  <XCircle className="w-5 h-5" />
-                                </button>
+                                      });
+                                    }}
+                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                                  >
+                                    <XCircle className="w-5 h-5" />
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {q.options.map((opt, i) => (
+                                  <div key={i} className={`p-3 rounded-xl border text-sm ${i === q.correctOption ? 'bg-emerald-50 border-emerald-200 text-emerald-700 font-bold' : 'bg-slate-50 border-slate-100 text-slate-600'}`}>
+                                    {String.fromCharCode(65 + i)}) {opt}
+                                  </div>
+                                ))}
                               </div>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                              {q.options.map((opt, i) => (
-                                <div key={i} className={`p-3 rounded-xl border text-sm ${i === q.correctOption ? 'bg-emerald-50 border-emerald-200 text-emerald-700 font-bold' : 'bg-slate-50 border-slate-100 text-slate-600'}`}>
-                                  {String.fromCharCode(65 + i)}) {opt}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  ))}
+                  )})}
                   
                   {questions.length === 0 && (
                     <div className="text-center p-20 bg-white rounded-3xl border border-dashed border-slate-300 text-slate-400">
