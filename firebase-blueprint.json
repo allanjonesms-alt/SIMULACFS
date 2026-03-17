@@ -1,0 +1,81 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and permissions",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "user"] },
+        "isActive": { "type": "boolean" },
+        "isUpgraded": { "type": "boolean" },
+        "anonymousName": { "type": "string" }
+      },
+      "required": ["uid", "email", "role", "isActive", "isUpgraded", "anonymousName"]
+    },
+    "Question": {
+      "title": "Question",
+      "description": "Exam question with 5 alternatives",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "options": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "correctOption": { "type": "integer" },
+        "category": { "type": "string" },
+        "law": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["text", "options", "correctOption"]
+    },
+    "SimulationResult": {
+      "title": "Simulation Result",
+      "description": "Result of a completed simulation",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "score": { "type": "integer" },
+        "totalQuestions": { "type": "integer" },
+        "date": { "type": "string", "format": "date-time" },
+        "anonymousName": { "type": "string" }
+      },
+      "required": ["userId", "score", "totalQuestions", "date", "anonymousName"]
+    },
+    "ActiveSimulation": {
+      "title": "Active Simulation",
+      "description": "State of a simulation in progress",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "questions": { "type": "array" },
+        "currentIndex": { "type": "integer" },
+        "answers": { "type": "array" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "questions", "currentIndex", "answers"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/questions/{questionId}": {
+      "schema": "Question",
+      "description": "Bank of questions"
+    },
+    "/simulations/{simulationId}": {
+      "schema": "SimulationResult",
+      "description": "History of simulations"
+    },
+    "/active_simulations/{userId}": {
+      "schema": "ActiveSimulation",
+      "description": "Current active simulation for a user"
+    }
+  }
+}

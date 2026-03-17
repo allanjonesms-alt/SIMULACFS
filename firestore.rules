@@ -1,0 +1,86 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // Collection: users
+    // Fields: uid, email, displayName, photoURL, role, isActive, isUpgraded, anonymousName
+    //
+    // Collection: questions
+    // Fields: text, options, correctOption, category, justification, createdAt
+    //
+    // Collection: simulations
+    // Fields: userId, score, totalQuestions, date, anonymousName
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+        (request.auth.token.email == "allanjonesms@gmail.com" && request.auth.token.email_verified == true)
+      );
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'role', 'isActive', 'isUpgraded', 'anonymousName']) &&
+             data.uid is string &&
+             data.email is string &&
+             data.role in ['admin', 'user'] &&
+             data.isActive is bool &&
+             data.isUpgraded is bool &&
+             data.anonymousName is string;
+    }
+
+    function isValidQuestion(data) {
+      return data.keys().hasAll(['text', 'options', 'correctOption']) &&
+             data.text is string &&
+             data.options is list &&
+             data.options.size() == 5 &&
+             data.correctOption is int &&
+             data.correctOption >= 0 && data.correctOption <= 4 &&
+             (!('category' in data) || data.category is string) &&
+             (!('law' in data) || data.law is string) &&
+             (!('justification' in data) || data.justification is string);
+    }
+
+    function isValidSimulation(data) {
+      return data.keys().hasAll(['userId', 'score', 'totalQuestions', 'date', 'anonymousName']) &&
+             data.userId == request.auth.uid &&
+             data.score is int &&
+             data.totalQuestions is int &&
+             data.anonymousName is string;
+    }
+
+    // Rules
+    // Rules
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isAdmin() || (isOwner(userId) && isValidUser(request.resource.data) && request.resource.data.role == resource.data.role);
+    }
+
+    match /questions/{questionId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() && isValidQuestion(request.resource.data);
+    }
+
+    match /simulations/{simulationId} {
+      allow read: if isAuthenticated(); // Allowed for ranking
+      allow create: if isAuthenticated() && isValidSimulation(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /active_simulations/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+  }
+}

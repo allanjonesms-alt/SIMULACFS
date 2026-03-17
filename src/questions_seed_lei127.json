@@ -1,0 +1,416 @@
+[
+  {
+    "text": "De acordo com a Lei Complementar nº 127/2008, o sistema remuneratório dos militares de MS é por meio de:",
+    "options": ["Vencimento básico e gratificações", "Subsídio", "Soldo e adicionais", "Remuneração variável", "Proventos integrais"],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "O que define o 'subsídio' segundo o Art. 2º da Lei 127/2008?",
+    "options": [
+      "Soma do soldo com o adicional de tempo de serviço.",
+      "Parcela única sobre a qual é vedado o acréscimo de qualquer gratificação ou adicional.",
+      "Valor total recebido pelo militar incluindo diárias.",
+      "Remuneração base acrescida de auxílio-moradia.",
+      "Valor pago apenas aos oficiais superiores."
+    ],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "A 'parcela constitucional de irredutibilidade' é definida como:",
+    "options": [
+      "Um bônus por desempenho.",
+      "A diferença provisória entre o novo subsídio e a remuneração anterior.",
+      "O valor fixo do auxílio-alimentação.",
+      "Uma gratificação por tempo de serviço.",
+      "O valor mínimo que um soldado pode receber."
+    ],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "Segundo a Lei 127/2008, 'remuneração' é o subsídio acrescido de:",
+    "options": [
+      "Diárias e passagens.",
+      "Verbas indenizatórias e eventual parcela de irredutibilidade.",
+      "Apenas o adicional militar.",
+      "Gratificações de comando.",
+      "Auxílio-fardamento."
+    ],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "Qual o termo utilizado para o valor pecuniário devido ao inativo?",
+    "options": ["Pensão", "Subsídio", "Proventos", "Vencimento", "Soldo"],
+    "correctOption": 2,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "Estão compreendidas no subsídio e NÃO são devidas separadamente as seguintes parcelas, EXCETO:",
+    "options": ["Soldo", "Adicional por tempo de serviço", "Adicional militar", "Etapa alimentação", "Diárias"],
+    "correctOption": 4,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "A 'ajuda de custo' destina-se a compensar despesas de:",
+    "options": [
+      "Alimentação diária.",
+      "Mudança de residência para nova sede por interesse do serviço.",
+      "Aquisição de fardamento.",
+      "Tratamento de saúde fora do estado.",
+      "Participação em congressos."
+    ],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "A 'ajuda de curso' é uma indenização mensal para custeio de despesas em cursos com duração superior a:",
+    "options": ["15 dias", "30 dias", "60 dias", "90 dias", "120 dias"],
+    "correctOption": 2,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "Qual o percentual da ajuda de curso para um Cabo ou Soldado sobre o subsídio inicial da graduação?",
+    "options": ["16%", "24%", "30%", "37%", "50%"],
+    "correctOption": 3,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "O militar que receber ajuda de curso fica impedido de receber, cumulativamente:",
+    "options": [
+      "Subsídio e pensão.",
+      "Diárias, auxílio-alimentação e auxílio-transporte.",
+      "Gratificação natalina.",
+      "Adicional de férias.",
+      "Retribuição por comando."
+    ],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "A indenização por 'hora-aula' em cursos de formação não poderá exceder quantas horas semanais?",
+    "options": ["10 horas", "20 horas", "30 horas", "40 horas", "12 horas"],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "A diária será concedida pela metade quando o deslocamento:",
+    "options": [
+      "For para fora do Estado.",
+      "Não exigir pernoite fora da sede.",
+      "For realizado em veículo próprio.",
+      "Durar mais de 10 dias.",
+      "For para o exterior."
+    ],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "Não será devida diária quando a distância entre a localidade de origem e a de destino for igual ou inferior a:",
+    "options": ["10 km", "20 km", "30 km", "50 km", "15 km"],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "O auxílio para aquisição de uniformes (auxílio-fardamento) é devido ao militar promovido ao posto de 3º Sargento no valor de:",
+    "options": ["10%", "20%", "30%", "40%", "50%"],
+    "correctOption": 2,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "O adiantamento para aquisição de uniforme, quando o militar é promovido, deve ser reposto em até:",
+    "options": ["12 meses", "24 meses", "36 meses", "6 meses", "48 meses"],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "A despesa de funeral para um Cabo ou Soldado corresponde a qual percentual do subsídio inicial da graduação?",
+    "options": ["30%", "40%", "50%", "60%", "100%"],
+    "correctOption": 2,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "O 'auxílio-invalidez' é devido ao militar reformado por incapacidade definitiva no valor de:",
+    "options": ["10%", "20%", "25%", "30%", "50%"],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "O valor do auxílio-invalidez não poderá ser inferior a qual percentual do subsídio inicial da graduação de Cabo?",
+    "options": ["10%", "20%", "25%", "30%", "15%"],
+    "correctOption": 2,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "A retribuição pela prestação de serviços em funções de comando (Art. 23) para o Comandante-Geral é de:",
+    "options": ["15%", "20%", "25%", "30%", "10%"],
+    "correctOption": 2,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "Qual o percentual de retribuição para o Subcomandante-Geral?",
+    "options": ["10%", "13%", "15%", "20%", "25%"],
+    "correctOption": 3,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "A retribuição para Comandantes de OPM/OBM destacadas de nível Companhia é de:",
+    "options": ["5%", "10%", "13%", "15%", "18%"],
+    "correctOption": 2,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "A retribuição para Comandante de Equipe de Serviço é de:",
+    "options": ["3%", "5%", "7%", "10%", "13%"],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "Para receber a retribuição de Motorista de Viatura ou Condutor, o militar deve estar classificado na função por no mínimo:",
+    "options": ["15 dias", "30 dias", "60 dias", "90 dias", "10 dias"],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "A retribuição por função privativa da carreira integra os proventos e pensões?",
+    "options": [
+      "Sim, integralmente.",
+      "Não integrará os proventos e as pensões.",
+      "Sim, após 10 anos de recebimento.",
+      "Apenas para oficiais.",
+      "Sim, se houver contribuição específica."
+    ],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "A indenização de substituição é calculada com base no subsídio de qual posto/graduação?",
+    "options": [
+      "Do militar substituído.",
+      "Do militar substituto.",
+      "Média entre os dois.",
+      "Subsídio de Coronel.",
+      "Subsídio de Soldado."
+    ],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "A progressão funcional do militar estadual (Art. 26-A) identifica a progressão em quantos níveis?",
+    "options": ["3 níveis", "5 níveis", "6 níveis", "7 níveis", "10 níveis"],
+    "correctOption": 3,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "O nível I de progressão funcional compreende militares com até quantos anos de efetivo serviço?",
+    "options": ["2 anos", "3 anos", "5 anos", "10 anos", "1 ano"],
+    "correctOption": 2,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "O nível VII de progressão funcional é para militares com quantos anos ou mais de efetivo serviço?",
+    "options": ["20 anos", "25 anos", "30 anos", "35 anos", "15 anos"],
+    "correctOption": 2,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "A migração para o regime de subsídio (Tabela II) exige, entre outras condições:",
+    "options": [
+      "Aprovação em novo concurso.",
+      "Renúncia a eventuais direitos relacionados a diferenças remuneratórias passadas.",
+      "Ter pelo menos 20 anos de serviço.",
+      "Ser oficial superior.",
+      "Não ter punições disciplinares."
+    ],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "Qual o percentual de contribuição para o Sistema de Proteção Social dos militares ativos a partir de 2021?",
+    "options": ["11%", "14%", "9,5%", "10,5%", "8%"],
+    "correctOption": 3,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "A contribuição dos pensionistas incidirá sobre:",
+    "options": [
+      "O valor total da pensão.",
+      "Apenas o que exceder o teto do INSS.",
+      "O valor integral percebido a título de pensão militar.",
+      "50% do valor da pensão.",
+      "Apenas se a pensão for superior a 3 salários mínimos."
+    ],
+    "correctOption": 2,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "O auxílio-alimentação mensal (Art. 5º, XV) foi fixado inicialmente em qual valor?",
+    "options": ["R$ 50,00", "R$ 100,00", "R$ 150,00", "R$ 200,00", "R$ 300,00"],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "A ajuda de custo será paga em dobro quando o militar:",
+    "options": [
+      "For para o exterior.",
+      "Possuir dependentes expressamente declarados.",
+      "For promovido.",
+      "Tiver mais de 20 anos de serviço.",
+      "For movimentado por punição."
+    ],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "O militar restituirá a ajuda de custo integralmente se:",
+    "options": [
+      "For promovido em 6 meses.",
+      "Deixar de seguir destino a seu pedido.",
+      "Entrar em licença-prêmio.",
+      "For transferido para a reserva.",
+      "Falecer antes da viagem."
+    ],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "O militar que retornar à sede em prazo menor que o previsto para o afastamento deve:",
+    "options": [
+      "Ficar com o valor como bônus.",
+      "Restituir as diárias recebidas em excesso.",
+      "Compensar em folga.",
+      "Pedir autorização para manter o valor.",
+      "Não precisa fazer nada."
+    ],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "A licença especial (Art. 32) tem duração de:",
+    "options": ["1 mês", "3 meses", "6 meses", "1 ano", "2 meses"],
+    "correctOption": 2,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "A licença especial é adquirida a cada:",
+    "options": ["3 anos", "5 anos", "10 anos (decênio)", "15 anos", "20 anos"],
+    "correctOption": 2,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "O militar reformado por incapacidade definitiva terá proventos calculados com base no subsídio de qual grau hierárquico?",
+    "options": [
+      "O mesmo que possuía.",
+      "Imediatamente superior ao que possuía na ativa.",
+      "Dois graus acima.",
+      "De Coronel.",
+      "De Subtenente."
+    ],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "Para fins de reforma, qual o grau hierárquico imediato para um Cabo ou Soldado?",
+    "options": ["3º Sargento", "2º Sargento", "1º Sargento", "Subtenente", "Aspirante"],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "A indenização de transporte é devida ao militar que:",
+    "options": [
+      "Viajar de ônibus intermunicipal.",
+      "Realizar despesas com utilização de meio próprio de locomoção para serviços externos.",
+      "Mudar de cidade.",
+      "Comprar um carro novo.",
+      "Trabalhar em escala 12x36."
+    ],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "O militar que perder seus uniformes em sinistro em organização militar receberá auxílio de até:",
+    "options": ["5%", "10%", "15%", "20%", "30%"],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "A gratificação natalina e o adicional de férias são considerados vantagens pecuniárias de natureza:",
+    "options": ["Permanente", "Constitucional ou indenizatória", "Eventual", "Previdenciária", "Militar"],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "O militar movimentado por interesse próprio tem direito à ajuda de custo?",
+    "options": ["Sim, integral.", "Não terá direito.", "Sim, pela metade.", "Apenas se tiver dependentes.", "Sim, se for oficial."],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "A ajuda de custo é paga:",
+    "options": ["Após a viagem.", "Mensalmente.", "Adiantadamente.", "No final do ano.", "Apenas se houver orçamento."],
+    "correctOption": 2,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "O subsídio é revisto anualmente?",
+    "options": [
+      "Não, é fixo.",
+      "Sim, na mesma data e fixado por lei específica.",
+      "Sim, de acordo com a inflação automaticamente.",
+      "Apenas se o Governador desejar.",
+      "A cada 4 anos."
+    ],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "O militar em estágio probatório tem direito à progressão funcional?",
+    "options": [
+      "Sim, normalmente.",
+      "Não, apenas após a estabilidade.",
+      "Sim, mas com valor reduzido.",
+      "Apenas se for promovido por bravura.",
+      "A lei não menciona estágio probatório para progressão."
+    ],
+    "correctOption": 0,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "A retribuição por substituição é devida se a substituição durar menos de 30 dias?",
+    "options": [
+      "Não, apenas acima de 30 dias.",
+      "Sim, paga proporcionalmente aos dias de efetivo exercício.",
+      "Apenas se for cargo de confiança.",
+      "Sim, mas apenas para oficiais superiores.",
+      "Não, é considerada serviço voluntário."
+    ],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "O auxílio-invalidez pode ser pago conjuntamente com a pensão previdenciária?",
+    "options": ["Sim.", "Não poderá compor a base de cálculo nem ser pago conjuntamente.", "Apenas se a pensão for menor que o auxílio.", "Sim, se houver decisão judicial.", "Apenas para dependentes."],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "A ajuda de custo não será restituída se ocorrer:",
+    "options": [
+      "Promoção do militar.",
+      "Falecimento do militar, mesmo antes de seguir destino.",
+      "Desistência da viagem por interesse particular.",
+      "Punição disciplinar.",
+      "Transferência para outro estado."
+    ],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  },
+  {
+    "text": "O valor da hora-aula é fixado por:",
+    "options": ["Lei específica.", "Decreto do Chefe do Poder Executivo.", "Portaria do Comandante-Geral.", "Resolução da SEGOV.", "Acordo coletivo."],
+    "correctOption": 1,
+    "category": "Lei 127/2008"
+  }
+]
