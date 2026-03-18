@@ -24,9 +24,9 @@ export default function UpgradePage({ onBack, userId }: UpgradePageProps) {
       });
 
       const data = await response.json();
-      if (data.id) {
+      if (data.init_point) {
         // Redirect to Mercado Pago checkout
-        window.location.href = `https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=${data.id}`;
+        window.location.href = data.init_point;
       } else {
         alert('Erro ao iniciar pagamento.');
       }

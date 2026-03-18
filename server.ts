@@ -32,7 +32,7 @@ async function startServer() {
           notification_url: `${process.env.APP_URL}/api/webhook`,
         },
       });
-      res.json({ id: result.id });
+      res.json({ init_point: result.init_point });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Failed to create preference" });
