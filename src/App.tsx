@@ -744,6 +744,14 @@ export default function App() {
                     <h2 className="text-3xl font-bold text-slate-900">Olá, {profile?.displayName}! 👋</h2>
                     <p className="text-slate-500">Bem-vindo de volta ao seu painel de estudos.</p>
                   </div>
+                  {user.email === 'allanjonesms@gmail.com' && (
+                    <button
+                      onClick={() => setView('upgrade')}
+                      className="bg-red-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-red-700 transition-colors"
+                    >
+                      [TESTE] Ir para Upgrade
+                    </button>
+                  )}
                   <button 
                     onClick={activeSimulation ? resumeSimulation : startSimulation}
                     className="flex items-center justify-center gap-2 bg-indigo-600 text-white px-8 py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95"
@@ -774,8 +782,6 @@ export default function App() {
                     <Trophy className="absolute right-[-20px] bottom-[-20px] w-64 h-64 text-white/10 rotate-12" />
                   </div>
                 )}
-
-                {/* Removed UpgradePage from here */}
 
                 <h3 className="text-xl font-bold text-slate-900 mb-6">Últimas Atividades</h3>
                 <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
@@ -817,7 +823,6 @@ export default function App() {
                 </div>
               </motion.div>
             )}
-
             {view === 'upgrade' && (
               <motion.div key="upgrade" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                 <UpgradePage onBack={() => setView('dashboard')} userId={user.uid} />

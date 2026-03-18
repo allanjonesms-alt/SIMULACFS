@@ -12,7 +12,11 @@ admin.initializeApp({
 const db = admin.firestore();
 
 // Initialize Mercado Pago
-const client = new MercadoPagoConfig({ accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || "" });
+const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+if (!accessToken) {
+  console.error("MERCADOPAGO_ACCESS_TOKEN is not set.");
+}
+const client = new MercadoPagoConfig({ accessToken: accessToken || "" });
 
 async function startServer() {
   const app = express();
@@ -23,19 +27,21 @@ async function startServer() {
   // API routes
   app.post("/api/create-preference", async (req, res) => {
     const { userId, planName, amount } = req.body;
+    console.log("Creating preference for:", { userId, planName, amount });
     try {
       const preference = new Preference(client);
       const result = await preference.create({
         body: {
-          items: [{ id: '1', title: planName, quantity: 1, unit_price: amount }],
+          items: [{ id: '1', title: planName, quantity: 1, unit_price: Number(amount) }],
           external_reference: userId,
           notification_url: `${process.env.APP_URL || 'https://ais-dev-2ljxrupff4fnsdftrofktf-45221046979.us-east1.run.app'}/api/webhook`,
         },
       });
+      console.log("Preference created:", result.id);
       res.json({ init_point: result.init_point });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "Failed to create preference" });
+      console.error("Error creating preference:", error);
+      res.status(500).json({ error: "Failed to create preference: " + (error instanceof Error ? error.message : String(error)) });
     }
   });
 
