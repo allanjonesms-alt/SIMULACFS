@@ -29,7 +29,7 @@ async function startServer() {
         body: {
           items: [{ id: '1', title: planName, quantity: 1, unit_price: amount }],
           external_reference: userId,
-          notification_url: `${process.env.APP_URL}/api/webhook`,
+          notification_url: `${process.env.APP_URL || 'https://ais-dev-2ljxrupff4fnsdftrofktf-45221046979.us-east1.run.app'}/api/webhook`,
         },
       });
       res.json({ init_point: result.init_point });

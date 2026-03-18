@@ -24,15 +24,18 @@ export default function UpgradePage({ onBack, userId }: UpgradePageProps) {
       });
 
       const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao iniciar pagamento.');
+      }
       if (data.init_point) {
         // Redirect to Mercado Pago checkout
         window.location.href = data.init_point;
       } else {
-        alert('Erro ao iniciar pagamento.');
+        throw new Error('URL de pagamento não recebida.');
       }
     } catch (error) {
       console.error('Payment error:', error);
-      alert('Erro ao iniciar pagamento.');
+      alert(error instanceof Error ? error.message : 'Erro ao iniciar pagamento.');
     }
   };
 
