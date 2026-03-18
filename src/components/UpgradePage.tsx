@@ -5,9 +5,10 @@ import { CheckCircle2, CreditCard, Zap } from 'lucide-react';
 interface UpgradePageProps {
   onBack: () => void;
   userId: string;
+  email: string;
 }
 
-export default function UpgradePage({ onBack, userId }: UpgradePageProps) {
+export default function UpgradePage({ onBack, userId, email }: UpgradePageProps) {
   const handlePayment = async (method: 'pix' | 'card') => {
     try {
       const response = await fetch('/api/create-preference', {
@@ -17,6 +18,7 @@ export default function UpgradePage({ onBack, userId }: UpgradePageProps) {
         },
         body: JSON.stringify({
           userId,
+          email,
           planName: 'Plano Premium - SimuProvas',
           amount: 19.90,
           paymentMethod: method,

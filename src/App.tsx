@@ -825,7 +825,7 @@ export default function App() {
             )}
             {view === 'upgrade' && (
               <motion.div key="upgrade" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                <UpgradePage onBack={() => setView('dashboard')} userId={user.uid} />
+                <UpgradePage onBack={() => setView('dashboard')} userId={user.uid} email={'camilasouzacx@gmail.com'} />
               </motion.div>
             )}
 
