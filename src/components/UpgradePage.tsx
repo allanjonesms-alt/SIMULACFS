@@ -25,7 +25,8 @@ export default function UpgradePage({ onBack, userId }: UpgradePageProps) {
 
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Erro no servidor: Resposta não é JSON.");
+        const errorText = await response.text();
+        throw new Error(`Erro no servidor (não é JSON): ${errorText.substring(0, 200)}`);
       }
 
       const data = await response.json();
