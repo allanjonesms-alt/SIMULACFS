@@ -39,20 +39,17 @@ async function startServer() {
     const { userId, planName, amount, paymentMethod } = req.body;
     console.log("Creating preference for:", { userId, planName, amount, paymentMethod });
     try {
-      const paymentMethodsConfig = paymentMethod === 'pix' 
-        ? { excluded_payment_types: [{ id: 'credit_card' }, { id: 'debit_card' }, { id: 'ticket' }] }
-        : { excluded_payment_types: [{ id: 'atm' }] }; // Simple example, might need adjustment
-
       const preference = new Preference(client);
+      const requestBody = {
+        items: [{ id: '1', title: planName, quantity: 1, unit_price: Number(amount) }],
+        external_reference: String(userId),
+        notification_url: `${process.env.APP_URL || 'https://ais-dev-2ljxrupff4fnsdftrofktf-45221046979.us-east1.run.app'}/api/webhook`,
+      };
+      console.log("Sending to Mercado Pago:", JSON.stringify(requestBody, null, 2));
       const result = await preference.create({
-        body: {
-          items: [{ id: '1', title: planName, quantity: 1, unit_price: Number(amount) }],
-          external_reference: String(userId),
-          notification_url: `${process.env.APP_URL || 'https://ais-dev-2ljxrupff4fnsdftrofktf-45221046979.us-east1.run.app'}/api/webhook`,
-          payment_methods: paymentMethodsConfig,
-        },
+        body: requestBody,
       });
-      console.log("Preference created:", result.id);
+      console.log("Preference created result:", JSON.stringify(result, null, 2));
       res.json({ init_point: result.init_point });
     } catch (error) {
       console.error("Error creating preference:", error);
