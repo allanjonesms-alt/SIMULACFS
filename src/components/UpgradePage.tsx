@@ -23,6 +23,11 @@ export default function UpgradePage({ onBack, userId }: UpgradePageProps) {
         }),
       });
 
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Erro no servidor: Resposta não é JSON.");
+      }
+
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || 'Erro ao iniciar pagamento.');
