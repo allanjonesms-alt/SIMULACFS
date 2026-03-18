@@ -775,9 +775,7 @@ export default function App() {
                   </div>
                 )}
 
-                {view === 'upgrade' && (
-                  <UpgradePage onBack={() => setView('dashboard')} userId={user.uid} />
-                )}
+                {/* Removed UpgradePage from here */}
 
                 <h3 className="text-xl font-bold text-slate-900 mb-6">Últimas Atividades</h3>
                 <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
@@ -817,6 +815,12 @@ export default function App() {
                     </div>
                   )}
                 </div>
+              </motion.div>
+            )}
+
+            {view === 'upgrade' && (
+              <motion.div key="upgrade" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                <UpgradePage onBack={() => setView('dashboard')} userId={user.uid} />
               </motion.div>
             )}
 
