@@ -29,11 +29,17 @@ async function startServer() {
     const { userId, planName, amount } = req.body;
     console.log("Creating preference for:", { userId, planName, amount });
     try {
+      console.log("Creating preference with body:", JSON.stringify({
+        items: [{ id: '1', title: planName, quantity: 1, unit_price: Number(amount) }],
+        external_reference: userId,
+        notification_url: `${process.env.APP_URL || 'https://ais-dev-2ljxrupff4fnsdftrofktf-45221046979.us-east1.run.app'}/api/webhook`,
+      }, null, 2));
+
       const preference = new Preference(client);
       const result = await preference.create({
         body: {
           items: [{ id: '1', title: planName, quantity: 1, unit_price: Number(amount) }],
-          external_reference: userId,
+          external_reference: String(userId),
           notification_url: `${process.env.APP_URL || 'https://ais-dev-2ljxrupff4fnsdftrofktf-45221046979.us-east1.run.app'}/api/webhook`,
         },
       });
