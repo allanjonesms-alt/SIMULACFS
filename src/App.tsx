@@ -8,7 +8,7 @@ import {
 } from 'firebase/auth';
 import { 
   doc, getDoc, setDoc, collection, onSnapshot, 
-  query, where, orderBy, limit, addDoc, updateDoc, deleteDoc, serverTimestamp 
+  query, where, orderBy, limit, addDoc, updateDoc, deleteDoc, serverTimestamp, getDocs 
 } from 'firebase/firestore';
 import { 
   LayoutDashboard, 
@@ -28,10 +28,12 @@ import {
   ShieldCheck,
   UserCheck,
   UserX,
-  Lock
+  Lock,
+  Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, Question, SimulationResult } from './types';
+import UpgradePage from './components/UpgradePage';
 
 interface ShuffledOption {
   id: number;
@@ -49,6 +51,7 @@ interface ActiveSimulation {
   currentIndex: number;
   answers: number[];
   updatedAt: any;
+  elapsedTime: number;
 }
 
 // --- Components ---
@@ -96,9 +99,9 @@ const ErrorBoundary = ({ children }: { children: React.ReactNode }) => {
 
 const SergeantIcon = () => (
   <svg width="24" height="24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="10" y="20" width="80" height="10" fill="white" />
-    <rect x="10" y="45" width="80" height="10" fill="white" />
-    <rect x="10" y="70" width="80" height="10" fill="white" />
+    <path d="M10 80 L50 60 L90 80" stroke="#FFD700" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M10 60 L50 40 L90 60" stroke="#FFD700" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M10 40 L50 20 L90 40" stroke="#FFD700" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
@@ -108,7 +111,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'dashboard' | 'simulation' | 'history' | 'ranking' | 'admin_users' | 'admin_questions'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'simulation' | 'history' | 'ranking' | 'admin_users' | 'admin_questions' | 'upgrade'>('dashboard');
   
   // Data states
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -124,7 +127,27 @@ export default function App() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
   const [activeSimulation, setActiveSimulation] = useState<ActiveSimulation | null>(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
   const [expandedLaws, setExpandedLaws] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (view === 'simulation' && !examFinished && !isPaused) {
+      timer = setInterval(() => {
+        setElapsedTime((prev) => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [view, examFinished, isPaused]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsPaused(document.hidden);
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -203,7 +226,12 @@ export default function App() {
       // Active simulation listener
       const activeUnsubscribe = onSnapshot(doc(db, 'active_simulations', user.uid), (snapshot) => {
         if (snapshot.exists()) {
-          setActiveSimulation({ id: snapshot.id, ...snapshot.data() } as ActiveSimulation);
+          const data = snapshot.data();
+          setActiveSimulation({ 
+            id: snapshot.id, 
+            ...data, 
+            elapsedTime: data.elapsedTime || 0 
+          } as ActiveSimulation);
         } else {
           setActiveSimulation(null);
         }
@@ -283,7 +311,31 @@ export default function App() {
 
   const handleLogout = () => signOut(auth);
 
+  const deleteUserSimulations = async (targetUserId: string) => {
+    if (!profile || profile.role !== 'admin') {
+      setNotification({ message: 'Ação não permitida.', type: 'error' });
+      return;
+    }
+
+    try {
+      const q = query(collection(db, 'simulations'), where('userId', '==', targetUserId));
+      const querySnapshot = await getDocs(q);
+      
+      const deletePromises = querySnapshot.docs.map((doc) => deleteDoc(doc.ref));
+      await Promise.all(deletePromises);
+      
+      setNotification({ message: `Simulados do usuário deletados com sucesso. (${querySnapshot.size} documentos)`, type: 'success' });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, 'simulations');
+    }
+  };
+
   const startSimulation = async () => {
+    if (activeSimulation) {
+      setNotification({ message: 'Você já tem um simulado em andamento. Por favor, retome-o.', type: 'error' });
+      return;
+    }
+    
     if (!profile?.isActive) {
       setNotification({ message: 'Sua conta está desativada. Entre em contato com o administrador.', type: 'error' });
       return;
@@ -313,8 +365,7 @@ export default function App() {
       .sort(() => 0.5 - Math.random())
       .slice(0, 30);
 
-    const combinedQuestions = [...selectedPortuguese, ...selectedOthers]
-      .sort(() => 0.5 - Math.random());
+    const combinedQuestions = [...selectedPortuguese, ...selectedOthers];
 
     const selectedQuestions = combinedQuestions.map(q => {
       const optionsWithIds: ShuffledOption[] = q.options.map((text, index) => ({
@@ -336,12 +387,14 @@ export default function App() {
         questions: selectedQuestions,
         currentIndex: 0,
         answers: [],
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
+        elapsedTime: 0
       });
 
       setCurrentExam(selectedQuestions);
       setExamIndex(0);
       setAnswers([]);
+      setElapsedTime(0);
       setExamFinished(false);
       setShowFeedback(false);
       setSelectedOptionId(null);
@@ -356,6 +409,7 @@ export default function App() {
     setCurrentExam(activeSimulation.questions);
     setExamIndex(activeSimulation.currentIndex);
     setAnswers(activeSimulation.answers);
+    setElapsedTime(activeSimulation.elapsedTime || 0);
     setExamFinished(false);
     setShowFeedback(false);
     setSelectedOptionId(null);
@@ -383,7 +437,8 @@ export default function App() {
         await updateDoc(doc(db, 'active_simulations', user!.uid), {
           currentIndex: nextIdx,
           answers: newAnswers,
-          updatedAt: serverTimestamp()
+          updatedAt: serverTimestamp(),
+          elapsedTime: elapsedTime || 0
         });
       } catch (error) {
         handleFirestoreError(error, OperationType.UPDATE, 'active_simulations');
@@ -407,7 +462,8 @@ export default function App() {
       score,
       totalQuestions: currentExam.length,
       date: serverTimestamp(),
-      anonymousName: profile!.anonymousName
+      anonymousName: profile!.anonymousName,
+      elapsedTime: elapsedTime || 0
     };
 
     try {
@@ -685,11 +741,11 @@ export default function App() {
                     <p className="text-slate-500">Bem-vindo de volta ao seu painel de estudos.</p>
                   </div>
                   <button 
-                    onClick={startSimulation}
+                    onClick={activeSimulation ? resumeSimulation : startSimulation}
                     className="flex items-center justify-center gap-2 bg-indigo-600 text-white px-8 py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95"
                   >
                     <Play className="w-5 h-5 fill-current" />
-                    Iniciar Simulado
+                    {activeSimulation ? 'Continuar Simulado' : 'Iniciar Simulado'}
                   </button>
                 </div>
 
@@ -704,12 +760,19 @@ export default function App() {
                     <div className="relative z-10">
                       <h3 className="text-2xl font-bold mb-2">Desbloqueie todo o seu potencial!</h3>
                       <p className="text-indigo-100 mb-6 max-w-md">Faça o upgrade para o plano Premium e tenha acesso ilimitado a simulados, ranking completo e estatísticas detalhadas.</p>
-                      <button className="bg-white text-indigo-600 px-6 py-3 rounded-xl font-bold hover:bg-indigo-50 transition-colors">
+                      <button 
+                        onClick={() => setView('upgrade')}
+                        className="bg-white text-indigo-600 px-6 py-3 rounded-xl font-bold hover:bg-indigo-50 transition-colors"
+                      >
                         Fazer Upgrade Agora
                       </button>
                     </div>
                     <Trophy className="absolute right-[-20px] bottom-[-20px] w-64 h-64 text-white/10 rotate-12" />
                   </div>
+                )}
+
+                {view === 'upgrade' && (
+                  <UpgradePage onBack={() => setView('dashboard')} userId={user.uid} />
                 )}
 
                 <h3 className="text-xl font-bold text-slate-900 mb-6">Últimas Atividades</h3>
@@ -759,9 +822,14 @@ export default function App() {
                   <>
                     <div className="flex items-center justify-between mb-8">
                       <h2 className="text-2xl font-bold text-slate-900">Simulado em Andamento</h2>
-                      <span className="bg-indigo-100 text-indigo-700 px-4 py-1 rounded-full font-bold text-sm">
-                        Questão {examIndex + 1} de {currentExam.length}
-                      </span>
+                      <div className="flex items-center gap-4">
+                        <div className="bg-indigo-100 text-indigo-700 px-4 py-1 rounded-full font-bold text-sm">
+                          {Math.floor(elapsedTime / 60).toString().padStart(2, '0')}:{ (elapsedTime % 60).toString().padStart(2, '0')}
+                        </div>
+                        <span className="bg-indigo-100 text-indigo-700 px-4 py-1 rounded-full font-bold text-sm">
+                          Questão {examIndex + 1} de {currentExam.length}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 mb-6">
@@ -799,7 +867,7 @@ export default function App() {
                               key={option.id}
                               onClick={() => submitAnswer(option.id)}
                               disabled={showFeedback}
-                              className={`flex items-center gap-4 p-4 text-left border-2 rounded-2xl transition-all group ${buttonClass}`}
+                              className={`flex items-center gap-4 p-2 text-left border-2 rounded-2xl transition-all group ${buttonClass}`}
                             >
                               <span className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold transition-colors ${iconClass}`}>
                                 {String.fromCharCode(65 + idx)}
@@ -842,7 +910,10 @@ export default function App() {
                           {currentExam[examIndex].justification && (
                             <div className="text-slate-600 text-sm leading-relaxed">
                               <span className="font-bold block mb-1">Justificativa:</span>
-                              {currentExam[examIndex].justification}
+                              {(() => {
+                                const correctOptionLetter = String.fromCharCode(65 + currentExam[examIndex].shuffledOptions.findIndex(o => o.id === currentExam[examIndex].correctOption));
+                                return currentExam[examIndex].justification.replace(/A alternativa [A-E] é a correta/gi, `A alternativa ${correctOptionLetter} é a correta`);
+                              })()}
                             </div>
                           )}
 
@@ -1009,10 +1080,16 @@ export default function App() {
                           <td className="px-6 py-4 text-sm text-slate-600">{u.email}</td>
                           <td className="px-6 py-4">
                             <button 
-                              onClick={async () => {
-                                try {
-                                  await updateDoc(doc(db, 'users', u.uid), { isUpgraded: !u.isUpgraded });
-                                } catch (e) { handleFirestoreError(e, OperationType.UPDATE, `users/${u.uid}`); }
+                              onClick={() => {
+                                setConfirmModal({
+                                  title: 'Confirmar Alteração de Plano',
+                                  message: `Deseja realmente alterar o plano de ${u.displayName} para ${u.isUpgraded ? 'Gratuito' : 'Premium'}?`,
+                                  onConfirm: async () => {
+                                    try {
+                                      await updateDoc(doc(db, 'users', u.uid), { isUpgraded: !u.isUpgraded });
+                                    } catch (e) { handleFirestoreError(e, OperationType.UPDATE, `users/${u.uid}`); }
+                                  }
+                                });
                               }}
                               className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${
                                 u.isUpgraded ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -1041,6 +1118,13 @@ export default function App() {
                               title={u.isActive ? 'Desativar' : 'Ativar'}
                             >
                               {u.isActive ? <UserX className="w-5 h-5" /> : <UserCheck className="w-5 h-5" />}
+                            </button>
+                            <button 
+                              onClick={() => deleteUserSimulations(u.uid)}
+                              className="text-red-600 hover:text-red-800 font-bold text-xs p-2"
+                              title="Limpar Simulados"
+                            >
+                              <Trash2 className="w-5 h-5" />
                             </button>
                           </td>
                         </tr>

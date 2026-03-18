@@ -27,4 +27,5 @@ export interface SimulationResult {
   totalQuestions: number;
   date: any;
   anonymousName: string;
+  elapsedTime: number;
 }
