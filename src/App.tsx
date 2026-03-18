@@ -29,7 +29,8 @@ import {
   UserCheck,
   UserX,
   Lock,
-  Trash2
+  Trash2,
+  Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, Question, SimulationResult } from './types';
@@ -703,6 +704,9 @@ export default function App() {
           <NavItem active={view === 'dashboard'} onClick={() => setView('dashboard')} icon={<LayoutDashboard />} label="Dashboard" />
           <NavItem active={view === 'history'} onClick={() => setView('history')} icon={<History />} label="Meu Histórico" />
           <NavItem active={view === 'ranking'} onClick={() => setView('ranking')} icon={<Trophy />} label="Ranking Geral" />
+          {!profile?.isUpgraded && (
+            <NavItem active={view === 'upgrade'} onClick={() => setView('upgrade')} icon={<Zap />} label="Upgrade" />
+          )}
           
           {(profile?.role === 'admin' || user?.email === 'allanjonesms@gmail.com') && (
             <>
