@@ -9,7 +9,13 @@ interface UpgradePageProps {
 }
 
 export default function UpgradePage({ onBack, userId, email }: UpgradePageProps) {
+  const [cpf, setCpf] = React.useState('');
+
   const handlePayment = async (method: 'pix' | 'card') => {
+    if (!cpf || cpf.length < 11) {
+      alert('Por favor, informe um CPF válido.');
+      return;
+    }
     try {
       const response = await fetch('/api/create-preference', {
         method: 'POST',
@@ -19,6 +25,7 @@ export default function UpgradePage({ onBack, userId, email }: UpgradePageProps)
         body: JSON.stringify({
           userId,
           email,
+          cpf,
           planName: 'Plano Premium - SimuProvas',
           amount: 19.90,
           paymentMethod: method,
@@ -67,6 +74,16 @@ export default function UpgradePage({ onBack, userId, email }: UpgradePageProps)
         </p>
         
         <div className="text-5xl font-black text-slate-900 mb-8">R$ 19,90</div>
+
+        <div className="mb-6">
+          <input 
+            type="text" 
+            placeholder="Digite seu CPF (apenas números)" 
+            value={cpf}
+            onChange={(e) => setCpf(e.target.value.replace(/\D/g, ''))}
+            className="w-full p-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"
+          />
+        </div>
 
         <div className="space-y-4 mb-8">
           <div className="flex items-center gap-3 text-slate-700 font-medium">

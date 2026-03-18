@@ -36,15 +36,21 @@ async function startServer() {
   });
 
   app.post("/api/create-preference", async (req, res) => {
-    const { userId, email, planName, amount, paymentMethod } = req.body;
-    console.log("Creating preference for:", { userId, email, planName, amount, paymentMethod });
+    const { userId, email, cpf, planName, amount, paymentMethod } = req.body;
+    console.log("Creating preference for:", { userId, email, cpf, planName, amount, paymentMethod });
     try {
       const preference = new Preference(client);
       const requestBody = {
         items: [{ id: '1', title: planName, quantity: 1, unit_price: Number(amount) }],
         external_reference: String(userId),
         notification_url: `${process.env.APP_URL || 'https://ais-dev-2ljxrupff4fnsdftrofktf-45221046979.us-east1.run.app'}/api/webhook`,
-        payer: { email: email },
+        payer: { 
+          email: email,
+          identification: {
+            type: 'CPF',
+            number: cpf
+          }
+        },
       };
       console.log("Sending to Mercado Pago:", JSON.stringify(requestBody, null, 2));
       const result = await preference.create({
