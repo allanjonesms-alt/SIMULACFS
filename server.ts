@@ -31,15 +31,17 @@ async function startServer() {
   });
 
   // API routes
+  app.get("/api/test", (req, res) => {
+    res.json({ message: "Server is working!" });
+  });
+
   app.post("/api/create-preference", async (req, res) => {
-    const { userId, planName, amount } = req.body;
-    console.log("Creating preference for:", { userId, planName, amount });
+    const { userId, planName, amount, paymentMethod } = req.body;
+    console.log("Creating preference for:", { userId, planName, amount, paymentMethod });
     try {
-      console.log("Creating preference with body:", JSON.stringify({
-        items: [{ id: '1', title: planName, quantity: 1, unit_price: Number(amount) }],
-        external_reference: userId,
-        notification_url: `${process.env.APP_URL || 'https://ais-dev-2ljxrupff4fnsdftrofktf-45221046979.us-east1.run.app'}/api/webhook`,
-      }, null, 2));
+      const paymentMethodsConfig = paymentMethod === 'pix' 
+        ? { excluded_payment_types: [{ id: 'credit_card' }, { id: 'debit_card' }, { id: 'ticket' }] }
+        : { excluded_payment_types: [{ id: 'atm' }] }; // Simple example, might need adjustment
 
       const preference = new Preference(client);
       const result = await preference.create({
@@ -47,6 +49,7 @@ async function startServer() {
           items: [{ id: '1', title: planName, quantity: 1, unit_price: Number(amount) }],
           external_reference: String(userId),
           notification_url: `${process.env.APP_URL || 'https://ais-dev-2ljxrupff4fnsdftrofktf-45221046979.us-east1.run.app'}/api/webhook`,
+          payment_methods: paymentMethodsConfig,
         },
       });
       console.log("Preference created:", result.id);
