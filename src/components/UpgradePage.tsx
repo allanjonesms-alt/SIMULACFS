@@ -12,12 +12,12 @@ export default function UpgradePage({ onBack, userId, email }: UpgradePageProps)
   const [cpf, setCpf] = React.useState('');
 
   const handlePayment = async (method: 'pix' | 'card') => {
-    if (!cpf || cpf.length < 11) {
-      alert('Por favor, informe um CPF válido.');
+    if (!cpf || cpf.length !== 11) {
+      alert('Por favor, informe um CPF válido com 11 números.');
       return;
     }
     try {
-      const response = await fetch('/api/create-preference', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/create-preference`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

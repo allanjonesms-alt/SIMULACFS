@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { MercadoPagoConfig, Preference } from "mercadopago";
@@ -24,6 +25,7 @@ async function startServer() {
   const PORT = 3000;
 
   app.use(express.json());
+  app.use(cors());
 
   app.use((req, res, next) => {
     console.log(`[DEBUG] ${req.method} ${req.url}`);
@@ -41,10 +43,16 @@ async function startServer() {
     try {
       const preference = new Preference(client);
       const requestBody = {
-        items: [{ id: '1', title: planName, quantity: 1, unit_price: Number(amount) }],
+        items: [{ id: '1', title: planName, quantity: 1, unit_price: Number(amount), currency_id: 'BRL' }],
         external_reference: String(userId),
         notification_url: `${process.env.APP_URL || 'https://ais-dev-2ljxrupff4fnsdftrofktf-45221046979.us-east1.run.app'}/api/webhook`,
+        back_urls: {
+          success: `${process.env.APP_URL || 'https://ais-dev-2ljxrupff4fnsdftrofktf-45221046979.us-east1.run.app'}/`,
+          failure: `${process.env.APP_URL || 'https://ais-dev-2ljxrupff4fnsdftrofktf-45221046979.us-east1.run.app'}/`,
+          pending: `${process.env.APP_URL || 'https://ais-dev-2ljxrupff4fnsdftrofktf-45221046979.us-east1.run.app'}/`
+        },
         payer: { 
+          name: 'Cliente',
           email: email,
           identification: {
             type: 'CPF',
