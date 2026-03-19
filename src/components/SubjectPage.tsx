@@ -7,11 +7,12 @@ interface SubjectPageProps {
   questions: Question[];
   onBack: () => void;
   onDownloadPDF: (law: string) => void;
-  onPreview: (q: Question) => void;
-  onEdit: (q: Question) => void;
-  onDelete: (q: Question) => void;
-  onAdd: () => void;
+  onPreview?: (q: Question) => void;
+  onEdit?: (q: Question) => void;
+  onDelete?: (q: Question) => void;
+  onAdd?: () => void;
   disableLawFilter?: boolean;
+  isAdmin?: boolean;
 }
 
 const SubjectPage: React.FC<SubjectPageProps> = ({
@@ -23,7 +24,8 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
   onEdit,
   onDelete,
   onAdd,
-  disableLawFilter = false
+  disableLawFilter = false,
+  isAdmin = false
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -54,12 +56,21 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
           </div>
         </div>
         <div className="flex flex-wrap gap-3">
+          {isAdmin && onAdd && (
+            <button 
+              onClick={onAdd}
+              className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-md"
+            >
+              <PlusCircle className="w-5 h-5" />
+              Nova Questão
+            </button>
+          )}
           <button 
-            onClick={onAdd}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-md"
+            onClick={() => onDownloadPDF(law)}
+            className="flex items-center gap-2 bg-white border border-slate-200 text-slate-600 px-6 py-3 rounded-xl font-bold hover:bg-slate-50 transition-all shadow-sm"
           >
-            <PlusCircle className="w-5 h-5" />
-            Nova Questão
+            <Download className="w-5 h-5" />
+            Baixar PDF
           </button>
         </div>
       </div>
@@ -107,26 +118,34 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
                 </div>
                 <p className="font-bold text-slate-900 whitespace-pre-wrap" translate="no">{q.text}</p>
               </div>
-              <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button 
-                  onClick={() => onPreview(q)}
-                  className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg"
-                >
-                  <Play className="w-5 h-5" />
-                </button>
-                <button 
-                  onClick={() => onEdit(q)}
-                  className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg"
-                >
-                  <Settings className="w-5 h-5" />
-                </button>
-                <button 
-                  onClick={() => onDelete(q)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
-                >
-                  <XCircle className="w-5 h-5" />
-                </button>
-              </div>
+              {isAdmin && (
+                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {onPreview && (
+                    <button 
+                      onClick={() => onPreview(q)}
+                      className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg"
+                    >
+                      <Play className="w-5 h-5" />
+                    </button>
+                  )}
+                  {onEdit && (
+                    <button 
+                      onClick={() => onEdit(q)}
+                      className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg"
+                    >
+                      <Settings className="w-5 h-5" />
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button 
+                      onClick={() => onDelete(q)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                    >
+                      <XCircle className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {q.options.map((opt, i) => (

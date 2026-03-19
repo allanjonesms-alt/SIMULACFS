@@ -2,7 +2,7 @@ import React from 'react';
 import SubjectPage from '../../components/SubjectPage';
 import { Question } from '../../types';
 
-interface Lei127Props {
+interface RDPMMSProps {
   questions: Question[];
   onBack: () => void;
   onDownloadPDF: (law: string) => void;
@@ -13,8 +13,8 @@ interface Lei127Props {
   isAdmin?: boolean;
 }
 
-const Lei127: React.FC<Lei127Props> = (props) => {
-  return <SubjectPage law="Lei 127/2008" {...props} />;
+const RDPMMS: React.FC<RDPMMSProps> = (props) => {
+  return <SubjectPage law="RDPMMS" {...props} />;
 };
 
-export default Lei127;
+export default RDPMMS;

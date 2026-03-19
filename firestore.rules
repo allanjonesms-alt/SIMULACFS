@@ -32,13 +32,16 @@ service cloud.firestore {
     }
 
     function isValidUser(data) {
-      return data.keys().hasAll(['uid', 'email', 'role', 'isActive', 'isUpgraded', 'anonymousName']) &&
+      return data.keys().hasAll(['uid', 'email', 'role', 'isActive', 'isUpgraded', 'anonymousName', 'photoURL']) &&
              data.uid is string &&
              data.email is string &&
              data.role in ['admin', 'user'] &&
              data.isActive is bool &&
              data.isUpgraded is bool &&
-             data.anonymousName is string;
+             data.anonymousName is string &&
+             data.photoURL is string &&
+             (!('upgradedAt' in data) || data.upgradedAt == null || data.upgradedAt is timestamp) &&
+             (!('lastPaymentId' in data) || data.lastPaymentId is string);
     }
 
     function isValidQuestion(data) {

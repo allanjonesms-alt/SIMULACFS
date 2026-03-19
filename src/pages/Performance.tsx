@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
-  LineChart, Line, LabelList
+  LineChart, Line, ReferenceLine
 } from 'recharts';
 import { SimulationResult, UserProfile } from '../types';
+import { BarChart2, Target } from 'lucide-react';
 
 interface PerformancePageProps {
   history: SimulationResult[];
@@ -14,8 +15,36 @@ interface PerformancePageProps {
   onUpgrade: () => void;
 }
 
+const normalizeSubject = (subject: string) => {
+  let displaySubject = subject;
+  if (
+    subject.includes('Maria da Penha') || 
+    subject.includes('9455') || 
+    subject.includes('9.455') || 
+    subject.includes('Estatuto do Desarmamento') || 
+    subject.includes('10.826') || 
+    subject.includes('10826') ||
+    subject.includes('Antidrogas') ||
+    subject.includes('Extravagantes')
+  ) {
+    displaySubject = 'Leis Extravagantes';
+  } else {
+    const s = subject.toUpperCase();
+    if (s.includes('190')) displaySubject = 'LC 190';
+    else if (s.includes('053') || s.includes(' 53') || s === 'LC 53') displaySubject = 'LC 053';
+    else if (s.includes('127')) displaySubject = 'LC 127';
+    else if (s.includes('PROCESSO PENAL MILITAR') || s === 'CPPM') displaySubject = 'CPPM';
+    else if (s.includes('PENAL MILITAR') || s === 'CPM') displaySubject = 'CPM';
+    else if (s.includes('CONSTITUIÇÃO DO ESTADO') || s.includes('CEMS') || s.includes('MATO GROSSO DO SUL')) displaySubject = 'CEMS';
+    else if (s.includes('PORTUGU') || s.includes('LÍNGUA')) displaySubject = 'PORTUGUÊS';
+    else if (s.includes('RDPM')) displaySubject = 'RDPMMS';
+  }
+  return displaySubject;
+};
+
 export default function PerformancePage({ history, allSimulations, allUsers, profile, onUpgrade }: PerformancePageProps) {
-  const [selectedUserId, setSelectedUserId] = React.useState<string>(profile.uid);
+  const [selectedUserId, setSelectedUserId] = useState<string>(profile.uid);
+  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
 
   const isAdmin = profile.role === 'admin';
 
@@ -31,6 +60,22 @@ export default function PerformancePage({ history, allSimulations, allUsers, pro
   const selectedUser = useMemo(() => {
     return allUsers.find(u => u.uid === selectedUserId) || profile;
   }, [allUsers, selectedUserId, profile]);
+
+  const availableSubjects = useMemo(() => {
+    const subjects = new Set<string>();
+    userHistory.forEach(sim => {
+      if (sim.subjectScores) {
+        Object.keys(sim.subjectScores).forEach(s => subjects.add(normalizeSubject(s)));
+      }
+    });
+    return ['Geral', ...Array.from(subjects).sort()];
+  }, [userHistory]);
+
+  useEffect(() => {
+    if (availableSubjects.length > 0 && !selectedSubject) {
+      setSelectedSubject('Geral');
+    }
+  }, [availableSubjects, selectedSubject]);
 
   if (!profile.isUpgraded && !isAdmin) {
     return (
@@ -49,91 +94,99 @@ export default function PerformancePage({ history, allSimulations, allUsers, pro
     );
   }
 
-  // Data processing for charts
-  
-  // 1. Performance by subject
-  const subjectData = useMemo(() => {
-    const mySubjects: Record<string, { correct: number; total: number }> = {};
-    const generalSubjects: Record<string, { correct: number; total: number }> = {};
+  const minOverallScore = useMemo(() => {
+    const validSimulations = allSimulations.filter(s => s.totalQuestions > 0 && !s.isMiniSimulado);
+    if (validSimulations.length === 0) return 0;
+    const scores = validSimulations.map(s => Math.round((s.score / s.totalQuestions) * 100));
+    return Math.min(...scores);
+  }, [allSimulations]);
+
+  // 1. Performance by subject (Line Chart for selected subject)
+  const subjectHistoryData = useMemo(() => {
+    if (!selectedSubject) return [];
     
-    const normalizeSubject = (subject: string) => {
-      let displaySubject = subject;
-      if (
-        subject.includes('Maria da Penha') || 
-        subject.includes('9455') || 
-        subject.includes('9.455') || 
-        subject.includes('Estatuto do Desarmamento') || 
-        subject.includes('10.826') || 
-        subject.includes('10826') ||
-        subject.includes('Antidrogas') ||
-        subject.includes('Extravagantes')
-      ) {
-        displaySubject = 'Leis Extravagantes';
-      } else {
-        const s = subject.toUpperCase();
-        if (s.includes('190')) displaySubject = 'LC 190';
-        else if (s.includes('053') || s.includes(' 53') || s === 'LC 53') displaySubject = 'LC 053';
-        else if (s.includes('127')) displaySubject = 'LC 127';
-        else if (s.includes('PROCESSO PENAL MILITAR') || s === 'CPPM') displaySubject = 'CPPM';
-        else if (s.includes('PENAL MILITAR') || s === 'CPM') displaySubject = 'CPM';
-        else if (s.includes('CONSTITUIÇÃO DO ESTADO') || s.includes('CEMS') || s.includes('MATO GROSSO DO SUL')) displaySubject = 'CEMS';
-        else if (s.includes('PORTUGU') || s.includes('LÍNGUA')) displaySubject = 'PORTUGUÊS';
-      }
-      return displaySubject;
-    };
+    if (selectedSubject === 'Geral') {
+      return userHistory.filter(s => !s.isMiniSimulado).slice().reverse().map((sim, index) => {
+        const date = sim.date?.toDate ? sim.date.toDate() : (sim.date?.seconds ? new Date(sim.date.seconds * 1000) : new Date());
+        return {
+          name: `Simulado ${index + 1}`,
+          data: date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+          meuDesempenho: Math.round((sim.score / sim.totalQuestions) * 100),
+          correct: sim.score,
+          total: sim.totalQuestions
+        };
+      });
+    }
 
-    userHistory.forEach(sim => {
-      if (sim.subjectScores) {
-        Object.entries(sim.subjectScores).forEach(([subject, scores]) => {
-          const s = scores as { correct: number; total: number };
-          const displaySubject = normalizeSubject(subject);
-          if (!mySubjects[displaySubject]) {
-            mySubjects[displaySubject] = { correct: 0, total: 0 };
+    return userHistory.slice().reverse().filter(sim => {
+        if (!sim.subjectScores) return false;
+        return Object.keys(sim.subjectScores).some(s => normalizeSubject(s) === selectedSubject);
+    }).map((sim, index) => {
+      const date = sim.date?.toDate ? sim.date.toDate() : (sim.date?.seconds ? new Date(sim.date.seconds * 1000) : new Date());
+      
+      let correct = 0;
+      let total = 0;
+      Object.entries(sim.subjectScores || {}).forEach(([s, scores]) => {
+          if (normalizeSubject(s) === selectedSubject) {
+              const sc = scores as { correct: number; total: number };
+              correct += sc.correct;
+              total += sc.total;
           }
-          mySubjects[displaySubject].correct += s.correct;
-          mySubjects[displaySubject].total += s.total;
-        });
-      }
-    });
+      });
 
-    const otherSimulations = allSimulations.filter(s => s.userId !== selectedUserId);
-    otherSimulations.forEach(sim => {
-      if (sim.subjectScores) {
-        Object.entries(sim.subjectScores).forEach(([subject, scores]) => {
-          const s = scores as { correct: number; total: number };
-          const displaySubject = normalizeSubject(subject);
-          if (!generalSubjects[displaySubject]) {
-            generalSubjects[displaySubject] = { correct: 0, total: 0 };
-          }
-          generalSubjects[displaySubject].correct += s.correct;
-          generalSubjects[displaySubject].total += s.total;
-        });
-      }
-    });
-
-    return Object.entries(mySubjects).map(([name, scores]) => {
-      const general = generalSubjects[name];
       return {
-        name,
-        meuDesempenho: Math.round((scores.correct / scores.total) * 100) || 0,
-        mediaGeral: general && general.total > 0 ? Math.round((general.correct / general.total) * 100) : 0,
-        correct: scores.correct,
-        total: scores.total
+        name: `Teste ${index + 1}`,
+        data: date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+        meuDesempenho: total > 0 ? Math.round((correct / total) * 100) : 0,
+        correct,
+        total
       };
-    }).sort((a, b) => b.meuDesempenho - a.meuDesempenho);
-  }, [userHistory, allSimulations, selectedUserId]);
+    });
+  }, [selectedSubject, userHistory]);
 
-  // 2. Historical performance vs General Average
-  const historicalData = useMemo(() => {
-    // Calculate general average per day or overall?
-    // Let's calculate the overall average of other users first
+  // Reference stats for the selected subject (or Geral)
+  const referenceStats = useMemo(() => {
+    if (!selectedSubject) return { mediaGeral: 0, melhorNota: 0, nota46: 0 };
+
     const otherSimulations = allSimulations.filter(s => s.userId !== selectedUserId);
+    let scores: number[] = [];
+
+    if (selectedSubject === 'Geral') {
+      scores = otherSimulations.filter(s => !s.isMiniSimulado).map(s => Math.round((s.score / s.totalQuestions) * 100));
+    } else {
+      otherSimulations.forEach(sim => {
+        if (sim.subjectScores) {
+          Object.entries(sim.subjectScores).forEach(([s, sc]) => {
+            if (normalizeSubject(s) === selectedSubject) {
+              const scoresObj = sc as { correct: number; total: number };
+              if (scoresObj.total > 0) {
+                scores.push(Math.round((scoresObj.correct / scoresObj.total) * 100));
+              }
+            }
+          });
+        }
+      });
+    }
+
+    if (scores.length === 0) return { mediaGeral: 0, melhorNota: 0, nota46: 0 };
+
+    const sortedScores = [...scores].sort((a, b) => b - a);
+    const mediaGeral = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+    const melhorNota = sortedScores[0];
+    const nota46 = sortedScores.length >= 46 ? sortedScores[45] : sortedScores[sortedScores.length - 1];
+
+    return { mediaGeral, melhorNota, nota46 };
+  }, [selectedSubject, allSimulations, selectedUserId]);
+
+  // 2. Overall Historical performance vs General Average
+  const historicalData = useMemo(() => {
+    const otherSimulations = allSimulations.filter(s => s.userId !== selectedUserId && !s.isMiniSimulado);
     const generalAverage = otherSimulations.length > 0 
       ? otherSimulations.reduce((acc, sim) => acc + ((sim.score / sim.totalQuestions) * 100), 0) / otherSimulations.length
       : 0;
 
-    return userHistory.slice().reverse().map((sim, index) => {
-      const date = sim.date?.toDate ? sim.date.toDate() : new Date();
+    return userHistory.filter(s => !s.isMiniSimulado).slice().reverse().map((sim, index) => {
+      const date = sim.date?.toDate ? sim.date.toDate() : (sim.date?.seconds ? new Date(sim.date.seconds * 1000) : new Date());
       return {
         name: `Simulado ${index + 1}`,
         data: date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
@@ -202,17 +255,37 @@ export default function PerformancePage({ history, allSimulations, allUsers, pro
       ) : (
         <>
           {/* Performance by Subject */}
-          {subjectData.length > 0 && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-              <h3 className="text-xl font-bold text-slate-800 mb-6">Desempenho por Matéria (% de Acertos)</h3>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+              <h3 className="text-xl font-bold text-slate-800">Desempenho por Matéria</h3>
+              
+              <div className="flex flex-wrap gap-2">
+                {availableSubjects.map(subject => (
+                  <button
+                    key={subject}
+                    onClick={() => setSelectedSubject(subject)}
+                    className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                      selectedSubject === subject
+                        ? subject === 'Geral' 
+                          ? 'bg-emerald-600 text-white shadow-md' 
+                          : 'bg-indigo-600 text-white shadow-md'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {subject}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {selectedSubject ? (
               <div className="h-80 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={subjectData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                  <LineChart data={subjectHistoryData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} domain={[0, 100]} />
+                    <XAxis dataKey="data" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} domain={[minOverallScore, 100]} />
                     <RechartsTooltip 
-                      cursor={{ fill: '#f8fafc' }}
                       contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                       formatter={(value: number, name: string, props: any) => {
                         if (name === 'Meu Desempenho') {
@@ -222,24 +295,29 @@ export default function PerformancePage({ history, allSimulations, allUsers, pro
                       }}
                     />
                     <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
-                    <Bar dataKey="meuDesempenho" name="Meu Desempenho" fill="#4f46e5" radius={[4, 4, 0, 0]} maxBarSize={40}>
-                      <LabelList dataKey="meuDesempenho" position="top" fill="#4f46e5" fontSize={12} formatter={(val: number) => `${val}%`} />
-                      <LabelList dataKey="correct" position="insideBottom" fill="#ffffff" fontSize={12} formatter={(val: number) => `${val} acertos`} />
-                    </Bar>
-                  </BarChart>
+                    <Line type="monotone" dataKey="meuDesempenho" name="Meu Desempenho" stroke="#4f46e5" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                    
+                    <ReferenceLine y={referenceStats.mediaGeral} stroke="#eab308" strokeDasharray="3 3" label={{ position: 'right', value: 'Média Geral', fill: '#eab308', fontSize: 10 }} />
+                    <ReferenceLine y={referenceStats.melhorNota} stroke="#10b981" strokeDasharray="3 3" label={{ position: 'right', value: 'Melhor Nota', fill: '#10b981', fontSize: 10 }} />
+                    <ReferenceLine y={referenceStats.nota46} stroke="#ef4444" strokeDasharray="3 3" label={{ position: 'right', value: '46ª Melhor', fill: '#ef4444', fontSize: 10 }} />
+                  </LineChart>
                 </ResponsiveContainer>
               </div>
-            </motion.div>
-          )}
+            ) : (
+              <div className="h-80 flex items-center justify-center text-slate-400">
+                Selecione uma matéria para ver o desempenho histórico.
+              </div>
+            )}
+          </motion.div>
 
-          {/* Historical Performance */}
+          {/* Overall Historical Performance */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-            <h3 className="text-xl font-bold text-slate-800 mb-6">Evolução Histórica (% de Acertos)</h3>
+            <h3 className="text-xl font-bold text-slate-800 mb-6">Evolução Geral (% de Acertos)</h3>
             <div className="h-80 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={historicalData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                  <XAxis dataKey="data" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} domain={[0, 100]} />
                   <RechartsTooltip 
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}

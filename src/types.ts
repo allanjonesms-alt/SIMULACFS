@@ -6,6 +6,7 @@ export interface UserProfile {
   role: 'admin' | 'user';
   isActive: boolean;
   isUpgraded: boolean;
+  upgradedAt?: any;
   anonymousName: string;
 }
 
@@ -44,4 +45,5 @@ export interface SimulationResult {
   elapsedTime: number;
   subjectScores?: Record<string, { correct: number; total: number }>;
   diff?: number;
+  isMiniSimulado?: boolean;
 }

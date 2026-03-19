@@ -26,7 +26,7 @@ async function startServer() {
 
   app.use(express.json());
   app.use(cors({
-    origin: 'https://simulacfs-473889295670.us-west1.run.app',
+    origin: '*', // Allow all origins for simplicity in this environment, or use process.env.APP_URL
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
@@ -34,6 +34,10 @@ async function startServer() {
 
   app.use((req, res, next) => {
     console.log(`[DEBUG] ${req.method} ${req.url}`);
+    if (req.method === 'POST' && req.url === '/api/webhook') {
+      console.log(`[DEBUG] Webhook Body:`, JSON.stringify(req.body, null, 2));
+      console.log(`[DEBUG] Webhook Query:`, JSON.stringify(req.query, null, 2));
+    }
     next();
   });
 
@@ -61,6 +65,7 @@ async function startServer() {
           failure: `${baseUrl}/`,
           pending: `${baseUrl}/`
         },
+        auto_return: 'approved',
         payer: { 
           name: 'Cliente',
           email: email,
@@ -83,46 +88,62 @@ async function startServer() {
   });
 
   app.post("/api/webhook", async (req, res) => {
+    console.log("[WEBHOOK] Received webhook request");
+    // Handle both Webhooks (JSON body) and IPN (Query params)
     const { data, type, action } = req.body;
-    console.log("Webhook received:", { type, action, data });
+    const topic = req.query.topic || type;
+    const paymentId = data?.id || req.query.id || req.query['data.id'];
+
+    console.log("[WEBHOOK] Parsed data:", { topic, action, paymentId, type });
     
-    // Mercado Pago sends webhooks for various events. We care about "payment" or "payment.created/updated"
-    if (type === "payment" || action === "payment.created" || action === "payment.updated") {
+    if (topic === "payment" || action === "payment.created" || action === "payment.updated" || action === "payment.status_changed" || type === "payment") {
       try {
-        const paymentId = data?.id || req.query['data.id'];
         if (!paymentId) {
-          console.warn("No payment ID found in webhook body or query");
+          console.warn("[WEBHOOK] No payment ID found in webhook/IPN");
           return res.sendStatus(200);
         }
 
-        console.log(`Verifying payment ${paymentId}...`);
+        console.log(`[WEBHOOK] Verifying payment ${paymentId}...`);
         const payment = new Payment(client);
-        const paymentDetails = await payment.get({ id: paymentId });
+        const paymentDetails = await payment.get({ id: String(paymentId) });
         
-        console.log("Payment details:", {
+        console.log("[WEBHOOK] Payment details retrieved:", JSON.stringify({
+          id: paymentDetails.id,
           status: paymentDetails.status,
           status_detail: paymentDetails.status_detail,
           external_reference: paymentDetails.external_reference
-        });
+        }, null, 2));
 
         if (paymentDetails.status === "approved") {
           const userId = paymentDetails.external_reference;
           if (userId) {
-            console.log(`Upgrading user ${userId}...`);
-            await db.collection("users").doc(userId).update({ 
-              isUpgraded: true,
-              upgradedAt: admin.firestore.FieldValue.serverTimestamp(),
-              lastPaymentId: paymentId
-            });
-            console.log(`User ${userId} upgraded successfully.`);
+            console.log(`[WEBHOOK] Upgrading user ${userId}...`);
+            const userRef = db.collection("users").doc(userId);
+            const userDoc = await userRef.get();
+            
+            if (userDoc.exists) {
+              await userRef.update({ 
+                isUpgraded: true,
+                upgradedAt: admin.firestore.FieldValue.serverTimestamp(),
+                lastPaymentId: String(paymentId)
+              });
+              console.log(`[WEBHOOK] User ${userId} upgraded successfully.`);
+            } else {
+              console.error(`[WEBHOOK] User ${userId} not found in database.`);
+              // If user not found, maybe it's a different collection or ID format?
+              // Let's try to find by email if possible, but external_reference should be the UID.
+            }
           } else {
-            console.warn("No external_reference (userId) found in payment details");
+            console.warn("[WEBHOOK] No external_reference (userId) found in payment details");
           }
+        } else {
+          console.log(`[WEBHOOK] Payment ${paymentId} status is ${paymentDetails.status}, not approved.`);
         }
       } catch (error) {
-        console.error("Webhook processing error:", error);
-        // We still return 200 to Mercado Pago to avoid retries if the error is on our side
+        console.error("[WEBHOOK] Webhook processing error:", error);
       }
+    } else {
+      console.log("[WEBHOOK] Topic/Action not handled:", { topic, action, type });
     }
     res.sendStatus(200);
   });

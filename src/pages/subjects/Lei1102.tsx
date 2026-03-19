@@ -6,10 +6,11 @@ interface Lei1102Props {
   questions: Question[];
   onBack: () => void;
   onDownloadPDF: (law: string) => void;
-  onPreview: (q: Question) => void;
-  onEdit: (q: Question) => void;
-  onDelete: (q: Question) => void;
-  onAdd: () => void;
+  onPreview?: (q: Question) => void;
+  onEdit?: (q: Question) => void;
+  onDelete?: (q: Question) => void;
+  onAdd?: () => void;
+  isAdmin?: boolean;
 }
 
 const Lei1102: React.FC<Lei1102Props> = (props) => {

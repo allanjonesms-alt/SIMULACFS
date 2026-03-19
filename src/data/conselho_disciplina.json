@@ -1,0 +1,602 @@
+[
+  {
+    "text": "O Conselho de Disciplina é o processo administrativo destinado a julgar a incapacidade de permanecer na ativa das seguintes classes de militares, EXCETO:",
+    "options": [
+      "Aspirantes-a-Oficial PM.",
+      "Praças com 10 (dez) ou mais anos de tempo de efetivo serviço.",
+      "Oficiais Subalternos e Intermediários.",
+      "Praças da reserva remunerada ou reformadas, presumivelmente incapazes de permanecer na inatividade."
+    ],
+    "correctOption": 2,
+    "law": "Conselho de Disciplina",
+    "justification": "Oficiais (independentemente do posto) são julgados pelo 'Conselho de Justificação' e não pelo Conselho de Disciplina (Art. 1º)."
+  },
+  {
+    "text": "Qual é a autoridade competente para a nomeação do Conselho de Disciplina no âmbito da PMMS?",
+    "options": [
+      "O Secretário de Estado de Justiça e Segurança Pública.",
+      "O Comandante-Geral da Polícia Militar.",
+      "O Comandante da Unidade onde a praça serve.",
+      "O Governador do Estado."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "A nomeação do colegiado é ato exclusivo do Comandante-Geral (Art. 3º)."
+  },
+  {
+    "text": "O Conselho de Disciplina é composto por quantos membros?",
+    "options": [
+      "3 (três) Oficiais.",
+      "2 (dois) Oficiais e 1 (um) Graduado mais antigo.",
+      "5 (cinco) membros de livre escolha.",
+      "3 (três) Oficiais e 1 (um) Promotor de Justiça."
+    ],
+    "correctOption": 0,
+    "law": "Conselho de Disciplina",
+    "justification": "O conselho é um colegiado formado estritamente por três oficiais da corporação (Art. 4º)."
+  },
+  {
+    "text": "Em relação à hierarquia dos membros do Conselho, o oficial mais antigo, obrigatoriamente, exercerá a função de:",
+    "options": [
+      "Relator.",
+      "Secretário.",
+      "Presidente.",
+      "Interrogador."
+    ],
+    "correctOption": 2,
+    "law": "Conselho de Disciplina",
+    "justification": "A presidência segue o critério da antiguidade entre os oficiais nomeados (Art. 4º, § 1º)."
+  },
+  {
+    "text": "O militar que é subordinado hierarquicamente ao acusado pode fazer parte do Conselho de Disciplina?",
+    "options": [
+      "Sim, desde que seja de outra unidade.",
+      "Não, é vedada a participação de oficiais que sejam mais modernos que o acusado.",
+      "Sim, pois no Conselho todos os votos têm o mesmo peso.",
+      "Apenas se houver falta de oficiais na sede."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "O princípio da hierarquia deve ser preservado; os julgadores devem ser superiores ou mais antigos que o julgado (Art. 4º, § 3º)."
+  },
+  {
+    "text": "Considera-se presumivelmente incapaz de permanecer na ativa a praça que:",
+    "options": [
+      "For promovida por antiguidade antes do tempo.",
+      "Praticar ato que afete a honra pessoal, o pundonor militar ou o decoro da classe.",
+      "Pedir transferência para a reserva remunerada.",
+      "Casar-se com pessoa estrangeira sem autorização."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "Esta é a principal causa de instauração do conselho (Art. 2º)."
+  },
+  {
+    "text": "Após a nomeação do Conselho, qual é o prazo para o início dos trabalhos de instrução?",
+    "options": [
+      "24 horas.",
+      "48 horas.",
+      "10 (dez) dias.",
+      "20 (vinte) dias."
+    ],
+    "correctOption": 3,
+    "law": "Conselho de Disciplina",
+    "justification": "Embora deva ser instalado em 48h, o prazo de instrução e conclusão tem ritos específicos (Art. 11)."
+  },
+  {
+    "text": "O acusado tem direito a um defensor para acompanhar o processo. Caso ele não nomeie um advogado, o que deve ocorrer?",
+    "options": [
+      "O processo corre à revelia (sem defesa).",
+      "O Presidente do Conselho deve nomear um Oficial para atuar como defensor dativo.",
+      "O acusado é demitido sumariamente.",
+      "O processo é suspenso por tempo indeterminado."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "O direito à ampla defesa é irrenunciável no rito administrativo (Art. 10, § 2º)."
+  },
+  {
+    "text": "Durante o interrogatório e as sessões do Conselho, o acusado tem o direito de:",
+    "options": [
+      "Permanecer em silêncio e não produzir prova contra si.",
+      "Oferecer presentes aos membros para agilizar o processo.",
+      "Escolher qual oficial irá interrogá-lo.",
+      "Faltar às sessões se estiver de folga."
+    ],
+    "correctOption": 0,
+    "law": "Conselho de Disciplina",
+    "justification": "Aplicam-se os direitos constitucionais de defesa ao rito do Conselho."
+  },
+  {
+    "text": "O Conselho de Disciplina pode funcionar com a ausência de um de seus membros?",
+    "options": [
+      "Sim, desde que o Presidente esteja presente.",
+      "Sim, se houver autorização do Comandante-Geral.",
+      "Não, as reuniões exigem a presença de todos os membros nomeados.",
+      "Sim, mas o voto do ausente é computado como 'abstenção'."
+    ],
+    "correctOption": 2,
+    "law": "Conselho de Disciplina",
+    "justification": "O quórum de funcionamento e deliberação é sempre a totalidade dos membros (Art. 7º)."
+  },
+  {
+    "text": "Qual é o prazo total para a conclusão dos trabalhos do Conselho de Disciplina, contados da data de sua nomeação?",
+    "options": [
+      "15 dias.",
+      "30 dias.",
+      "45 dias (podendo ser prorrogado por mais 15 dias).",
+      "60 dias improrrogáveis."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "O Comandante-Geral pode prorrogar por mais 20 dias em casos excepcionais (Art. 11)."
+  },
+  {
+    "text": "As reuniões do Conselho de Disciplina são, via de regra:",
+    "options": [
+      "Públicas para toda a sociedade.",
+      "Secretas, permitida apenas a presença do acusado e de seu defensor.",
+      "Gravadas e transmitidas via internet.",
+      "Realizadas em praça pública para servir de exemplo."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "Visa preservar a imagem da instituição e a segurança dos envolvidos (Art. 7º, § 1º)."
+  },
+  {
+    "text": "Se a praça for considerada culpada pelo Conselho, a decisão final sobre a exclusão ou permanência cabe ao:",
+    "options": [
+      "Presidente do Conselho.",
+      "Tribunal de Justiça Militar.",
+      "Comandante-Geral da PMMS.",
+      "Secretário de Segurança Pública."
+    ],
+    "correctOption": 2,
+    "law": "Conselho de Disciplina",
+    "justification": "O Conselho emite um parecer (relatório), mas quem decide de fato é a autoridade que o nomeou (Art. 13)."
+  },
+  {
+    "text": "Após receber o relatório do Conselho, o Comandante-Geral tem qual prazo para proferir sua decisão?",
+    "options": [
+      "5 dias.",
+      "10 dias.",
+      "20 dias.",
+      "30 dias."
+    ],
+    "correctOption": 2,
+    "law": "Conselho de Disciplina",
+    "justification": "Art. 13, caput."
+  },
+  {
+    "text": "No relatório final, os membros do Conselho votam sobre a procedência da acusação. Como é decidida a votação?",
+    "options": [
+      "Unanimidade obrigatória.",
+      "Por maioria de votos (2 contra 1).",
+      "Voto apenas do Presidente.",
+      "Sorteio de cédulas."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "A decisão do colegiado é tomada pela maioria dos votos dos oficiais membros."
+  },
+  {
+    "text": "O militar da reserva que for julgado 'incapaz de permanecer na inatividade' pelo Conselho de Disciplina terá como pena:",
+    "options": [
+      "Retorno ao serviço ativo para punição.",
+      "Cassação da reserva ou reforma (perda dos proventos conforme legislação específica).",
+      "Prisão por 30 dias no quartel.",
+      "Perda da cidadania."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "É a sanção administrativa máxima para quem já saiu do serviço ativo (Art. 13, inciso IV)."
+  },
+  {
+    "text": "O acusado pode arrolar testemunhas em sua defesa. Qual o limite máximo previsto no regulamento?",
+    "options": [
+      "3 testemunhas.",
+      "5 testemunhas.",
+      "8 testemunhas.",
+      "Não há limite de testemunhas."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "Art. 9º, § 4º."
+  },
+  {
+    "text": "Se o Comandante-Geral discordar do relatório do Conselho que considerou o militar 'Incapaz', ele pode:",
+    "options": [
+      "Mandar prender os oficiais do Conselho.",
+      "Reformular a decisão e absolver o militar, fundamentando seu ato.",
+      "Pedir para o Governador decidir.",
+      "Anular o processo e começar do zero."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "A decisão do Comandante-Geral é soberana na esfera administrativa, desde que motivada."
+  },
+  {
+    "text": "A praça que for condenada à exclusão a bem da disciplina poderá recorrer da decisão do Comandante-Geral para:",
+    "options": [
+      "O próprio Comandante-Geral (pedido de reconsideração).",
+      "O Governador do Estado.",
+      "O Comandante da Unidade.",
+      "Não cabe recurso na esfera administrativa."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "O Governador é a instância superior máxima do Executivo Estadual (Art. 15)."
+  },
+  {
+    "text": "O prazo para interpor recurso contra a decisão de exclusão é de:",
+    "options": [
+      "48 horas.",
+      "10 (dez) dias.",
+      "15 (quinze) dias.",
+      "30 (trinta) dias."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "Contados da data da publicação do ato no Diário Oficial ou Boletim (Art. 15)."
+  },
+  {
+    "text": "Durante o processo de Conselho de Disciplina, o militar acusado fica na situação de:",
+    "options": [
+      "Preso preventivo.",
+      "Afastado das funções (agregado) ou em funções administrativas, conforme decisão da autoridade.",
+      "Férias compulsórias.",
+      "Promovido por ressarcimento."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "Geralmente o militar é retirado do policiamento externo por cautela."
+  },
+  {
+    "text": "Se a conduta que originou o Conselho de Disciplina também for crime militar, o Conselho:",
+    "options": [
+      "Deve ser suspenso até o fim do processo na justiça.",
+      "Deve prosseguir independentemente da ação penal, dada a independência das instâncias.",
+      "Só pode punir se o juiz autorizar.",
+      "É anulado automaticamente."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "É o princípio da independência das esferas administrativa e penal."
+  },
+  {
+    "text": "Membros do Conselho que tenham parentesco com o acusado ou com o denunciante devem:",
+    "options": [
+      "Participar normalmente para mostrar imparcialidade.",
+      "Ser declarados impedidos ou suspeitos.",
+      "Votar apenas se o acusado permitir.",
+      "Ser promovidos."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "Aplica-se a teoria das nulidades e impedimentos do processo comum."
+  },
+  {
+    "text": "O relatório do Conselho de Disciplina deve ser redigido pelo:",
+    "options": [
+      "Presidente.",
+      "Secretário (membro mais moderno).",
+      "Advogado de defesa.",
+      "Investigador da Corregedoria."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "É atribuição funcional do membro secretário a lavratura das atas e do relatório (Art. 12)."
+  },
+  {
+    "text": "O Conselho de Disciplina pode ser instaurado para praça que tenha menos de 10 anos de serviço?",
+    "options": [
+      "Sim, para todos os casos.",
+      "Não, para estes casos o rito é o Processo Administrativo Disciplinar Simplificado (PADS).",
+      "Apenas se a praça for Aspirante-a-Oficial.",
+      "Somente se o crime for hediondo."
+    ],
+    "correctOption": 2,
+    "law": "Conselho de Disciplina",
+    "justification": "Praças sem estabilidade (menos de 10 anos) seguem rito simplificado de licenciamento, exceto o Aspirante (Art. 1º, inciso I)."
+  },
+  {
+    "text": "As diligências solicitadas pelo Conselho devem ser atendidas por outras unidades da PMMS com:",
+    "options": [
+      "Prazo de 30 dias.",
+      "Prioridade e urgência.",
+      "Pagamento de taxas.",
+      "Desprezo, se a unidade estiver ocupada."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "O Conselho tem autoridade de requisição de documentos e meios."
+  },
+  {
+    "text": "O militar que, no Conselho de Disciplina, for considerado 'Incapaz' mas que possua tempo de serviço para reserva, poderá ser:",
+    "options": [
+      "Expulso sem salário.",
+      "Transferido para a reserva remunerada ex-officio, se a infração não exigir a exclusão total.",
+      "Mantido no serviço ativo em regime de prisão.",
+      "Mandado para o Exército."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "É uma das opções de desfecho previstas no Art. 13."
+  },
+  {
+    "text": "Se o Conselho de Disciplina concluir que o fato não é transgressão, mas sim crime militar:",
+    "options": [
+      "Absolve o militar.",
+      "Remete os autos para a Justiça Militar para fins de Inquérito Policial Militar (IPM).",
+      "Aplica uma advertência leve.",
+      "O processo é queimado."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "O dever de ofício exige a comunicação do crime à autoridade judiciária."
+  },
+  {
+    "text": "O comparecimento do acusado às sessões do Conselho é:",
+    "options": [
+      "Facultativo.",
+      "Obrigatório, sob pena de ser conduzido coercitivamente.",
+      "Permitido apenas se ele estiver fardado.",
+      "Proibido se ele estiver de luto."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "A presença é necessária para a validade do interrogatório e instrução."
+  },
+  {
+    "text": "O Conselho de Disciplina é um processo de natureza:",
+    "options": [
+      "Judiciária.",
+      "Administrativa.",
+      "Legislativa.",
+      "Eclesiástica."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "Trata-se do poder de autotutela da Administração Pública sobre seus servidores."
+  },
+  {
+    "text": "O membro do Conselho que divergir da maioria no relatório final deve:",
+    "options": [
+      "Ser punido.",
+      "Votar novamente até concordar.",
+      "Justificar seu voto por escrito no relatório (voto vencido).",
+      "Sair do Conselho imediatamente."
+    ],
+    "correctOption": 2,
+    "law": "Conselho de Disciplina",
+    "justification": "O direito ao voto divergente fundamentado é garantido."
+  },
+  {
+    "text": "Qual a principal diferença entre o Conselho de Disciplina e o RDPMMS?",
+    "options": [
+      "O RDPMMS trata de faltas leves e médias; o Conselho trata da exclusão da praça estável.",
+      "O RDPMMS é apenas para oficiais.",
+      "O Conselho é feito no fórum civil.",
+      "Não há diferença."
+    ],
+    "correctOption": 0,
+    "law": "Conselho de Disciplina",
+    "justification": "O Conselho é um rito especial para situações extremas de indignidade."
+  },
+  {
+    "text": "As provas produzidas no Conselho podem ser:",
+    "options": [
+      "Apenas testemunhais.",
+      "Apenas documentais.",
+      "Documentais, testemunhais, periciais e exames técnicos.",
+      "Apenas confissão do réu."
+    ],
+    "correctOption": 2,
+    "law": "Conselho de Disciplina",
+    "justification": "Vigora o princípio da busca pela verdade real."
+  },
+  {
+    "text": "Se o militar for absolvido pelo Comandante-Geral, ele:",
+    "options": [
+      "Perde a farda do mesmo jeito.",
+      "É reintegrado plenamente às suas funções e deixa de ser agregado.",
+      "Deve pagar o custo do processo.",
+      "Fica proibido de ser promovido por 5 anos."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "A absolvição administrativa restaura o status quo ante."
+  },
+  {
+    "text": "A 'Incapacidade Moral' para o serviço militar é:",
+    "options": [
+      "Falta de inteligência.",
+      "Desvio de conduta ética incompatível com a função policial.",
+      "Ter muitas dívidas no banco.",
+      "Não saber marchar."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "É o cerne do julgamento do Conselho."
+  },
+  {
+    "text": "A instauração do Conselho de Disciplina interrompe a contagem do tempo de serviço?",
+    "options": [
+      "Sim, totalmente.",
+      "Não, o tempo continua contando para todos os fins até a decisão final.",
+      "Só interrompe se o militar estiver preso.",
+      "Interrompe apenas para fins de férias."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "Até que haja a exclusão, o militar é considerado em serviço ativo."
+  },
+  {
+    "text": "O Comandante-Geral pode delegar a decisão final do Conselho para um Capitão?",
+    "options": [
+      "Sim, se estiver cansado.",
+      "Não, a competência de decisão é indelegável conforme o regulamento.",
+      "Apenas se o Capitão for advogado.",
+      "Sim, em tempos de paz."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "Competências de julgamento de demissão são exclusivas da autoridade máxima."
+  },
+  {
+    "text": "Se o militar cometer novo erro durante o curso do Conselho:",
+    "options": [
+      "O processo atual é cancelado.",
+      "Abre-se novo processo ou anexa-se a nova falta conforme a gravidade.",
+      "Ele ganha imunidade até o fim do primeiro processo.",
+      "Ele é promovido."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "Fatos novos podem agravar a situação do acusado."
+  },
+  {
+    "text": "O Conselho de Disciplina aplica-se aos Bombeiros Militares do MS?",
+    "options": [
+      "Não, eles têm decreto próprio.",
+      "Sim, o decreto é unificado para as corporações militares do estado (ressalvadas leis posteriores específicas).",
+      "Apenas se houver incêndio.",
+      "Somente para os oficiais do fogo."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "Tradicionalmente a legislação militar estadual é simétrica para ambas as forças."
+  },
+  {
+    "text": "O laudo médico que atesta a 'insanidade mental' do acusado:",
+    "options": [
+      "Obriga a exclusão imediata.",
+      "Suspende o Conselho e encaminha o militar para reforma por invalidez.",
+      "É ignorado pelos oficiais.",
+      "Serve para aumentar a pena."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "Não se pune administrativamente quem não tem capacidade de entender o caráter ilícito do ato por doença."
+  },
+  {
+    "text": "As intimações para o acusado devem ser feitas com antecedência mínima de:",
+    "options": [
+      "1 hora.",
+      "24 horas.",
+      "5 dias.",
+      "10 dias."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "Visa garantir tempo para the preparo da defesa para a sessão."
+  },
+  {
+    "text": "O conselho pode ser dissolvido antes do fim?",
+    "options": [
+      "Sim, se o Comandante-Geral entender que não há mais provas.",
+      "Não, deve ir até o relatório final.",
+      "Apenas se o réu morrer.",
+      "Se todos os membros pedirem para sair."
+    ],
+    "correctOption": 0,
+    "law": "Conselho de Disciplina",
+    "justification": "A autoridade nomeante pode revogar o ato se cessarem os motivos da instauração."
+  },
+  {
+    "text": "O Conselho de Disciplina é uma etapa obrigatória para a demissão de praça estável?",
+    "options": [
+      "Não, o Comandante pode demitir direto.",
+      "Sim, é garantia do devido processo legal e da estabilidade.",
+      "Apenas se a praça quiser.",
+      "Só em anos bissextos."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "Sem o conselho, a demissão é nula por vício de forma."
+  },
+  {
+    "text": "A confissão do acusado no Conselho:",
+    "options": [
+      "Encerra o processo na hora.",
+      "É considerada apenas como uma das provas, devendo ser confrontada com as demais.",
+      "Garante a absolvição.",
+      "Impede o uso de advogado."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "No administrativo militar também busca-se a verdade real e não apenas a formal."
+  },
+  {
+    "text": "Pundonor Militar significa:",
+    "options": [
+      "O valor do salário.",
+      "O sentimento de honra e dignidade profissional que guia a conduta do militar.",
+      "A cor da farda.",
+      "O tempo de folga."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "É o conceito subjetivo protegido pelo Conselho."
+  },
+  {
+    "text": "O militar que é testemunha e falta à sessão do Conselho sem justificativa:",
+    "options": [
+      "Não acontece nada.",
+      "Comete transgressão disciplinar e pode ser conduzido.",
+      "É promovido.",
+      "Perde o dia de folga."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "O dever de colaborar com a justiça administrativa é obrigatório."
+  },
+  {
+    "text": "Se o relatório do Conselho for pela 'Reforma' do militar, isso significa que:",
+    "options": [
+      "Ele vai trabalhar em obras.",
+      "Ele será aposentado por ser considerado inapto para o serviço, mas não indigno.",
+      "Ele vai ser expulso sem nada.",
+      "Ele vai mudar de nome."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "É uma saída técnica para casos onde não há má-fé, mas inaptidão."
+  },
+  {
+    "text": "O Conselho de Disciplina tem natureza inquisitorial ou acusatória?",
+    "options": [
+      "Puramente inquisitorial.",
+      "Mista, tendendo ao acusatório com garantia de contraditório.",
+      "Não tem natureza definida.",
+      "É um bate-papo informal."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "Embora tenha rito rígido, a ampla defesa o torna um processo dialético."
+  },
+  {
+    "text": "O custo financeiro do Conselho (papel, transporte de oficiais, etc) é pago por:",
+    "options": [
+      "O acusado se for condenado.",
+      "O Estado.",
+      "O Presidente do Conselho.",
+      "Rateio entre os sargentos da unidade."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "O ônus da fiscalização da tropa é da Administração Pública."
+  },
+  {
+    "text": "O encerramento do Conselho ocorre com:",
+    "options": [
+      "O relatório final.",
+      "O julgamento do recurso pelo Governador ou decurso do prazo.",
+      "O grito de 'está encerrado'.",
+      "A promoção do acusado."
+    ],
+    "correctOption": 1,
+    "law": "Conselho de Disciplina",
+    "justification": "O processo transita em julgado administrativamente após esgotados os recursos."
+  }
+]

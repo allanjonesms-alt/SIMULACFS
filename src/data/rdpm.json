@@ -1,0 +1,652 @@
+[
+  {
+    "text": "Segundo o RDPMMS, a transgressão disciplinar é qualquer violação dos princípios da ética, dos deveres e das obrigações policiais-militares, desde que:",
+    "options": [
+      "Não constitua crime tipificado em lei.",
+      "Seja praticada apenas por praças.",
+      "Haja dolo específico de prejudicar a imagem da corporação.",
+      "O militar esteja em serviço no momento da prática."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. Conforme o Art. 12, se a conduta for tipificada como crime, a punição segue a esfera penal, embora as esferas sejam independentes (Art. 12, § 1º).",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "Qual é a base fundamental da disciplina na Polícia Militar, de acordo com o regulamento?",
+    "options": [
+      "A obediência cega a qualquer ordem do superior.",
+      "A camaradagem e a benevolência entre os pares.",
+      "A observância rigorosa das leis, regulamentos e ordens, e a pronta obediência.",
+      "O tempo de serviço na corporação."
+    ],
+    "correctOption": 2,
+    "justification": "A resposta correta é a C. São os pilares que sustentam a hierarquia e a disciplina.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "As punições disciplinares têm por finalidade:",
+    "options": [
+      "Humilhar o infrator perante a tropa.",
+      "Apenas afastar o militar do serviço.",
+      "Preservar a disciplina e ter caráter educativo e preventivo.",
+      "Gerar economia para o Estado com a suspensão do soldo."
+    ],
+    "correctOption": 2,
+    "justification": "A resposta correta é a C. O regulamento enfatiza o caráter educativo da sanção.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "Qual das seguintes autoridades possui competência para aplicar punição disciplinar a todos os integrantes da PMMS?",
+    "options": [
+      "O Comandante de Pelotão.",
+      "O Governador do Estado.",
+      "O Secretário de Segurança Pública.",
+      "O Comandante-Geral da PM."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. O Governador é a autoridade suprema da corporação.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "O militar que se julgar injustiçado por uma punição disciplinar pode interpor:",
+    "options": [
+      "Pedido de Reconsideração de Ato.",
+      "Ação judicial imediata sem passar pela via administrativa.",
+      "Greve de fome.",
+      "Denúncia anônima contra o superior."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. É o recurso administrativo inicial previsto no regulamento.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "A transgressão disciplinar é classificada, segundo sua gravidade, em:",
+    "options": [
+      "Leve, Média e Grave.",
+      "Simples e Complexa.",
+      "Ativa e Passiva.",
+      "Interna e Externa."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. Esta classificação determina a intensidade da punição.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "São circunstâncias que atenuam a punição, EXCETO:",
+    "options": [
+      "Bom comportamento anterior.",
+      "Relevantes serviços prestados.",
+      "Ter sido cometida a falta em defesa de direitos próprios ou de outrem.",
+      "Ter sido a falta praticada em presença da tropa."
+    ],
+    "correctOption": 3,
+    "justification": "A resposta correta é a D. Praticar a falta em presença da tropa é, na verdade, uma circunstância agravante.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "A punição de 'Detenção' consiste em:",
+    "options": [
+      "Cerceamento da liberdade, devendo o militar permanecer em local designado, sem prejuízo do serviço.",
+      "Permanência no quartel sem poder trabalhar.",
+      "Recolhimento em cela solitária.",
+      "Afastamento definitivo da corporação."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. O militar detido continua trabalhando, mas fica restrito ao quartel.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "O comportamento do militar é classificado como 'Excepcional' quando:",
+    "options": [
+      "Não tiver sofrido qualquer punição em 5 anos de serviço.",
+      "Não tiver sofrido qualquer punição em 9 anos de serviço.",
+      "Tiver apenas uma punição leve em 10 anos.",
+      "For elogiado pelo Governador."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. É o grau máximo de comportamento previsto no RDPMMS.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "A prescrição da ação disciplinar ocorre em:",
+    "options": [
+      "2 anos.",
+      "5 anos.",
+      "10 anos.",
+      "6 meses."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Após 5 anos da data do fato, a administração não pode mais punir disciplinarmente o militar.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "O militar que comete uma transgressão para evitar mal maior ou perigo iminente está amparado por uma:",
+    "options": [
+      "Causa de justificação.",
+      "Causa de atenuação.",
+      "Causa de agravamento.",
+      "Causa de anulação."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. Causas de justificação excluem a punibilidade da conduta.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "A punição de 'Prisão' disciplinar não pode ultrapassar o prazo de:",
+    "options": [
+      "15 dias.",
+      "20 dias.",
+      "30 dias.",
+      "60 dias."
+    ],
+    "correctOption": 2,
+    "justification": "A resposta correta é a C. O limite máximo de privação de liberdade administrativa é de 30 dias.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "A quem compete a aplicação da punição de 'Exclusão a Bem da Disciplina' para praças?",
+    "options": [
+      "Ao Comandante da Unidade.",
+      "Ao Comandante-Geral da PM.",
+      "Ao Corregedor-Geral.",
+      "Ao Juiz de Direito."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Compete ao Comandante-Geral após o devido processo legal (Conselho de Disciplina).",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "O recurso de 'Queixa' é utilizado quando:",
+    "options": [
+      "O militar deseja denunciar um crime comum.",
+      "O militar se sente prejudicado por ato de superior hierárquico, após indeferimento de reconsideração.",
+      "O militar quer elogiar um subordinado.",
+      "O militar deseja pedir transferência."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. É um recurso hierárquico superior.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "A reabilitação do militar punido ocorre quando:",
+    "options": [
+      "Ele pede desculpas formalmente.",
+      "Decorrido o prazo de 2 anos sem nova punição, para fins de registro.",
+      "Ele é promovido.",
+      "Ele completa 25 anos de serviço."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. A reabilitação limpa os registros funcionais para fins de carreira.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "A transgressão disciplinar praticada em conluio por dois ou mais militares é considerada:",
+    "options": [
+      "Atenuante.",
+      "Agravante.",
+      "Justificada.",
+      "Irrelevante."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. O conluio aumenta a gravidade da conduta.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "O militar que se apresenta para o serviço com sinais de embriaguez comete transgressão de natureza:",
+    "options": [
+      "Leve.",
+      "Média.",
+      "Grave.",
+      "Não é transgressão se ele conseguir trabalhar."
+    ],
+    "correctOption": 2,
+    "justification": "A resposta correta é a C. A embriaguez em serviço é falta grave que compromete a segurança e a imagem da instituição.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "A punição de 'Repreensão' é aplicada:",
+    "options": [
+      "Verbalmente em particular.",
+      "Por escrito e publicada em boletim.",
+      "Apenas para oficiais.",
+      "Somente em casos de crimes."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Diferente da advertência, a repreensão é formal e registrada.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "O Conselho de Disciplina é destinado a julgar a incapacidade de permanecer na ativa de:",
+    "options": [
+      "Oficiais Superiores.",
+      "Praças com estabilidade assegurada.",
+      "Alunos-Oficiais.",
+      "Civis que trabalham na PM."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Oficiais são julgados pelo Conselho de Justificação.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "A subordinação hierárquica na PMMS é:",
+    "options": [
+      "Apenas funcional.",
+      "Baseada na amizade.",
+      "Rigorosa e decorre da estrutura da corporação.",
+      "Opcional em tempo de paz."
+    ],
+    "correctOption": 2,
+    "justification": "A resposta correta é a C. A hierarquia é a ordenação da autoridade em níveis diferentes.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "O militar que falta ao serviço sem causa justificada comete transgressão. Se a ausência ultrapassar 8 dias, configura:",
+    "options": [
+      "Falta leve.",
+      "Abandono de posto.",
+      "Deserção (crime militar).",
+      "Aposentadoria compulsória."
+    ],
+    "correctOption": 2,
+    "justification": "A resposta correta é a C. O RDPMMS remete ao Código Penal Militar em casos de crimes.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "A aplicação da punição deve ser precedida de:",
+    "options": [
+      "Julgamento imediato sem ouvir o militar.",
+      "Oportunidade de ampla defesa e contraditório.",
+      "Consulta ao Ministério Público.",
+      "Votação secreta da tropa."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. É um princípio constitucional aplicado ao processo administrativo disciplinar.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "O comportamento 'Mau' é aquele em que o militar:",
+    "options": [
+      "Sofreu mais de duas prisões em 1 ano.",
+      "Sofreu punições que somam mais de 30 dias de prisão em 2 anos.",
+      "Foi punido com uma advertência.",
+      "Não gosta de trabalhar."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. É a classificação mais baixa de comportamento.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "A autoridade que aplica a punição pode, posteriormente:",
+    "options": [
+      "Anular, relevar ou atenuar a sanção se houver erro ou injustiça.",
+      "Aumentar a pena se o militar reclamar.",
+      "Cobrar uma taxa do militar.",
+      "Mudar o regulamento sozinha."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. A administração tem o poder de autotutela para corrigir seus atos.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "O militar 'Agregado' continua sujeito ao RDPMMS?",
+    "options": [
+      "Não, ele está afastado.",
+      "Sim, mantém seus deveres e obrigações disciplinares.",
+      "Apenas se ele quiser.",
+      "Somente se estiver fardado."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. A agregação é uma situação temporária que não rompe o vínculo com a disciplina.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "O uso indevido de uniformes e distintivos por militar é transgressão:",
+    "options": [
+      "Leve.",
+      "Média.",
+      "Grave.",
+      "Não é punido se for para uma festa."
+    ],
+    "correctOption": 2,
+    "justification": "A resposta correta é a C. O uniforme é símbolo da autoridade estatal.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "A camaradagem entre os militares deve ser:",
+    "options": [
+      "Incentivada, desde que não prejudique a disciplina e o respeito hierárquico.",
+      "Evitada para não gerar intimidade.",
+      "Obrigatória apenas entre oficiais.",
+      "Baseada em favores ilegais."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. O respeito mútuo é dever de todos.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "O militar que presencia uma transgressão e não toma providência, tendo competência para tal:",
+    "options": [
+      "Não comete falta.",
+      "Comete transgressão por omissão.",
+      "Deve ser promovido por ser legal.",
+      "Só responde se for amigo do infrator."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. O dever de agir é inerente à função policial-militar.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "A punição disciplinar de 'Licenciamento a Bem da Disciplina' aplica-se a:",
+    "options": [
+      "Oficiais.",
+      "Praças sem estabilidade.",
+      "Coronéis.",
+      "Civis."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. É a forma de exclusão para quem ainda não adquiriu estabilidade.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "O elogio individual é uma recompensa que:",
+    "options": [
+      "Serve apenas para vaidade.",
+      "Anula automaticamente todas as punições anteriores.",
+      "Reconhece méritos e serve de estímulo ao bom desempenho.",
+      "Dá direito a aumento salarial imediato."
+    ],
+    "correctOption": 2,
+    "justification": "A resposta correta é a C. É uma forma positiva de reforçar a disciplina.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "A ordem do superior deve ser cumprida prontamente, a menos que seja:",
+    "options": [
+      "Manifestamente ilegal.",
+      "Difícil de realizar.",
+      "Dada em tom de voz alto.",
+      "Dada por um superior mais jovem."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. Ordens ilegais não devem ser cumpridas e o subordinado deve reportar o fato.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "O militar na reserva remunerada pode ser punido pelo RDPMMS?",
+    "options": [
+      "Não, ele já se aposentou.",
+      "Sim, em casos específicos que afetem a honra e o decoro da classe.",
+      "Somente se ele voltar à ativa.",
+      "Apenas se cometer crime hediondo."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. O vínculo com a instituição permanece mesmo na reserva.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "A 'Advertência' é a forma mais branda de punição e consiste em:",
+    "options": [
+      "Uma conversa de orientação, sem registro em ficha.",
+      "Uma admoestação verbal que deve ser registrada para fins de comportamento.",
+      "Um grito na frente da tropa.",
+      "Uma multa de 10% do soldo."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Embora branda, ela conta para a classificação do comportamento.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "O cancelamento de punições na ficha do militar ocorre após:",
+    "options": [
+      "10 anos de bons serviços após a última punição.",
+      "5 anos de bons serviços.",
+      "Sempre que ele mudar de unidade.",
+      "Quando ele se casar."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. É o prazo para a 'limpeza' total da ficha funcional.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "A transgressão é considerada 'Grave' quando:",
+    "options": [
+      "Afeta o sentimento do dever, a honra pessoal ou o decoro da classe.",
+      "O militar chega 5 minutos atrasado.",
+      "O militar esquece de engraxar a bota.",
+      "O militar não cumprimenta um civil."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. São valores fundamentais da instituição.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "O militar que se utiliza do cargo para obter vantagem ilícita comete falta:",
+    "options": [
+      "Leve.",
+      "Média.",
+      "Grave.",
+      "Não é falta se for para ajudar a família."
+    ],
+    "correctOption": 2,
+    "justification": "A resposta correta é a C. Viola a ética e a probidade administrativa.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "O tempo de permanência do militar no comportamento 'Bom' é de:",
+    "options": [
+      "2 anos sem punição.",
+      "5 anos sem punição.",
+      "10 anos sem punição.",
+      "Sempre que ingressa na PM."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. É o comportamento padrão inicial após o período de adaptação.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "A autoridade que aplica a punição deve levar em conta, ao dosar a pena:",
+    "options": [
+      "Apenas a vontade do superior.",
+      "Os antecedentes, as causas e as circunstâncias do fato.",
+      "A cor dos olhos do militar.",
+      "A cidade onde o militar nasceu."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. É a aplicação do princípio da individualização da pena.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "O militar que dorme em serviço comete transgressão:",
+    "options": [
+      "Leve.",
+      "Média.",
+      "Grave.",
+      "Não é falta se ele estiver muito cansado."
+    ],
+    "correctOption": 2,
+    "justification": "A resposta correta é a C. Dormir em serviço compromete a segurança própria e da sociedade.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "A punição disciplinar pode ser suspensa pela autoridade superior?",
+    "options": [
+      "Sim, por motivo de saúde ou interesse do serviço.",
+      "Não, uma vez aplicada deve ser cumprida sem interrupção.",
+      "Apenas se o militar pagar uma fiança.",
+      "Somente em feriados nacionais."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. O regulamento prevê flexibilidade para casos excepcionais.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "O militar que extravia ou danifica material da corporação por desleixo responde:",
+    "options": [
+      "Apenas financeiramente.",
+      "Disciplinarmente e deve indenizar o Estado.",
+      "Somente se o material for caro.",
+      "Não responde se for o primeiro erro."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. O patrimônio público deve ser preservado.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "A ética policial-militar é composta por:",
+    "options": [
+      "Regras de etiqueta apenas.",
+      "Valores e deveres que orientam a conduta do militar.",
+      "Leis de trânsito.",
+      "Manuais de tiro."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. É o guia moral da profissão.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "O militar que faz uso de redes sociais para criticar atos de superiores ou decisões da corporação de forma desrespeitosa:",
+    "options": [
+      "Está exercendo sua liberdade de expressão sem limites.",
+      "Comete transgressão disciplinar grave.",
+      "Só pode ser punido se usar o computador do quartel.",
+      "Não pode ser punido se usar um perfil falso."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. A hierarquia e o respeito devem ser mantidos em todos os meios.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "A punição disciplinar de 'Demissão' aplica-se exclusivamente a:",
+    "options": [
+      "Praças.",
+      "Oficiais.",
+      "Alunos.",
+      "Inativos."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. É a sanção máxima para oficiais, após julgamento pelo Tribunal de Justiça Militar.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "O militar que se recusa a identificar-se quando solicitado por autoridade competente:",
+    "options": [
+      "Não comete falta.",
+      "Comete transgressão disciplinar.",
+      "Só deve se identificar se estiver fardado.",
+      "Pode ser preso imediatamente por 60 dias."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. A transparência e a identificação são deveres do agente público.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "A aplicação de punição disciplinar impede a promoção do militar?",
+    "options": [
+      "Não, em nenhum caso.",
+      "Sim, dependendo da gravidade e do tempo decorrido, pode impedir o ingresso em Quadro de Acesso.",
+      "Somente se for punição de advertência.",
+      "Apenas se o militar for reprovado no TAF."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. A conduta disciplinar é requisito para a ascensão na carreira.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "O militar que trabalha em outra atividade remunerada (bico) sem autorização:",
+    "options": [
+      "Comete transgressão disciplinar.",
+      "É incentivado para aumentar a renda.",
+      "Só é falta se for na área de segurança.",
+      "Não é falta se for em horário de folga."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. O militar deve dedicação exclusiva, salvo as exceções legais (como magistério).",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "A quem cabe o dever de manter a disciplina na unidade?",
+    "options": [
+      "Apenas ao Comandante.",
+      "A todos os militares, em todos os níveis.",
+      "Apenas à Corregedoria.",
+      "Aos soldados mais antigos."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. A disciplina é um esforço coletivo.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "O militar que perde o porte de arma por decisão judicial:",
+    "options": [
+      "Deve ser expulso imediatamente.",
+      "Pode ser punido disciplinarmente se o fato que gerou a perda for transgressão.",
+      "Não pode mais trabalhar no quartel.",
+      "Ganha o direito de trabalhar apenas no administrativo."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. As esferas são independentes.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  },
+  {
+    "text": "O regulamento disciplinar visa, em última análise:",
+    "options": [
+      "Oprimir o militar.",
+      "Garantir a eficiência e a operacionalidade da Polícia Militar no serviço à sociedade.",
+      "Arrecadar fundos com multas.",
+      "Aumentar o poder dos oficiais."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. A disciplina é meio para o fim maior da segurança pública.",
+    "law": "RDPMMS",
+    "category": "RDPM"
+  }
+]

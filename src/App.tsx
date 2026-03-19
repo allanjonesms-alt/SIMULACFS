@@ -46,13 +46,17 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { UserProfile, Question, SimulationResult, QuestionError } from './types';
 import UpgradePage from './components/UpgradePage';
-import PerformancePage from './components/PerformancePage';
+import PerformancePage from './pages/Performance';
+import AdminQuestions from './pages/AdminQuestions';
 import Lei1102 from './pages/subjects/Lei1102';
 import Lei053 from './pages/subjects/Lei053';
 import Lei127 from './pages/subjects/Lei127';
 import Decreto1093 from './pages/subjects/Decreto1093';
+import RDPMMS from './pages/subjects/RDPMMS';
 import LinguaPortuguesa from './pages/subjects/LinguaPortuguesa';
+import ConselhoDisciplina from './pages/subjects/ConselhoDisciplina';
 import SubjectPage from './components/SubjectPage';
+import CD_DATA from './data/conselho_disciplina.json';
 
 interface ShuffledOption {
   id: number;
@@ -130,7 +134,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'dashboard' | 'simulation' | 'history' | 'performance' | 'ranking' | 'admin_users' | 'admin_questions' | 'admin_errors' | 'upgrade' | 'mini_simulados'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'simulation' | 'history' | 'performance' | 'ranking' | 'admin_users' | 'admin_questions' | 'admin_errors' | 'upgrade' | 'mini_simulados' | 'conselho_disciplina'>('dashboard');
   
   // Data states
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -141,39 +145,40 @@ export default function App() {
   
   // Computed Ranking
   const processedRanking = useMemo(() => {
-    if (!allSimulations.length) return [];
+    const simulationsForRanking = allSimulations.filter(sim => !sim.isMiniSimulado);
+    if (!simulationsForRanking.length) return [];
 
     // Group by userId
     const userSims: Record<string, SimulationResult[]> = {};
-    allSimulations.forEach(sim => {
+    simulationsForRanking.forEach(sim => {
       if (!userSims[sim.userId]) userSims[sim.userId] = [];
       userSims[sim.userId].push(sim);
     });
 
     const rankingList = Object.values(userSims).map(sims => {
-      // Sort by date desc to find last and previous
-      const sortedByDate = [...sims].sort((a, b) => {
+      // Sort by date ascending to track progress and find the best score
+      const sortedByDateAsc = [...sims].sort((a, b) => {
         const dateA = a.date?.toMillis?.() || (a.date?.seconds ? a.date.seconds * 1000 : 0);
         const dateB = b.date?.toMillis?.() || (b.date?.seconds ? b.date.seconds * 1000 : 0);
-        return dateB - dateA;
+        return dateA - dateB;
       });
-      const last = sortedByDate[0];
-      const previous = sortedByDate[1];
-      
-      // Difference between last and previous
-      const diff = previous ? last.score - previous.score : 0;
 
-      // Find best score (highest score, then latest date if tied)
-      const best = [...sims].sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score;
-        const dateA = a.date?.toMillis?.() || (a.date?.seconds ? a.date.seconds * 1000 : 0);
-        const dateB = b.date?.toMillis?.() || (b.date?.seconds ? b.date.seconds * 1000 : 0);
-        return dateB - dateA;
-      })[0];
+      let currentBestScore = -1;
+      let bestSim = sortedByDateAsc[0];
+      let lastDiff = 0;
+
+      sortedByDateAsc.forEach(sim => {
+        // Only update if the score is strictly better than the current best
+        if (sim.score > currentBestScore) {
+          lastDiff = currentBestScore === -1 ? 0 : sim.score - currentBestScore;
+          currentBestScore = sim.score;
+          bestSim = sim;
+        }
+      });
 
       return {
-        ...best,
-        diff
+        ...bestSim,
+        diff: lastDiff
       };
     });
 
@@ -193,6 +198,7 @@ export default function App() {
   const [examFinished, setExamFinished] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [hasRatedCurrentQuestion, setHasRatedCurrentQuestion] = useState(false);
+  const [pendingRating, setPendingRating] = useState<number | null>(null);
   const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
   const [activeSimulation, setActiveSimulation] = useState<ActiveSimulation | null>(null);
   const [activeMiniSimulation, setActiveMiniSimulation] = useState<{
@@ -205,8 +211,6 @@ export default function App() {
   const [isMiniSimulado, setIsMiniSimulado] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [selectedAdminLaw, setSelectedAdminLaw] = useState<string | null>(null);
-  const [adminSearchTerm, setAdminSearchTerm] = useState('');
 
   // Error reporting state
   const [isReportingError, setIsReportingError] = useState(false);
@@ -366,76 +370,7 @@ export default function App() {
     };
   }, [user, profile]);
 
-  const [isSeeding, setIsSeeding] = useState(false);
-
-  const seedDecreto1093 = async () => {
-    if (isSeeding) return;
-    setIsSeeding(true);
-    try {
-      // Check if questions already exist for this law
-      const q = query(collection(db, 'questions'), where('law', '==', 'Decreto 1.093/81'));
-      const snapshot = await getDocs(q);
-      
-      if (!snapshot.empty) {
-        setConfirmModal({
-          title: "Questões já existem",
-          message: "Já existem questões para o Decreto 1.093/81 no banco de dados. Deseja adicionar as 50 questões mesmo assim (pode gerar duplicatas)?",
-          onConfirm: async () => {
-            await performSeed();
-          }
-        });
-        setIsSeeding(false);
-        return;
-      }
-
-      await performSeed();
-    } catch (error) {
-      console.error('Erro ao semear:', error);
-      setNotification({ message: 'Erro ao semear questões', type: 'error' });
-      setIsSeeding(false);
-    }
-  };
-
-  const performSeed = async () => {
-    try {
-      const response = await fetch('/src/data/decreto1093.json');
-      const data = await response.json();
-      
-      const batch = writeBatch(db);
-      data.forEach((q: any) => {
-        const docRef = doc(collection(db, 'questions'));
-        batch.set(docRef, {
-          ...q,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        });
-      });
-      
-      await batch.commit();
-      setNotification({ message: `${data.length} questões semeadas com sucesso!`, type: 'success' });
-    } catch (error) {
-      console.error('Erro no performSeed:', error);
-      setNotification({ message: 'Erro ao semear questões', type: 'error' });
-    } finally {
-      setIsSeeding(false);
-    }
-  };
-
   const [loginError, setLoginError] = useState<string | null>(null);
-
-  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
-  const [previewQuestion, setPreviewQuestion] = useState<Question | null>(null);
-  const [previewSelectedOptionIdx, setPreviewSelectedOptionIdx] = useState<number | null>(null);
-  const [previewShowFeedback, setPreviewShowFeedback] = useState(false);
-  const [isAddingQuestion, setIsAddingQuestion] = useState(false);
-  const [newQuestion, setNewQuestion] = useState<Partial<Question>>({
-    text: '',
-    options: ['', '', '', '', ''],
-    correctOption: 0,
-    category: 'Lei 127/2008',
-    justification: '',
-    difficulty: 3
-  });
 
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
   const [confirmModal, setConfirmModal] = useState<{title: string, message: string, onConfirm: () => void} | null>(null);
@@ -569,13 +504,6 @@ export default function App() {
     }
   }, [notification]);
 
-  useEffect(() => {
-    if (previewQuestion) {
-      setPreviewSelectedOptionIdx(null);
-      setPreviewShowFeedback(false);
-    }
-  }, [previewQuestion]);
-
   const handleLogin = async () => {
     setLoginError(null);
     try {
@@ -706,6 +634,7 @@ export default function App() {
       setShowFeedback(false);
       setSelectedOptionId(null);
       setHasRatedCurrentQuestion(false);
+      setPendingRating(null);
       setView('simulation');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'active_simulations');
@@ -733,6 +662,7 @@ export default function App() {
       setShowFeedback(false);
       setSelectedOptionId(null);
       setHasRatedCurrentQuestion(false);
+      setPendingRating(null);
       setView('simulation');
       return;
     }
@@ -784,6 +714,7 @@ export default function App() {
     setAnswers([]);
     setElapsedTime(0);
     setHasRatedCurrentQuestion(false);
+    setPendingRating(null);
     setExamFinished(false);
     setShowFeedback(false);
     setSelectedOptionId(null);
@@ -801,6 +732,7 @@ export default function App() {
     setShowFeedback(false);
     setSelectedOptionId(null);
     setHasRatedCurrentQuestion(false);
+    setPendingRating(null);
     setView('simulation');
   };
 
@@ -836,11 +768,16 @@ export default function App() {
   };
 
   const nextQuestion = async () => {
+    if (pendingRating !== null) {
+      await rateQuestion(currentExam[examIndex].id, pendingRating);
+    }
+
     const newAnswers = [...answers, selectedOptionId!];
     setAnswers(newAnswers);
     setShowFeedback(false);
     setSelectedOptionId(null);
     setHasRatedCurrentQuestion(false);
+    setPendingRating(null);
     
     if (examIndex < currentExam.length - 1) {
       const nextIdx = examIndex + 1;
@@ -891,12 +828,6 @@ export default function App() {
       }
     });
 
-    if (isMiniSimulado) {
-      setActiveMiniSimulation(null);
-      setExamFinished(true);
-      return;
-    }
-
     const result: Omit<SimulationResult, 'id'> = {
       userId: user!.uid,
       score,
@@ -904,14 +835,19 @@ export default function App() {
       date: serverTimestamp(),
       anonymousName: profile!.anonymousName,
       elapsedTime: elapsedTime || 0,
-      subjectScores
+      subjectScores,
+      isMiniSimulado: isMiniSimulado || false
     };
 
     try {
       await addDoc(collection(db, 'simulations'), result);
       
-      // Delete active simulation state
-      await deleteDoc(doc(db, 'active_simulations', user!.uid));
+      if (!isMiniSimulado) {
+        // Delete active simulation state
+        await deleteDoc(doc(db, 'active_simulations', user!.uid));
+      } else {
+        setActiveMiniSimulation(null);
+      }
       
       setExamFinished(true);
     } catch (error) {
@@ -1016,162 +952,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* New Question Modal */}
-      <AnimatePresence>
-        {isAddingQuestion && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
-            >
-              <h3 className="text-2xl font-bold text-slate-900 mb-6">Nova Questão</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Enunciado</label>
-                  <textarea 
-                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" 
-                    rows={3}
-                    placeholder="Digite o enunciado da questão..."
-                    value={newQuestion.text}
-                    translate="no"
-                    onChange={(e) => setNewQuestion({...newQuestion, text: e.target.value})}
-                  />
-                </div>
-                {newQuestion.options?.map((opt, i) => (
-                  <div key={i}>
-                    <label className="block text-sm font-bold text-slate-700 mb-1">Alternativa {String.fromCharCode(65 + i)}</label>
-                    <input 
-                      type="text" 
-                      className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                      placeholder={`Opção ${String.fromCharCode(65 + i)}`}
-                      value={opt}
-                      translate="no"
-                      onChange={(e) => {
-                        const newOpts = [...(newQuestion.options || [])];
-                        newOpts[i] = e.target.value;
-                        setNewQuestion({...newQuestion, options: newOpts});
-                      }}
-                    />
-                  </div>
-                ))}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1">Índice da Correta (0-4)</label>
-                    <input 
-                      type="number" 
-                      min="0" max="4"
-                      className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                      value={newQuestion.correctOption}
-                      onChange={(e) => setNewQuestion({...newQuestion, correctOption: parseInt(e.target.value)})}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1">Lei</label>
-                    <select 
-                      className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
-                      value={newQuestion.law || ''}
-                      onChange={(e) => setNewQuestion({...newQuestion, law: e.target.value})}
-                    >
-                      <option value="">Selecione uma Lei</option>
-                      {existingLaws.map(law => (
-                        <option key={law} value={law}>{law}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1">Categoria</label>
-                    <input 
-                      type="text" 
-                      className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                      placeholder="Ex: Generalidades"
-                      value={newQuestion.category}
-                      onChange={(e) => setNewQuestion({...newQuestion, category: e.target.value})}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Dificuldade</label>
-                  <div className="flex gap-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() => setNewQuestion({ ...newQuestion, difficulty: star })}
-                        className="p-1 transition-all"
-                      >
-                        <Star
-                          className={`w-8 h-8 ${
-                            (newQuestion.difficulty || 0) >= star
-                              ? 'fill-amber-400 text-amber-400'
-                              : 'text-slate-300'
-                          }`}
-                        />
-                      </button>
-                    ))}
-                    <span className="ml-2 text-sm font-bold text-slate-500 self-center">
-                      {newQuestion.difficulty === 1 ? 'Muito Fácil' :
-                       newQuestion.difficulty === 2 ? 'Fácil' :
-                       newQuestion.difficulty === 3 ? 'Média' :
-                       newQuestion.difficulty === 4 ? 'Difícil' : 'Muito Difícil'}
-                    </span>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Justificativa</label>
-                  <textarea 
-                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                    rows={3}
-                    placeholder="Explique a resposta correta..."
-                    value={newQuestion.justification || ''}
-                    translate="no"
-                    onChange={(e) => setNewQuestion({...newQuestion, justification: e.target.value})}
-                  />
-                </div>
-                <div className="flex gap-3 pt-6">
-                  <button 
-                    onClick={async () => {
-                      if (!newQuestion.text || newQuestion.options?.some(o => !o)) {
-                        setNotification({ message: 'Preencha todos os campos', type: 'error' });
-                        return;
-                      }
-                      try {
-                        await addDoc(collection(db, 'questions'), {
-                          ...newQuestion,
-                          createdAt: serverTimestamp()
-                        });
-                        setIsAddingQuestion(false);
-                        setNewQuestion({ 
-                          text: '', 
-                          options: ['', '', '', '', ''], 
-                          correctOption: 0, 
-                          category: 'Lei 127/2008',
-                          law: '',
-                          justification: '',
-                          difficulty: 3
-                        });
-                        setNotification({ message: 'Questão adicionada com sucesso!', type: 'success' });
-                      } catch (e) {
-                        setNotification({ message: 'Erro ao adicionar questão', type: 'error' });
-                      }
-                    }}
-                    className="flex-1 bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg"
-                  >
-                    Salvar Questão
-                  </button>
-                  <button 
-                    onClick={() => setIsAddingQuestion(false)}
-                    className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-bold hover:bg-slate-200 transition-all"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {/* New Question Modal removed - now handled in AdminQuestions */}
       <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
         {/* Mobile Header */}
         <header className="md:hidden bg-white border-b border-slate-200 p-4 flex items-center justify-between sticky top-0 z-40">
@@ -1255,8 +1036,8 @@ export default function App() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                  <StatCard label="Mini-Simulados Realizados" value={history.length} icon={<History className="text-indigo-600" />} />
-                  <StatCard label="Média de Acertos" value={history.length > 0 ? `${(history.reduce((a, b) => a + b.score, 0) / history.length).toFixed(1)}` : '0'} icon={<CheckCircle2 className="text-emerald-600" />} />
+                  <StatCard label="Simulados Realizados" value={history.filter(s => !s.isMiniSimulado).length} icon={<History className="text-indigo-600" />} />
+                  <StatCard label="Média de Acertos" value={history.filter(s => !s.isMiniSimulado).length > 0 ? `${(history.filter(s => !s.isMiniSimulado).reduce((a, b) => a + b.score, 0) / history.filter(s => !s.isMiniSimulado).length).toFixed(1)}` : '0'} icon={<CheckCircle2 className="text-emerald-600" />} />
                   <StatCard label="Status da Conta" value={profile?.isUpgraded ? 'Premium' : 'Gratuito'} icon={<ShieldCheck className="text-amber-600" />} />
                 </div>
 
@@ -1360,7 +1141,8 @@ export default function App() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {Object.entries(questions.reduce((acc, q) => {
-                      const subject = q.law || q.category || 'Sem Matéria';
+                      let subject = q.law || q.category || 'Sem Matéria';
+                      if (subject === 'Leis') subject = 'Provas Anteriores';
                       acc[subject] = (acc[subject] || 0) + 1;
                       return acc;
                     }, {} as Record<string, number>)).map(([subject, count]) => (
@@ -1551,26 +1333,21 @@ export default function App() {
                               {[1, 2, 3, 4, 5].map((rating) => (
                                 <button
                                   key={rating}
-                                  onClick={() => rateQuestion(currentExam[examIndex].id, rating)}
-                                  disabled={hasRatedCurrentQuestion}
-                                  className={`p-1 rounded-lg transition-all ${
-                                    hasRatedCurrentQuestion 
-                                      ? 'cursor-default' 
-                                      : 'hover:bg-amber-50 hover:scale-110 active:scale-95'
-                                  }`}
+                                  onClick={() => setPendingRating(rating)}
+                                  className="p-1 rounded-lg transition-all hover:bg-amber-50 hover:scale-110 active:scale-95"
                                   title={`${rating} estrela${rating > 1 ? 's' : ''}`}
                                 >
                                   <Star 
                                     className={`w-6 h-6 ${
-                                      hasRatedCurrentQuestion
+                                      (pendingRating !== null && rating <= pendingRating)
                                         ? 'text-amber-400 fill-amber-400'
                                         : 'text-slate-300 hover:text-amber-400'
                                     }`} 
                                   />
                                 </button>
                               ))}
-                              {hasRatedCurrentQuestion && (
-                                <span className="text-xs font-medium text-emerald-600 ml-2 animate-pulse">Avaliado!</span>
+                              {pendingRating !== null && (
+                                <span className="text-xs font-medium text-amber-600 ml-2">Selecionado: {pendingRating} {pendingRating === 1 ? 'estrela' : 'estrelas'}</span>
                               )}
                             </div>
                           </div>
@@ -1620,6 +1397,7 @@ export default function App() {
                   <table className="w-full text-left">
                     <thead className="bg-slate-50 border-b border-slate-200">
                       <tr>
+                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Tipo</th>
                         <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Data</th>
                         <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Acertos</th>
                         <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Total</th>
@@ -1629,6 +1407,13 @@ export default function App() {
                     <tbody className="divide-y divide-slate-100">
                       {history.map((h) => (
                         <tr key={h.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-6 py-4">
+                            <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
+                              h.isMiniSimulado ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-700'
+                            }`}>
+                              {h.isMiniSimulado ? 'Mini' : 'Simulado'}
+                            </span>
+                          </td>
                           <td className="px-6 py-4 text-sm text-slate-600">
                             {h.date?.toDate ? h.date.toDate().toLocaleString() : 'Recent'}
                           </td>
@@ -1722,13 +1507,23 @@ export default function App() {
               </motion.div>
             )}
 
+            {view === 'conselho_disciplina' && (
+              <motion.div key="conselho_disciplina" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                <ConselhoDisciplina 
+                  questions={questions.filter(q => q.law === 'Conselho de Disciplina')}
+                  onBack={() => setView('dashboard')}
+                  onDownloadPDF={downloadPDF}
+                  isAdmin={false}
+                />
+              </motion.div>
+            )}
             {view === 'admin_users' && profile?.role === 'admin' && (
               <motion.div key="admin_users" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
                 <h2 className="text-3xl font-bold text-slate-900 mb-8">Gestão de Usuários</h2>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                  <StatCard label="Total de Mini-Simulados" value={allSimulations.length} icon={<History className="text-indigo-600" />} />
-                  <StatCard label="Média de Acertos" value={allSimulations.length > 0 ? `${(allSimulations.reduce((a, b) => a + b.score, 0) / allSimulations.length).toFixed(1)}` : '0'} icon={<CheckCircle2 className="text-emerald-600" />} />
+                  <StatCard label="Total de Simulados" value={allSimulations.filter(s => !s.isMiniSimulado).length} icon={<History className="text-indigo-600" />} />
+                  <StatCard label="Média de Acertos" value={allSimulations.filter(s => !s.isMiniSimulado).length > 0 ? `${(allSimulations.filter(s => !s.isMiniSimulado).reduce((a, b) => a + b.score, 0) / allSimulations.filter(s => !s.isMiniSimulado).length).toFixed(1)}` : '0'} icon={<CheckCircle2 className="text-emerald-600" />} />
                   <StatCard label="Total de Usuários" value={allUsers.length} icon={<Users className="text-slate-600" />} />
                   <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-4">
                     <div className="p-3 bg-slate-100 rounded-2xl">
@@ -1750,509 +1545,133 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
-                  {/* Desktop Table View */}
-                  <div className="hidden md:block overflow-x-auto">
-                    <table className="w-full text-left">
-                      <thead className="bg-slate-50 border-b border-slate-200">
-                        <tr>
-                          <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Usuário</th>
-                          <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Email</th>
-                          <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Plano</th>
-                          <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
-                          <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Ações</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {allUsers.map((u) => (
-                          <tr key={u.uid} className="hover:bg-slate-50 transition-colors">
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-3">
-                                <img src={u.photoURL} className="w-8 h-8 rounded-full" alt="" />
-                                <span className="font-bold text-slate-900">{u.displayName}</span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-sm text-slate-600">{u.email}</td>
-                            <td className="px-6 py-4">
-                              <button 
-                                onClick={() => {
-                                  setConfirmModal({
-                                    title: 'Confirmar Alteração de Plano',
-                                    message: `Deseja realmente alterar o plano de ${u.displayName} para ${u.isUpgraded ? 'Gratuito' : 'Premium'}?`,
-                                    onConfirm: async () => {
-                                      try {
-                                        await updateDoc(doc(db, 'users', u.uid), { isUpgraded: !u.isUpgraded });
-                                      } catch (e) { handleFirestoreError(e, OperationType.UPDATE, `users/${u.uid}`); }
-                                    }
-                                  });
-                                }}
-                                className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${
-                                  u.isUpgraded ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                }`}
-                              >
-                                {u.isUpgraded ? 'Premium' : 'Gratuito'}
-                              </button>
-                            </td>
-                            <td className="px-6 py-4">
-                              <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                u.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
-                              }`}>
-                                {u.isActive ? 'Ativo' : 'Inativo'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <button 
-                                onClick={async () => {
-                                  try {
-                                    await updateDoc(doc(db, 'users', u.uid), { isActive: !u.isActive });
-                                  } catch (e) { handleFirestoreError(e, OperationType.UPDATE, `users/${u.uid}`); }
-                                }}
-                                className={`p-2 rounded-lg transition-colors ${
-                                  u.isActive ? 'text-red-500 hover:bg-red-50' : 'text-emerald-500 hover:bg-emerald-50'
-                                }`}
-                                title={u.isActive ? 'Desativar' : 'Ativar'}
-                              >
-                                {u.isActive ? <UserX className="w-5 h-5" /> : <UserCheck className="w-5 h-5" />}
-                              </button>
-                              <button 
-                                onClick={() => deleteUserSimulations(u.uid)}
-                                className="text-red-600 hover:text-red-800 font-bold text-xs p-2"
-                                title="Limpar Mini-Simulados"
-                              >
-                                <Trash2 className="w-5 h-5" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Mobile Card View */}
-                  <div className="md:hidden divide-y divide-slate-100">
-                    {allUsers.map((u) => (
-                      <div key={u.uid} className="p-6 space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <img src={u.photoURL} className="w-10 h-10 rounded-full border border-slate-200" alt="" />
-                            <div>
-                              <p className="font-bold text-slate-900 leading-tight">{u.displayName}</p>
-                              <p className="text-xs text-slate-500">{u.email}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <button 
-                              onClick={async () => {
-                                try {
-                                  await updateDoc(doc(db, 'users', u.uid), { isActive: !u.isActive });
-                                } catch (e) { handleFirestoreError(e, OperationType.UPDATE, `users/${u.uid}`); }
-                              }}
-                              className={`p-2 rounded-xl transition-colors ${
-                                u.isActive ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-500'
-                              }`}
-                            >
-                              {u.isActive ? <UserX className="w-5 h-5" /> : <UserCheck className="w-5 h-5" />}
-                            </button>
-                            <button 
-                              onClick={() => deleteUserSimulations(u.uid)}
-                              className="p-2 bg-slate-50 text-red-600 rounded-xl"
-                            >
-                              <Trash2 className="w-5 h-5" />
-                            </button>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {allUsers.map((u) => (
+                    <div key={u.uid} className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-all space-y-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <img src={u.photoURL} className="w-12 h-12 rounded-2xl border border-slate-100 shadow-sm" alt="" />
+                          <div className="overflow-hidden">
+                            <p className="font-bold text-slate-900 leading-tight truncate">{u.displayName}</p>
+                            <p className="text-xs text-slate-500 truncate">{u.email}</p>
                           </div>
                         </div>
-
-                        <div className="flex items-center justify-between pt-2">
-                          <div className="space-y-1">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Plano</p>
-                            <button 
-                              onClick={() => {
-                                setConfirmModal({
-                                  title: 'Confirmar Alteração de Plano',
-                                  message: `Deseja realmente alterar o plano de ${u.displayName} para ${u.isUpgraded ? 'Gratuito' : 'Premium'}?`,
-                                  onConfirm: async () => {
-                                    try {
-                                      await updateDoc(doc(db, 'users', u.uid), { isUpgraded: !u.isUpgraded });
-                                    } catch (e) { handleFirestoreError(e, OperationType.UPDATE, `users/${u.uid}`); }
-                                  }
-                                });
-                              }}
-                              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${
-                                u.isUpgraded ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600'
-                              }`}
-                            >
-                              {u.isUpgraded ? 'Premium' : 'Gratuito'}
-                            </button>
-                          </div>
-                          <div className="space-y-1 text-right">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</p>
-                            <span className={`inline-block px-3 py-1.5 rounded-full text-xs font-bold ${
-                              u.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
-                            }`}>
-                              {u.isActive ? 'Ativo' : 'Inativo'}
-                            </span>
-                          </div>
+                        <div className="flex items-center gap-2">
+                          <button 
+                            onClick={async () => {
+                              try {
+                                await updateDoc(doc(db, 'users', u.uid), { isActive: !u.isActive });
+                              } catch (e) { handleFirestoreError(e, OperationType.UPDATE, `users/${u.uid}`); }
+                            }}
+                            className={`p-2 rounded-xl transition-colors ${
+                              u.isActive ? 'bg-red-50 text-red-500 hover:bg-red-100' : 'bg-emerald-50 text-emerald-500 hover:bg-emerald-100'
+                            }`}
+                            title={u.isActive ? 'Desativar' : 'Ativar'}
+                          >
+                            {u.isActive ? <UserX className="w-5 h-5" /> : <UserCheck className="w-5 h-5" />}
+                          </button>
+                          <button 
+                            onClick={() => deleteUserSimulations(u.uid)}
+                            className="p-2 bg-slate-50 text-red-600 rounded-xl hover:bg-red-50 transition-colors"
+                            title="Limpar Mini-Simulados"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
                         </div>
                       </div>
-                    ))}
-                  </div>
+
+                      <div className="grid grid-cols-2 gap-4 pt-2">
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Plano</p>
+                          <button 
+                            onClick={() => {
+                              setConfirmModal({
+                                title: 'Confirmar Alteração de Plano',
+                                message: `Deseja realmente alterar o plano de ${u.displayName} para ${u.isUpgraded ? 'Gratuito' : 'Premium'}?`,
+                                onConfirm: async () => {
+                                  try {
+                                    await updateDoc(doc(db, 'users', u.uid), { 
+                                      isUpgraded: !u.isUpgraded,
+                                      upgradedAt: !u.isUpgraded ? serverTimestamp() : null
+                                    });
+                                  } catch (e) { handleFirestoreError(e, OperationType.UPDATE, `users/${u.uid}`); }
+                                }
+                              });
+                            }}
+                            className={`px-3 py-1.5 rounded-full text-[10px] font-black transition-colors uppercase tracking-wider ${
+                              u.isUpgraded ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            }`}
+                          >
+                            {u.isUpgraded ? 'Premium' : 'Gratuito'}
+                          </button>
+                        </div>
+                        <div className="space-y-1 text-right">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Papel</p>
+                          <button 
+                            onClick={async () => {
+                              try {
+                                await updateDoc(doc(db, 'users', u.uid), { role: u.role === 'admin' ? 'user' : 'admin' });
+                              } catch (e) { handleFirestoreError(e, OperationType.UPDATE, `users/${u.uid}`); }
+                            }}
+                            className={`text-xs font-bold px-3 py-1.5 rounded-full transition-all ${
+                              u.role === 'admin' ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            }`}
+                          >
+                            {u.role === 'admin' ? 'Admin' : 'Usuário'}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <History className="w-3.5 h-3.5 text-slate-400" />
+                          <span className="text-xs font-bold text-slate-600">
+                            {allSimulations.filter(s => s.userId === u.uid).length} simulados
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                          <span className="text-xs font-bold text-slate-600">
+                            {allSimulations.filter(s => s.userId === u.uid).length > 0 
+                              ? (allSimulations.filter(s => s.userId === u.uid).reduce((a, b) => a + b.score, 0) / allSimulations.filter(s => s.userId === u.uid).length).toFixed(1)
+                              : '0'
+                            } média
+                          </span>
+                        </div>
+                      </div>
+
+                      {u.isUpgraded && (
+                        <div className="pt-4 border-t border-slate-100">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Adesão Premium</p>
+                          <p className="text-xs font-medium text-slate-600">
+                            {u.upgradedAt ? (
+                              new Date(u.upgradedAt?.seconds ? u.upgradedAt.seconds * 1000 : u.upgradedAt).toLocaleDateString('pt-BR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })
+                            ) : 'Data não registrada'}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </motion.div>
             )}
 
             {view === 'admin_questions' && profile?.role === 'admin' && (
               <motion.div key="admin_questions" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-                {!selectedAdminLaw ? (
-                  <>
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                      <h2 className="text-3xl font-bold text-slate-900">BANCO DE QUESTÕES</h2>
-                      <div className="flex flex-wrap gap-3">
-                        <button 
-                          onClick={() => {
-                            setNewQuestion({ ...newQuestion, law: '' });
-                            setIsAddingQuestion(true);
-                          }}
-                          className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-md"
-                        >
-                          <PlusCircle className="w-5 h-5" />
-                          Nova Questão
-                        </button>
-                        <button 
-                          onClick={seedDecreto1093}
-                          disabled={isSeeding}
-                          className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-md disabled:opacity-50"
-                        >
-                          <Database className="w-5 h-5" />
-                          {isSeeding ? 'Semeando...' : 'Semear Decreto 1.093/81'}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="relative max-w-xl mb-8">
-                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                      <input
-                        type="text"
-                        placeholder="Buscar em todas as questões..."
-                        value={adminSearchTerm}
-                        onChange={(e) => setAdminSearchTerm(e.target.value)}
-                        className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none transition-all shadow-sm"
-                      />
-                    </div>
-
-                    {adminSearchTerm.trim() !== '' ? (
-                      <SubjectPage 
-                        law="Resultados da Busca" 
-                        questions={questions.filter(q => q.text.toLowerCase().includes(adminSearchTerm.toLowerCase()))}
-                        onBack={() => setAdminSearchTerm('')}
-                        onDownloadPDF={() => {}}
-                        onPreview={(q) => {
-                          setPreviewQuestion(q);
-                          setPreviewSelectedOptionIdx(null);
-                          setPreviewShowFeedback(false);
-                        }}
-                        onEdit={(q) => setEditingQuestion(q)}
-                        onDelete={(q) => {
-                          setConfirmModal({
-                            title: "Excluir Questão",
-                            message: "Tem certeza que deseja excluir esta questão permanentemente?",
-                            onConfirm: async () => {
-                              try {
-                                await deleteDoc(doc(db, 'questions', q.id));
-                                setNotification({ message: 'Questão excluída', type: 'success' });
-                              } catch (e) {
-                                setNotification({ message: 'Erro ao excluir', type: 'error' });
-                              }
-                            }
-                          });
-                        }}
-                        onAdd={() => {
-                          setNewQuestion({ ...newQuestion, law: '' });
-                          setIsAddingQuestion(true);
-                        }}
-                        disableLawFilter={true}
-                      />
-                    ) : (
-                      <>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                          {Object.entries(questions.reduce((acc, q) => {
-                            const subject = q.law || q.category || 'Sem Matéria';
-                            acc[subject] = (acc[subject] || 0) + 1;
-                            return acc;
-                          }, {} as Record<string, number>)).map(([subject, count]) => (
-                            <div 
-                              key={subject} 
-                              onClick={() => setSelectedAdminLaw(subject)}
-                              className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between cursor-pointer hover:border-indigo-600 hover:shadow-md transition-all group"
-                            >
-                              <div className="flex-1">
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 group-hover:text-indigo-400">{subject}</p>
-                                <p className="text-2xl font-black text-slate-900">{count}</p>
-                              </div>
-                              <div className="flex gap-2">
-                                <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                                  <BookOpen className="w-5 h-5" />
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        
-                        {questions.length === 0 && (
-                          <div className="text-center p-20 bg-white rounded-3xl border border-dashed border-slate-300 text-slate-400">
-                            Nenhuma questão cadastrada. Use os botões acima para começar.
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </>
-                ) : (
-                  (() => {
-                    const props = {
-                      questions: questions,
-                      onBack: () => setSelectedAdminLaw(null),
-                      onDownloadPDF: downloadPDF,
-                      onPreview: (q: Question) => {
-                        setPreviewQuestion(q);
-                        setPreviewSelectedOptionIdx(null);
-                        setPreviewShowFeedback(false);
-                      },
-                      onEdit: (q: Question) => {
-                        setEditingQuestion(q);
-                      },
-                      onDelete: (q: Question) => {
-                        setConfirmModal({
-                          title: "Excluir Questão",
-                          message: "Tem certeza que deseja excluir esta questão permanentemente?",
-                          onConfirm: async () => {
-                            try {
-                              await deleteDoc(doc(db, 'questions', q.id));
-                              setNotification({ message: 'Questão excluída', type: 'success' });
-                            } catch (e) {
-                              setNotification({ message: 'Erro ao excluir', type: 'error' });
-                            }
-                          }
-                        });
-                      },
-                      onAdd: () => {
-                        setNewQuestion({ ...newQuestion, law: selectedAdminLaw });
-                        setIsAddingQuestion(true);
-                      }
-                    };
-
-                    switch (selectedAdminLaw) {
-                      case 'Lei 1.102/90':
-                        return <Lei1102 {...props} />;
-                      case 'Lei 053/1990':
-                        return <Lei053 {...props} />;
-                      case 'Lei 127/2008':
-                        return <Lei127 {...props} />;
-                      case 'Decreto 1.093/81':
-                        return <Decreto1093 {...props} />;
-                      case 'Língua Portuguesa':
-                        return <LinguaPortuguesa {...props} />;
-                      default:
-                        return <SubjectPage law={selectedAdminLaw} {...props} />;
-                    }
-                  })()
-                )}
-
-                {editingQuestion && (
-                  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                      <h3 className="text-2xl font-bold mb-6">Editar Questão</h3>
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-bold text-slate-700 mb-1">Enunciado</label>
-                          <textarea 
-                            className="w-full p-3 border rounded-xl" 
-                            rows={3}
-                            value={editingQuestion.text}
-                            translate="no"
-                            onChange={(e) => setEditingQuestion({...editingQuestion, text: e.target.value})}
-                          />
-                        </div>
-                        {editingQuestion.options.map((opt, i) => (
-                          <div key={i}>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">Alternativa {String.fromCharCode(65 + i)}</label>
-                            <input 
-                              type="text" 
-                              className="w-full p-3 border rounded-xl"
-                              value={opt}
-                              translate="no"
-                              onChange={(e) => {
-                                const newOpts = [...editingQuestion.options];
-                                newOpts[i] = e.target.value;
-                                setEditingQuestion({...editingQuestion, options: newOpts});
-                              }}
-                            />
-                          </div>
-                        ))}
-                        <div>
-                          <label className="block text-sm font-bold text-slate-700 mb-1">Índice da Correta (0-4)</label>
-                          <input 
-                            type="number" 
-                            min="0" max="4"
-                            className="w-full p-3 border rounded-xl"
-                            value={editingQuestion.correctOption}
-                            onChange={(e) => setEditingQuestion({...editingQuestion, correctOption: parseInt(e.target.value)})}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-bold text-slate-700 mb-1">Lei</label>
-                          <select 
-                            className="w-full p-3 border rounded-xl bg-white"
-                            value={editingQuestion.law || ''}
-                            onChange={(e) => setEditingQuestion({...editingQuestion, law: e.target.value})}
-                          >
-                            <option value="">Selecione uma Lei</option>
-                            {existingLaws.map(law => (
-                              <option key={law} value={law}>{law}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-bold text-slate-700 mb-1">Categoria</label>
-                          <input 
-                            type="text" 
-                            className="w-full p-3 border rounded-xl"
-                            value={editingQuestion.category || ''}
-                            onChange={(e) => setEditingQuestion({...editingQuestion, category: e.target.value})}
-                            placeholder="Ex: Generalidades"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-bold text-slate-700 mb-2">Dificuldade</label>
-                          <div className="flex gap-2">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <button
-                                key={star}
-                                type="button"
-                                onClick={() => setEditingQuestion({ ...editingQuestion, difficulty: star })}
-                                className="p-1 transition-all"
-                              >
-                                <Star
-                                  className={`w-8 h-8 ${
-                                    (editingQuestion.difficulty || 0) >= star
-                                      ? 'fill-amber-400 text-amber-400'
-                                      : 'text-slate-300'
-                                  }`}
-                                />
-                              </button>
-                            ))}
-                            <span className="ml-2 text-sm font-bold text-slate-500 self-center">
-                              {editingQuestion.difficulty === 1 ? 'Muito Fácil' :
-                               editingQuestion.difficulty === 2 ? 'Fácil' :
-                               editingQuestion.difficulty === 3 ? 'Média' :
-                               editingQuestion.difficulty === 4 ? 'Difícil' : 'Muito Difícil'}
-                            </span>
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-bold text-slate-700 mb-1">Justificativa</label>
-                          <textarea 
-                            className="w-full p-3 border rounded-xl" 
-                            rows={3}
-                            value={editingQuestion.justification || ''}
-                            translate="no"
-                            onChange={(e) => setEditingQuestion({...editingQuestion, justification: e.target.value})}
-                            placeholder="Explique a resposta correta..."
-                          />
-                        </div>
-                        <div className="flex gap-3 pt-4">
-                          <button 
-                            onClick={async () => {
-                              try {
-                                const { id, ...data } = editingQuestion;
-                                await updateDoc(doc(db, 'questions', id), data);
-                                setEditingQuestion(null);
-                                setNotification({ message: 'Questão atualizada!', type: 'success' });
-                              } catch (e) {
-                                setNotification({ message: 'Erro ao salvar', type: 'error' });
-                              }
-                            }}
-                            className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold"
-                          >
-                            Salvar Alterações
-                          </button>
-                          <button 
-                            onClick={() => setEditingQuestion(null)}
-                            className="flex-1 bg-slate-100 text-slate-600 py-3 rounded-xl font-bold"
-                          >
-                            Cancelar
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {previewQuestion && (
-                  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                      <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-2xl font-bold">Visualização</h3>
-                        <button onClick={() => setPreviewQuestion(null)} className="p-2 hover:bg-slate-100 rounded-full">
-                          <X className="w-6 h-6" />
-                        </button>
-                      </div>
-                      <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 mb-6">
-                        {previewQuestion.law && (
-                          <div className="mb-4 inline-block px-3 py-1 bg-indigo-50 text-indigo-600 text-xs font-bold rounded-lg uppercase tracking-wider border border-indigo-100">
-                            {previewQuestion.law}
-                          </div>
-                        )}
-                        <p className="text-xl text-slate-800 font-medium leading-relaxed mb-8" translate="no">
-                          {previewQuestion.text}
-                        </p>
-                        <div className="grid grid-cols-1 gap-4">
-                          {previewQuestion.options.map((optionText, idx) => {
-                            const isSelected = previewSelectedOptionIdx === idx;
-                            const isCorrect = idx === previewQuestion.correctOption;
-                            
-                            let buttonClass = "flex items-center gap-4 p-4 text-left border-2 rounded-2xl transition-all group ";
-                            if (previewShowFeedback) {
-                              if (isCorrect) {
-                                buttonClass += "border-emerald-500 bg-emerald-50";
-                              } else if (isSelected) {
-                                buttonClass += "border-red-500 bg-red-50";
-                              } else {
-                                buttonClass += "border-slate-100";
-                              }
-                            } else {
-                              buttonClass += isSelected ? "border-indigo-600 bg-indigo-50" : "border-slate-100 hover:border-indigo-600 hover:bg-indigo-50";
-                            }
-
-                            return (
-                              <button 
-                                key={idx}
-                                onClick={() => {
-                                  if (!previewShowFeedback) {
-                                    setPreviewSelectedOptionIdx(idx);
-                                    setPreviewShowFeedback(true);
-                                  }
-                                }}
-                                className={buttonClass}
-                              >
-                                <span className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold ${previewShowFeedback && isCorrect ? 'bg-emerald-600 text-white' : previewShowFeedback && isSelected ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-indigo-600 group-hover:text-white'}`}>
-                                  {String.fromCharCode(65 + idx)}
-                                </span>
-                                <span className="flex-1 text-slate-700 font-medium" translate="no">{optionText}</span>
-                                {previewShowFeedback && isCorrect && <CheckCircle2 className="w-6 h-6 text-emerald-600 ml-auto" />}
-                                {previewShowFeedback && isSelected && !isCorrect && <XCircle className="w-6 h-6 text-red-600 ml-auto" />}
-                              </button>
-                            );
-                          })}
-                        </div>
-                        {previewShowFeedback && (
-                          <div className="mt-6 p-6 bg-slate-50 rounded-2xl border border-slate-200">
-                            <h4 className="font-bold text-slate-800 mb-2">Justificativa:</h4>
-                            <p className="text-slate-600" translate="no">{previewQuestion.justification || "Nenhuma justificativa fornecida."}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
+                <AdminQuestions 
+                  questions={questions}
+                  profile={profile}
+                  setNotification={setNotification}
+                  setConfirmModal={setConfirmModal}
+                  downloadPDF={downloadPDF}
+                  onBack={() => setView('dashboard')}
+                />
               </motion.div>
             )}
             {view === 'admin_errors' && (profile?.role === 'admin' || user?.email === 'allanjonesms@gmail.com') && (
