@@ -17,7 +17,8 @@ export default function UpgradePage({ onBack, userId, email }: UpgradePageProps)
       return;
     }
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/create-preference`, {
+      console.log("Initiating payment with:", { userId, email, cpf, method });
+      const response = await fetch(`/api/create-preference`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -59,6 +60,7 @@ export default function UpgradePage({ onBack, userId, email }: UpgradePageProps)
       initial={{ opacity: 0, y: 20 }} 
       animate={{ opacity: 1, y: 0 }} 
       className="max-w-2xl mx-auto p-6"
+      translate="no"
     >
       <button onClick={onBack} className="mb-6 text-slate-500 hover:text-slate-900 font-bold">
         ← Voltar
@@ -96,19 +98,13 @@ export default function UpgradePage({ onBack, userId, email }: UpgradePageProps)
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button 
-            onClick={() => handlePayment('pix')}
-            className="flex items-center justify-center gap-3 bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all"
-          >
-            Pagar com PIX
-          </button>
+        <div className="w-full">
           <button 
             onClick={() => handlePayment('card')}
-            className="flex items-center justify-center gap-3 bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all"
+            className="flex items-center justify-center gap-3 bg-indigo-600 text-white w-full py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all"
           >
             <CreditCard className="w-5 h-5" />
-            Cartão de Crédito
+            Pagar com Mercado Pago
           </button>
         </div>
       </div>

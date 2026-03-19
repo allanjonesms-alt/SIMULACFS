@@ -1,0 +1,652 @@
+[
+  {
+    "text": "O processamento das promoções deve obedecer a um cronograma rigoroso. Segundo o regulamento, as vagas a serem preenchidas são aquelas abertas até:",
+    "options": [
+      "O dia da publicação do Quadro de Acesso no Diário Oficial.",
+      "15 (quinze) dias antes da data fixada para a promoção.",
+      "30 (trinta) dias antes da data fixada para a promoção.",
+      "A data de encerramento das alterações para fins de merecimento."
+    ],
+    "correctOption": 2,
+    "justification": "A resposta correta é a C. O Artigo 20 estabelece o prazo de 30 dias de antecedência para o cômputo das vagas existentes que serão preenchidas no ato.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "No critério de merecimento, a nota final do candidato é composta por pontos positivos e negativos. Qual das seguintes situações acarreta a MAIOR perda de pontos (ponto negativo)?",
+    "options": [
+      "Punição de repreensão por falta leve.",
+      "Punição de detenção por falta grave.",
+      "Estar em gozo de licença para tratamento de saúde por mais de 6 meses.",
+      "Ter sido punido com prisão disciplinar transitada em julgado."
+    ],
+    "correctOption": 3,
+    "justification": "A resposta correta é a D. Conforme as tabelas de pontuação do Decreto, a punição de prisão é a que gera o maior decréscimo na nota de merecimento do militar.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "Sobre o Quadro de Acesso (QA), é correto afirmar que o militar que for \"Agregado\" por motivo de saúde própria:",
+    "options": [
+      "Fica impedido de figurar em qualquer Quadro de Acesso.",
+      "Concorre à promoção apenas pelo critério de antiguidade.",
+      "Pode figurar no QA e ser promovido, desde que o motivo da agregação não seja incapacidade definitiva.",
+      "É promovido automaticamente para a reserva remunerada."
+    ],
+    "correctOption": 2,
+    "justification": "A resposta correta é a C. A agregação por saúde não impede o acesso, desde que o militar não seja julgado inválido para o serviço ativo.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "A Comissão de Promoção de Praças (CPP) tem caráter permanente. O quórum mínimo para que a Comissão possa deliberar é de:",
+    "options": [
+      "Metade mais um de seus membros.",
+      "Pelo menos 2/3 (dois terços) de seus membros.",
+      "Presença obrigatória de todos os membros designados.",
+      "Presença exclusiva do Presidente e do Secretário."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Para garantir a legitimidade das decisões colegiadas, exige-se a presença de dois terços dos membros da CPP.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "Na promoção por BRAVURA, caso o militar venha a falecer em decorrência do ato heróico praticado, o procedimento correto será:",
+    "options": [
+      "Anulação da promoção por bravura e conversão em \"post mortem\".",
+      "Manutenção da promoção por bravura, sem acumular com a \"post mortem\".",
+      "A promoção por bravura será processada e, posteriormente, aplicada a promoção \"post mortem\" sobre a nova graduação.",
+      "O militar será promovido duas graduações acima de forma imediata."
+    ],
+    "correctOption": 2,
+    "justification": "A resposta correta é a C. A legislação permite a sobreposição técnica para que a família receba o benefício sobre a graduação mais elevada alcançada pelo ato.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "O interstício para a promoção de CABO para 3º SARGENTO pode ser reduzido pelo Comandante-Geral em até:",
+    "options": [
+      "25% (vinte e cinco por cento).",
+      "50% (cinquenta por cento).",
+      "1/3 (um terço).",
+      "Não há previsão legal para redução de interstício para praças."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. O Decreto permite a redução de até metade do interstício em casos de necessidade de preenchimento de claros e interesse da administração.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "O militar que se encontrar em Luto ou Núpcias na data da promoção:",
+    "options": [
+      "Tem sua promoção adiada para a próxima data ordinária.",
+      "É promovido normalmente, retroagindo os efeitos à data do evento.",
+      "Perde o direito à promoção por estar afastado do serviço ativo.",
+      "Concorre apenas ao critério de antiguidade, perdendo o de merecimento."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Afastamentos temporários previstos no Estatuto (como luto e núpcias) são considerados como de efetivo serviço.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "Para a apuração da antiguidade em caso de empate, se ambos os militares tiverem a mesma data de última promoção e mesma data de praça, prevalecerá:",
+    "options": [
+      "A maior idade cronológica.",
+      "A nota obtida no Curso de Formação inicial.",
+      "O estado civil, preferindo-se o casado com filhos.",
+      "A ordem de classificação no concurso público de ingresso."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. Conforme os critérios de desempate técnico, a idade é o último critério de desempate objetivo antes da ordem de classificação de ingresso.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "É vedada a inclusão em Quadro de Acesso do militar que for condenado criminalmente por sentença transitada em julgado, enquanto durar o cumprimento da pena, INCLUSIVE no caso de:",
+    "options": [
+      "Suspensão condicional da pena (Sursis).",
+      "Pena de multa isolada.",
+      "Absolvição por insuficiência de provas em segunda instância.",
+      "Reabilitação criminal já concedida."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. O Sursis suspende a execução da pena, mas não afasta o impedimento para promoção durante o período de prova.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "A promoção pelo critério de MERECIMENTO requer que o militar esteja classificado, no mínimo, em qual comportamento disciplinar?",
+    "options": [
+      "Insuficiente.",
+      "Bom.",
+      "Ótimo.",
+      "Excepcional."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. O comportamento \"BOM\" é o patamar mínimo de idoneidade disciplinar exigido para o ingresso no Quadro de Acesso por Merecimento.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "No caso de empate na nota final de MERECIMENTO, o primeiro critério de desempate utilizado pela CPP será:",
+    "options": [
+      "A maior nota no curso de formação ou aperfeiçoamento.",
+      "A antiguidade na graduação.",
+      "O número de medalhas de mérito.",
+      "O maior tempo de serviço público no Estado do MS."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Em igualdade de mérito, a antiguidade (tempo na graduação) funciona como o primeiro filtro de desempate.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "O recurso administrativo contra a composição do Quadro de Acesso deve ser interposto no prazo improrrogável de:",
+    "options": [
+      "2 (dois) dias úteis.",
+      "5 (cinco) dias úteis.",
+      "10 (dez) dias corridos.",
+      "15 (quinze) dias úteis."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. O prazo padrão para recursos em processos de promoção de praças é de 5 dias úteis após a publicação do ato.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "A exclusão de um militar do Quadro de Acesso já publicado pode ocorrer se:",
+    "options": [
+      "O militar solicitar por escrito por motivos pessoais.",
+      "O militar for preso preventivamente ou em flagrante delito por crime infiançável.",
+      "O militar completar 25 anos de serviço.",
+      "O militar mudar de lotação para outra cidade."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Fatos supervenientes de natureza criminal retiram o requisito de idoneidade moral, causando a exclusão sumária do QA.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "A pontuação referente aos CURSOS realizados pelo militar é cumulativa, porém o Decreto estabelece que:",
+    "options": [
+      "Apenas cursos realizados na área de segurança pública contam pontos.",
+      "Cursos de graduação civil (Faculdade) não pontuam para praças.",
+      "Cursos repetidos (mesma nomenclatura e conteúdo) não geram nova pontuação.",
+      "Cursos online não são aceitos pela CPP."
+    ],
+    "correctOption": 2,
+    "justification": "A resposta correta é a C. Visa evitar que o militar realize o mesmo curso diversas vezes apenas para \"inflar\" a nota de merecimento.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "O militar que permanece por mais de 8 (oito) anos consecutivos na mesma graduação por falta de vagas, terá direito a:",
+    "options": [
+      "Promoção automática por tempo de serviço.",
+      "Uma gratificação de permanência, mas não à promoção.",
+      "Prioridade absoluta no Quadro de Acesso por Antiguidade, independentemente da nota.",
+      "Nenhuma das alternativas, pois a promoção depende estritamente da existência de vaga."
+    ],
+    "correctOption": 3,
+    "justification": "A resposta correta é a D. O sistema de promoções no MS é baseado no fluxo de vagas; o tempo sem vagas não gera direito adquirido à promoção automática (\"pedágio\").",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "A promoção \"POST MORTEM\" retroage à data do falecimento. Se o militar já estava no Quadro de Acesso por Antiguidade em primeiro lugar na data do óbito:",
+    "options": [
+      "A promoção será feita obrigatoriamente pelo critério de Antiguidade.",
+      "A promoção será feita pelo critério de Bravura.",
+      "A família decide qual critério é mais vantajoso.",
+      "A vaga é extinta."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. Se o direito à antiguidade já estava consolidado no momento do óbito, este critério prevalece para a regularização.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "Sobre a avaliação de \"Conceito Moral\", quem fornece os subsídios sobre a conduta civil do militar para a CPP?",
+    "options": [
+      "O Promotor de Justiça da comarca.",
+      "O Comandante da Unidade, baseado em sindicâncias e histórico social.",
+      "Uma comissão de moradores da cidade.",
+      "O próprio militar através de autodeclaração."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. O Comandante imediato é o responsável legal por atestar a conduta civil e moral de seus subordinados.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "A promoção por RESSARCIMENTO DE PRETERIÇÃO gera efeitos financeiros:",
+    "options": [
+      "Somente a partir da nova publicação.",
+      "Retroativos à data em que o militar deveria ter sido promovido.",
+      "Apenas após um ano de estágio na nova graduação.",
+      "Não gera efeitos financeiros, apenas hierárquicos."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. O ressarcimento visa apagar o prejuízo sofrido, logo, o pagamento deve ser retroativo.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "O interstício mínimo para promoção à graduação de SUBTENENTE PM é de:",
+    "options": [
+      "2 anos.",
+      "3 anos.",
+      "4 anos.",
+      "5 anos."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. De acordo com as tabelas de interstício vigentes para praças da PMMS (ressalvadas alterações legislativas pontuais de fluxo).",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "O militar que passa à condição de \"Sub judice\" pode ingressar no Quadro de Acesso se o crime for:",
+    "options": [
+      "De natureza militar e punido com detenção.",
+      "Culposo e não houver prisão preventiva decretada.",
+      "Contra a administração pública.",
+      "Praticado com violência contra a mulher."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Crimes culposos (sem intenção), via de regra, não impedem o ingresso no QA, desde que não haja restrição de liberdade.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "No que tange à composição da Comissão de Promoção de Praças (CPP), quem exerce a função de Secretário da Comissão?",
+    "options": [
+      "O Praça mais antigo designado pelo Comandante-Geral.",
+      "O Chefe da Seção de Pessoal do Estado-Maior Geral (PM-1).",
+      "Um Oficial Superior designado especificamente para esta função pelo Presidente.",
+      "O Subcomandante-Geral da Corporação."
+    ],
+    "correctOption": 2,
+    "justification": "A resposta correta é a C. Conforme o regimento interno da CPP previsto no decreto, a secretaria é exercida por oficial designado, não sendo uma atribuição automática de chefia de seção.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "O militar que for considerado \"Não Habilitado\" para o acesso, em caráter definitivo, pela CPP, poderá:",
+    "options": [
+      "Recorrer ao Governador do Estado no prazo de 15 dias.",
+      "Interpor recurso ao Comandante-Geral, que é a instância revisora final.",
+      "Ser promovido apenas por antiguidade no ciclo seguinte.",
+      "Pedir transferência para o quadro de reserva imediatamente."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. O Comandante-Geral detém a competência de última instância administrativa para decidir sobre recursos de inabilitação exarados pela CPP.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "O \"Quadro de Acesso Especial\" é organizado especificamente para qual situação?",
+    "options": [
+      "Promoções de militares que retornam do exterior.",
+      "Promoções que devam ocorrer em datas diversas das ordinárias, como o ressarcimento de preterição.",
+      "Promoções exclusivas para o critério de Bravura.",
+      "Promoções de Cabos a Sargentos que possuem curso superior."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. O Quadro Especial visa regularizar situações jurídicas de militares que tiveram seu direito reconhecido fora do cronograma normal (Art. 27).",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "Na Ficha de Promoção (Merecimento), o item \"Tempo de Efetivo Serviço\" computa pontos. Caso o militar tenha tempo de serviço prestado em Forças Armadas:",
+    "options": [
+      "Esse tempo não conta pontos para merecimento, apenas para aposentadoria.",
+      "Conta pontos de forma idêntica ao tempo de serviço na PMMS.",
+      "Conta pontos, porém com coeficiente redutor em relação ao tempo de corporação.",
+      "Só conta pontos se o militar tiver servido em zona de guerra."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. O tempo de efetivo serviço militar (incluindo Forças Armadas) é considerado para fins de pontuação de tempo total de serviço.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "A \"Média Geral de Conceito\" é a resultante das notas atribuídas pelos comandantes nos últimos:",
+    "options": [
+      "12 meses de serviço.",
+      "2 anos de serviço.",
+      "5 anos de serviço ou desde a última promoção.",
+      "Semestres que compõem o período de interstício."
+    ],
+    "correctOption": 3,
+    "justification": "A resposta correta é a D. A avaliação é contínua e foca no desempenho durante o período em que o militar está na graduação atual aguardando a ascensão.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "O militar que estiver agregado para exercer cargo público civil temporário, não eletivo:",
+    "options": [
+      "Não pode ser incluído em Quadro de Acesso por Merecimento.",
+      "Concorre normalmente aos dois critérios (Antiguidade e Merecimento).",
+      "Tem sua contagem de pontos por medalhas suspensa.",
+      "É promovido apenas por Bravura."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. O afastamento para cargos civis retira o militar da lida profissional direta, impedindo a avaliação de mérito militar.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "Qual o procedimento da CPP ao constatar que um militar no Quadro de Acesso atingiu a idade limite de permanência no serviço ativo?",
+    "options": [
+      "Promovê-lo imediatamente para que se aposente na graduação superior.",
+      "Excluí-lo do Quadro de Acesso, por não preencher o requisito de permanência na ativa.",
+      "Mantê-lo no quadro, mas suspender os efeitos financeiros da promoção.",
+      "Transferi-lo para o Quadro de Acesso por Antiguidade de forma compulsória."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. A promoção visa o fluxo da ativa; se o militar vai para a reserva, cessa o interesse da administração na sua ascensão hierárquica ativa.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "No critério de Desempate de Merecimento, se houver empate em todos os itens da ficha e na antiguidade, prevalece:",
+    "options": [
+      "O militar com o maior número de dependentes.",
+      "O militar que possuir a medalha de maior precedência.",
+      "O militar mais idoso.",
+      "O militar que tiver o maior tempo de comando de destacamento."
+    ],
+    "correctOption": 2,
+    "justification": "A resposta correta é a C. A idade cronológica é o critério de desempate final previsto na legislação de promoções (Art. 18, § 2º).",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "A promoção por BRAVURA, para ser efetivada, exige obrigatoriamente:",
+    "options": [
+      "Que haja vaga na graduação superior.",
+      "Parecer favorável de uma Comissão de Investigação específica e homologação do Comandante-Geral.",
+      "Que o militar não tenha punições graves nos últimos 5 anos.",
+      "Autorização prévia da Assembleia Legislativa."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. A bravura exige um processo administrativo rigoroso de comprovação do ato heróico, independente de vagas.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "O interstício mínimo para a promoção de 2º SARGENTO para 1º SARGENTO PM é de:",
+    "options": [
+      "2 anos.",
+      "3 anos.",
+      "4 anos.",
+      "5 anos."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Conforme os prazos escalonados do Decreto nº 10.769/02 e suas atualizações de interstício.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "Na contagem de pontos negativos, a penalidade de \"Repreensão\" retira quantos pontos na ficha de merecimento?",
+    "options": [
+      "0,5 ponto.",
+      "1,0 ponto.",
+      "2,0 pontos.",
+      "5,0 pontos."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Embora seja a punição mais leve, ela já gera um impacto decimal negativo que pode ser decisivo no ranking.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "O militar que for denunciado em processo de crime doloso contra a vida:",
+    "options": [
+      "Pode figurar no QA por Antiguidade, mas não no de Merecimento.",
+      "Fica impedido de ingressar em qualquer Quadro de Acesso.",
+      "Só é impedido se houver condenação em primeira instância.",
+      "Concorre normalmente, pois o crime não é militar."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. A denúncia recebida em crimes dolosos (com intenção) é causa de impedimento automático para ingresso em QA.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "A publicação do Quadro de Acesso Provisório serve para:",
+    "options": [
+      "O militar conferir sua pontuação e interpor recurso caso haja erro material na contagem.",
+      "Efetivar a promoção de forma imediata.",
+      "Escolher quem será promovido por antiguidade.",
+      "Substituir o boletim interno da unidade."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. É a fase que garante a ampla defesa antes da consolidação do Quadro de Acesso Definitivo.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "Se uma vaga de Sargento for aberta no dia 10 de fevereiro e a data da promoção for 11 de fevereiro, essa vaga será preenchida:",
+    "options": [
+      "Na promoção do dia 11 de fevereiro.",
+      "Apenas na próxima data de promoção ordinária (5 de setembro).",
+      "Imediatamente por ato de bravura.",
+      "Por quem for o mais antigo da corporação inteira."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. As vagas devem estar abertas até 30 dias antes da data da promoção. Vagas abertas na véspera ficam para o ciclo seguinte.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "O militar que está \"Agregado\" para exercer função de natureza militar fora da corporação (ex: Gabinete de Segurança Institucional):",
+    "options": [
+      "Perde o direito de pontuar por tempo de serviço.",
+      "Concorre à promoção como se estivesse em serviço na tropa.",
+      "Só concorre pelo critério de antiguidade.",
+      "Fica com a promoção suspensa até o retorno."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Cargos de natureza militar ou interesse militar mantêm todos os direitos de ascensão do praça.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "Sobre a Ficha de Merecimento, as \"Notas de Cursos\" possuem pesos diferentes. O Curso de Aperfeiçoamento de Sargentos (CAS) tem peso maior que:",
+    "options": [
+      "O Curso de Formação de Sargentos (CFS).",
+      "O Curso de Formação de Cabos (CFC).",
+      "Ambos.",
+      "Nenhum, todos os cursos de formação possuem o mesmo peso."
+    ],
+    "correctOption": 2,
+    "justification": "A resposta correta é a C. Cursos de aperfeiçoamento (nível superior na carreira de praça) possuem valoração superior aos cursos de formação inicial.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "O militar que for promovido indevidamente e tiver o ato anulado:",
+    "options": [
+      "Deve devolver todos os salários recebidos na graduação superior.",
+      "Não precisa devolver os valores, desde que tenha agido de boa-fé e efetivamente trabalhado na função.",
+      "Fica impedido de ser promovido novamente por 2 anos.",
+      "É obrigado a ir para a reserva."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Pelo princípio da irrepetibilidade das verbas alimentares e da aparência de legalidade do ato administrativo (boa-fé).",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "Quem possui a atribuição de organizar os Quadros de Acesso por Antiguidade e Merecimento?",
+    "options": [
+      "O Governador do Estado.",
+      "O Comandante de cada Batalhão separadamente.",
+      "A Comissão de Promoção de Praças (CPP).",
+      "A Secretaria de Administração do Estado."
+    ],
+    "correctOption": 2,
+    "justification": "A resposta correta é a C. A centralização na CPP garante a isonomia e a aplicação uniforme dos critérios em toda a PMMS.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "Na contagem de pontos positivos, o exercício de função de \"Instrutor ou Monitor\" em cursos oficiais da PMMS:",
+    "options": [
+      "Não gera pontos, é dever do militar.",
+      "Gera pontuação adicional na ficha de merecimento por hora-aula ou período.",
+      "Garante folgas proporcionais, mas não pontos.",
+      "Só conta pontos se o militar for Oficial."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. O exercício do magistério militar é valorizado como atividade de difusão de conhecimento técnico.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "O militar que atingir o \"Comportamento Mau\" reabilitará sua condição para o comportamento \"Bom\" após:",
+    "options": [
+      "1 ano sem punições.",
+      "2 anos sem punições.",
+      "5 anos sem punições.",
+      "Nunca, o comportamento mau é definitivo para fins de promoção."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Conforme o Regulamento Disciplinar (RDPMMS), aplicado subsidiariamente ao Decreto de Promoções para fins de ingresso em QA.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "A promoção POST MORTEM retroage à data do falecimento. Se houver mais de um herdeiro habilitado, o valor da pensão será baseado:",
+    "options": [
+      "Na graduação que o militar possuía em vida.",
+      "Na nova graduação resultante da promoção post mortem.",
+      "No salário mínimo vigente.",
+      "Na média dos últimos 12 meses."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. O benefício da promoção post mortem é justamente garantir o amparo financeiro superior à família do militar.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "No processamento das promoções, o conceito emitido pelo Comandante deve ser:",
+    "options": [
+      "Secreto e inviolável.",
+      "Motivado e de conhecimento do militar avaliado.",
+      "Emitido apenas por meio de notas de 0 a 10 sem justificativa.",
+      "O mesmo para todos os militares da unidade."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Para respeitar o princípio da publicidade e permitir o recurso administrativo em caso de avaliação subjetiva injusta.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "O interstício para a promoção de SOLDADO para CABO PM, conforme regra geral do decreto, é de:",
+    "options": [
+      "4 anos.",
+      "6 anos.",
+      "7 anos.",
+      "10 anos."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. (Nota: Este prazo pode sofrer alterações por leis complementares de fluxo, mas o Decreto 10.769 estabelece as bases de progressão).",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "No caso de promoção por RESSARCIMENTO DE PRETERIÇÃO, o militar promovido:",
+    "options": [
+      "Fica no último lugar da antiguidade da nova turma.",
+      "Ocupa o lugar que lhe caberia na escala hierárquica se tivesse sido promovido na época certa.",
+      "Deve aguardar 2 anos para poder ser promovido novamente.",
+      "Perde o direito de usar medalhas por um ano."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. O ressarcimento é uma reparação integral do status hierárquico e financeiro.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "O militar que estiver respondendo a Processo Administrativo Disciplinar (PAD) visando a exclusão (Conselho de Disciplina):",
+    "options": [
+      "Pode ser promovido por antiguidade.",
+      "Pode ser promovido por merecimento.",
+      "Fica impedido de ingressar em Quadro de Acesso.",
+      "É promovido mas fica com o diploma retido."
+    ],
+    "correctOption": 2,
+    "justification": "A resposta correta é a C. A gravidade do processo de exclusão é incompatível com a ascensão funcional.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "As alterações de dados na Ficha de Promoção podem ser solicitadas pelo militar até:",
+    "options": [
+      "O dia da promoção.",
+      "O prazo final do recurso do Quadro de Acesso Provisório.",
+      "48 horas antes da promoção.",
+      "Somente no mês de janeiro de cada ano."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Após o fechamento do Quadro Definitivo, as notas são imutáveis para aquele ciclo.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "Se uma praça cometer um ato de bravura estando na reserva remunerada:",
+    "options": [
+      "Pode ser promovida por bravura.",
+      "Não pode ser promovida, pois já não pertence ao serviço ativo.",
+      "Recebe apenas uma medalha.",
+      "É reintegrada ao serviço ativo imediatamente."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. As promoções reguladas por este decreto destinam-se exclusivamente às praças em serviço ativo.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "A nota de merecimento tem um limite máximo de pontos. Ultrapassado esse limite por excesso de medalhas e cursos:",
+    "options": [
+      "O militar ganha uma bonificação em dinheiro.",
+      "Os pontos excedentes são descartados (teto de pontuação).",
+      "O militar é promovido duas graduações acima.",
+      "Os pontos contam para a promoção seguinte."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Existem limites técnicos de pontuação em cada grupo (Cursos, Medalhas, Tempo) para evitar disparidades extremas.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "O militar que passar a frequentar o curso de formação de oficiais (CFO):",
+    "options": [
+      "É promovido a Sargento automaticamente.",
+      "Passa à condição de Aluno-Oficial e segue as regras de promoção específicas deste quadro.",
+      "Continua concorrendo às promoções de praças normalmente.",
+      "Perde a antiguidade que possuía como praça."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. O ingresso em carreira de oficial interrompe o fluxo de promoção de praças.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  },
+  {
+    "text": "Qual o nome do documento oficial que publica as listas de promoção no Estado de Mato Grosso do Sul?",
+    "options": [
+      "Boletim Geral da PMMS.",
+      "Diário Oficial do Estado (DOE).",
+      "Jornal da Tropa.",
+      "Mural do Comando-Geral."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Promoção é ato do Governador (ou por delegação ao Comandante-Geral) e exige publicação em Diário Oficial para validade externa.",
+    "law": "Decreto nº 10.769/2002",
+    "category": "Decreto de Promoções"
+  }
+]

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   auth, db, googleProvider, 
   handleFirestoreError, OperationType 
@@ -8,7 +8,8 @@ import {
 } from 'firebase/auth';
 import { 
   doc, getDoc, setDoc, collection, onSnapshot, 
-  query, where, orderBy, limit, addDoc, updateDoc, deleteDoc, serverTimestamp, getDocs 
+  query, where, orderBy, limit, addDoc, updateDoc, deleteDoc, serverTimestamp, getDocs,
+  writeBatch
 } from 'firebase/firestore';
 import { 
   LayoutDashboard, 
@@ -24,17 +25,34 @@ import {
   ChevronRight, 
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
   Play,
+  X,
   ShieldCheck,
   UserCheck,
   UserX,
   Lock,
   Trash2,
-  Zap
+  Zap,
+  Star,
+  AlertTriangle,
+  BarChart2,
+  Search,
+  Target,
+  Database
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { UserProfile, Question, SimulationResult } from './types';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { UserProfile, Question, SimulationResult, QuestionError } from './types';
 import UpgradePage from './components/UpgradePage';
+import PerformancePage from './components/PerformancePage';
+import Lei1102 from './pages/subjects/Lei1102';
+import Lei053 from './pages/subjects/Lei053';
+import Lei127 from './pages/subjects/Lei127';
+import Decreto1093 from './pages/subjects/Decreto1093';
+import LinguaPortuguesa from './pages/subjects/LinguaPortuguesa';
+import SubjectPage from './components/SubjectPage';
 
 interface ShuffledOption {
   id: number;
@@ -112,13 +130,61 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'dashboard' | 'simulation' | 'history' | 'ranking' | 'admin_users' | 'admin_questions' | 'upgrade'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'simulation' | 'history' | 'performance' | 'ranking' | 'admin_users' | 'admin_questions' | 'admin_errors' | 'upgrade' | 'mini_simulados'>('dashboard');
   
   // Data states
   const [questions, setQuestions] = useState<Question[]>([]);
   const [history, setHistory] = useState<SimulationResult[]>([]);
-  const [ranking, setRanking] = useState<SimulationResult[]>([]);
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
+  const [allSimulations, setAllSimulations] = useState<SimulationResult[]>([]);
+  const [allErrors, setAllErrors] = useState<QuestionError[]>([]);
+  
+  // Computed Ranking
+  const processedRanking = useMemo(() => {
+    if (!allSimulations.length) return [];
+
+    // Group by userId
+    const userSims: Record<string, SimulationResult[]> = {};
+    allSimulations.forEach(sim => {
+      if (!userSims[sim.userId]) userSims[sim.userId] = [];
+      userSims[sim.userId].push(sim);
+    });
+
+    const rankingList = Object.values(userSims).map(sims => {
+      // Sort by date desc to find last and previous
+      const sortedByDate = [...sims].sort((a, b) => {
+        const dateA = a.date?.toMillis?.() || (a.date?.seconds ? a.date.seconds * 1000 : 0);
+        const dateB = b.date?.toMillis?.() || (b.date?.seconds ? b.date.seconds * 1000 : 0);
+        return dateB - dateA;
+      });
+      const last = sortedByDate[0];
+      const previous = sortedByDate[1];
+      
+      // Difference between last and previous
+      const diff = previous ? last.score - previous.score : 0;
+
+      // Find best score (highest score, then latest date if tied)
+      const best = [...sims].sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        const dateA = a.date?.toMillis?.() || (a.date?.seconds ? a.date.seconds * 1000 : 0);
+        const dateB = b.date?.toMillis?.() || (b.date?.seconds ? b.date.seconds * 1000 : 0);
+        return dateB - dateA;
+      })[0];
+
+      return {
+        ...best,
+        diff
+      };
+    });
+
+    // Final sort by score desc, then date desc
+    return rankingList.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      const dateA = a.date?.toMillis?.() || (a.date?.seconds ? a.date.seconds * 1000 : 0);
+      const dateB = b.date?.toMillis?.() || (b.date?.seconds ? b.date.seconds * 1000 : 0);
+      return dateB - dateA;
+    }).slice(0, 50);
+  }, [allSimulations]);
   
   // Simulation state
   const [currentExam, setCurrentExam] = useState<ExamQuestion[]>([]);
@@ -126,11 +192,31 @@ export default function App() {
   const [answers, setAnswers] = useState<number[]>([]); // Stores the ID of the selected option
   const [examFinished, setExamFinished] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [hasRatedCurrentQuestion, setHasRatedCurrentQuestion] = useState(false);
   const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
   const [activeSimulation, setActiveSimulation] = useState<ActiveSimulation | null>(null);
+  const [activeMiniSimulation, setActiveMiniSimulation] = useState<{
+    subject: string;
+    questions: ExamQuestion[];
+    currentIndex: number;
+    answers: number[];
+    elapsedTime: number;
+  } | null>(null);
+  const [isMiniSimulado, setIsMiniSimulado] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [expandedLaws, setExpandedLaws] = useState<Record<string, boolean>>({});
+  const [selectedAdminLaw, setSelectedAdminLaw] = useState<string | null>(null);
+  const [adminSearchTerm, setAdminSearchTerm] = useState('');
+
+  // Error reporting state
+  const [isReportingError, setIsReportingError] = useState(false);
+  const [errorDescription, setErrorDescription] = useState('');
+  const [reportingQuestion, setReportingQuestion] = useState<Question | null>(null);
+
+  const existingLaws = useMemo(() => {
+    const laws = questions.map(q => q.law).filter(Boolean) as string[];
+    return Array.from(new Set(laws)).sort();
+  }, [questions]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -210,17 +296,17 @@ export default function App() {
       setHistory(hList);
     }, (error) => handleFirestoreError(error, OperationType.LIST, 'simulations'));
 
-    // Ranking listener (all)
-    const rQuery = query(collection(db, 'simulations'), orderBy('score', 'desc'), limit(50));
-    const rUnsubscribe = onSnapshot(rQuery, (snapshot) => {
-      const rList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SimulationResult));
-      setRanking(rList);
+    // All simulations listener (for performance averages)
+    const sUnsubscribe = onSnapshot(collection(db, 'simulations'), (snapshot) => {
+      const sList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SimulationResult));
+      setAllSimulations(sList);
     }, (error) => handleFirestoreError(error, OperationType.LIST, 'simulations'));
 
     // Admin: Users listener
     if (profile.role === 'admin') {
       const uUnsubscribe = onSnapshot(collection(db, 'users'), (snapshot) => {
         const uList = snapshot.docs.map(doc => doc.data() as UserProfile);
+        uList.sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
         setAllUsers(uList);
       }, (error) => handleFirestoreError(error, OperationType.LIST, 'users'));
       
@@ -243,12 +329,19 @@ export default function App() {
         }
       });
 
+      // Admin: Question errors listener
+      const eUnsubscribe = onSnapshot(collection(db, 'question_errors'), (snapshot) => {
+        const eList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as QuestionError));
+        setAllErrors(eList);
+      }, (error) => handleFirestoreError(error, OperationType.LIST, 'question_errors'));
+
       return () => {
         qUnsubscribe();
         hUnsubscribe();
-        rUnsubscribe();
+        sUnsubscribe();
         uUnsubscribe();
         activeUnsubscribe();
+        eUnsubscribe();
       };
     }
 
@@ -268,24 +361,206 @@ export default function App() {
     return () => {
       qUnsubscribe();
       hUnsubscribe();
-      rUnsubscribe();
+      sUnsubscribe();
       activeUnsubscribe();
     };
   }, [user, profile]);
 
+  const [isSeeding, setIsSeeding] = useState(false);
+
+  const seedDecreto1093 = async () => {
+    if (isSeeding) return;
+    setIsSeeding(true);
+    try {
+      // Check if questions already exist for this law
+      const q = query(collection(db, 'questions'), where('law', '==', 'Decreto 1.093/81'));
+      const snapshot = await getDocs(q);
+      
+      if (!snapshot.empty) {
+        setConfirmModal({
+          title: "Questões já existem",
+          message: "Já existem questões para o Decreto 1.093/81 no banco de dados. Deseja adicionar as 50 questões mesmo assim (pode gerar duplicatas)?",
+          onConfirm: async () => {
+            await performSeed();
+          }
+        });
+        setIsSeeding(false);
+        return;
+      }
+
+      await performSeed();
+    } catch (error) {
+      console.error('Erro ao semear:', error);
+      setNotification({ message: 'Erro ao semear questões', type: 'error' });
+      setIsSeeding(false);
+    }
+  };
+
+  const performSeed = async () => {
+    try {
+      const response = await fetch('/src/data/decreto1093.json');
+      const data = await response.json();
+      
+      const batch = writeBatch(db);
+      data.forEach((q: any) => {
+        const docRef = doc(collection(db, 'questions'));
+        batch.set(docRef, {
+          ...q,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+      });
+      
+      await batch.commit();
+      setNotification({ message: `${data.length} questões semeadas com sucesso!`, type: 'success' });
+    } catch (error) {
+      console.error('Erro no performSeed:', error);
+      setNotification({ message: 'Erro ao semear questões', type: 'error' });
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
   const [loginError, setLoginError] = useState<string | null>(null);
 
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [previewQuestion, setPreviewQuestion] = useState<Question | null>(null);
+  const [previewSelectedOptionIdx, setPreviewSelectedOptionIdx] = useState<number | null>(null);
+  const [previewShowFeedback, setPreviewShowFeedback] = useState(false);
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
   const [newQuestion, setNewQuestion] = useState<Partial<Question>>({
     text: '',
     options: ['', '', '', '', ''],
     correctOption: 0,
-    category: 'Lei 127/2008'
+    category: 'Lei 127/2008',
+    justification: '',
+    difficulty: 3
   });
 
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
   const [confirmModal, setConfirmModal] = useState<{title: string, message: string, onConfirm: () => void} | null>(null);
+
+  const downloadPDF = (law: string) => {
+    const doc = new jsPDF();
+    const filteredQuestions = questions.filter(q => (q.law || 'Sem Lei') === law);
+
+    doc.setFontSize(18);
+    doc.text(`Banco de Questões - ${law}`, 14, 22);
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text(`Total de questões: ${filteredQuestions.length}`, 14, 30);
+
+    const tableData = filteredQuestions.map((q, index) => [
+      `${index + 1}`,
+      q.text,
+      q.options.map((opt, i) => `${String.fromCharCode(65 + i)}) ${opt}`).join('\n'),
+      `${String.fromCharCode(65 + q.correctOption)}`,
+      q.justification || 'N/A'
+    ]);
+
+    autoTable(doc, {
+      startY: 35,
+      head: [['#', 'Questão', 'Alternativas', 'Correta', 'Justificativa']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { fillColor: [79, 70, 229] }, // indigo-600
+      styles: { fontSize: 8, cellPadding: 2 },
+      columnStyles: {
+        0: { cellWidth: 8 },
+        1: { cellWidth: 70 },
+        2: { cellWidth: 60 },
+        3: { cellWidth: 12 },
+        4: { cellWidth: 35 }
+      }
+    });
+
+    doc.save(`questoes_${law.toLowerCase().replace(/\s+/g, '_')}.pdf`);
+  };
+
+  const downloadPDFLetterE = () => {
+    const doc = new jsPDF();
+    const filteredQuestions = questions.filter(q => q.correctOption === 4);
+
+    doc.setFontSize(18);
+    doc.text(`Banco de Questões - Respostas E`, 14, 22);
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text(`Total de questões: ${filteredQuestions.length}`, 14, 30);
+
+    const tableData = filteredQuestions.map((q, index) => [
+      `${index + 1}`,
+      q.text,
+      q.options.map((opt, i) => `${String.fromCharCode(65 + i)}) ${opt}`).join('\n'),
+      `${String.fromCharCode(65 + q.correctOption)}`,
+      q.justification || 'N/A'
+    ]);
+
+    autoTable(doc, {
+      startY: 35,
+      head: [['#', 'Questão', 'Alternativas', 'Correta', 'Justificativa']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { fillColor: [79, 70, 229] }, // indigo-600
+      styles: { fontSize: 8, cellPadding: 2 },
+      columnStyles: {
+        0: { cellWidth: 8 },
+        1: { cellWidth: 70 },
+        2: { cellWidth: 60 },
+        3: { cellWidth: 12 },
+        4: { cellWidth: 35 }
+      }
+    });
+
+    doc.save(`questoes_resposta_e.pdf`);
+  };
+
+  const executeRemoveOptionEFromAll = async () => {
+    try {
+      setNotification({ message: 'Processando questões, aguarde...', type: 'success' });
+      let updatedCount = 0;
+
+      for (const q of questions) {
+        if (q.options && q.options.length > 4) {
+          let newOptions = [...q.options];
+          let newCorrectOption = q.correctOption;
+
+          if (q.correctOption === 4) {
+            // A resposta correta é a E. Movemos o texto da E para a posição da D.
+            newOptions[3] = newOptions[4]; 
+            newCorrectOption = 3; // A resposta correta passa a ser a D
+          } else if (q.correctOption > 4) {
+            // Fallback de segurança caso haja alguma anomalia
+            newCorrectOption = 3;
+          }
+
+          // Corta o array para ter apenas 4 alternativas (A, B, C, D)
+          newOptions = newOptions.slice(0, 4);
+
+          await updateDoc(doc(db, 'questions', q.id), {
+            options: newOptions,
+            correctOption: newCorrectOption
+          });
+          updatedCount++;
+        }
+      }
+
+      setNotification({ message: `${updatedCount} questões foram adaptadas para 4 alternativas!`, type: 'success' });
+    } catch (error) {
+      console.error(error);
+      setNotification({ message: 'Erro ao atualizar as questões.', type: 'error' });
+    }
+  };
+
+  const removeOptionEFromAll = () => {
+    setConfirmModal({
+      title: 'ATENÇÃO: Ação Irreversível!',
+      message: 'Isso removerá a 5ª alternativa (Letra E) de TODAS as questões do banco.\n\nSe a resposta correta de uma questão for a Letra E, o texto dela será movido para a Letra D (e a antiga D será apagada), tornando a Letra D a nova resposta correta.\n\nDeseja continuar?',
+      onConfirm: () => {
+        setConfirmModal(null);
+        executeRemoveOptionEFromAll();
+      }
+    });
+  };
 
   useEffect(() => {
     if (notification) {
@@ -293,6 +568,13 @@ export default function App() {
       return () => clearTimeout(timer);
     }
   }, [notification]);
+
+  useEffect(() => {
+    if (previewQuestion) {
+      setPreviewSelectedOptionIdx(null);
+      setPreviewShowFeedback(false);
+    }
+  }, [previewQuestion]);
 
   const handleLogin = async () => {
     setLoginError(null);
@@ -312,6 +594,35 @@ export default function App() {
 
   const handleLogout = () => signOut(auth);
 
+  const handleReportError = async () => {
+    if (!user || !reportingQuestion || !errorDescription.trim()) return;
+
+    try {
+      await addDoc(collection(db, 'question_errors'), {
+        questionId: reportingQuestion.id,
+        questionText: reportingQuestion.text,
+        userEmail: user.email || 'Anônimo',
+        userId: user.uid,
+        description: errorDescription.trim(),
+        status: 'pending',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+
+      setIsReportingError(false);
+      setErrorDescription('');
+      setReportingQuestion(null);
+      
+      setConfirmModal({
+        title: "Obrigado!",
+        message: "Sua correção foi enviada com sucesso. Iremos analisar a questão para melhorar nossos serviços.",
+        onConfirm: () => setConfirmModal(null)
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, 'question_errors');
+    }
+  };
+
   const deleteUserSimulations = async (targetUserId: string) => {
     if (!profile || profile.role !== 'admin') {
       setNotification({ message: 'Ação não permitida.', type: 'error' });
@@ -325,7 +636,7 @@ export default function App() {
       const deletePromises = querySnapshot.docs.map((doc) => deleteDoc(doc.ref));
       await Promise.all(deletePromises);
       
-      setNotification({ message: `Simulados do usuário deletados com sucesso. (${querySnapshot.size} documentos)`, type: 'success' });
+      setNotification({ message: `Mini-simulados do usuário deletados com sucesso. (${querySnapshot.size} documentos)`, type: 'success' });
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, 'simulations');
     }
@@ -369,15 +680,9 @@ export default function App() {
     const combinedQuestions = [...selectedPortuguese, ...selectedOthers];
 
     const selectedQuestions = combinedQuestions.map(q => {
-      const optionsWithIds: ShuffledOption[] = q.options.map((text, index) => ({
-        id: index,
-        text
-      }));
-      // Shuffle the options themselves
-      const shuffledOptions = [...optionsWithIds].sort(() => 0.5 - Math.random());
       return {
         ...q,
-        shuffledOptions
+        shuffledOptions: q.options.map((text, index) => ({ id: index, text }))
       };
     });
 
@@ -392,6 +697,7 @@ export default function App() {
         elapsedTime: 0
       });
 
+      setIsMiniSimulado(false);
       setCurrentExam(selectedQuestions);
       setExamIndex(0);
       setAnswers([]);
@@ -399,14 +705,94 @@ export default function App() {
       setExamFinished(false);
       setShowFeedback(false);
       setSelectedOptionId(null);
+      setHasRatedCurrentQuestion(false);
       setView('simulation');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'active_simulations');
     }
   };
 
+  const startMiniSimulation = async (subject: string) => {
+    if (!profile?.isActive) {
+      setNotification({ message: 'Sua conta está desativada. Entre em contato com o administrador.', type: 'error' });
+      return;
+    }
+    
+    if (!profile.isUpgraded) {
+      setNotification({ message: 'Mini-simulados são exclusivos para usuários Premium. Faça o upgrade!', type: 'error' });
+      return;
+    }
+
+    if (activeMiniSimulation?.subject === subject) {
+      setIsMiniSimulado(true);
+      setCurrentExam(activeMiniSimulation.questions);
+      setExamIndex(activeMiniSimulation.currentIndex);
+      setAnswers(activeMiniSimulation.answers);
+      setElapsedTime(activeMiniSimulation.elapsedTime);
+      setExamFinished(false);
+      setShowFeedback(false);
+      setSelectedOptionId(null);
+      setHasRatedCurrentQuestion(false);
+      setView('simulation');
+      return;
+    }
+
+    if (activeMiniSimulation && activeMiniSimulation.subject !== subject) {
+      setConfirmModal({
+        title: 'Novo Mini-Simulado',
+        message: `Você já tem um mini-simulado de "${activeMiniSimulation.subject}" em andamento. Deseja iniciar um novo de "${subject}" e perder o progresso atual?`,
+        onConfirm: () => {
+          startNewMiniSimulation(subject);
+        }
+      });
+      return;
+    }
+
+    startNewMiniSimulation(subject);
+  };
+
+  const startNewMiniSimulation = (subject: string) => {
+    const subjectQuestions = questions.filter(q => (q.law || q.category || 'Sem Matéria') === subject);
+
+    if (subjectQuestions.length === 0) {
+      setNotification({ message: 'Nenhuma questão disponível para esta matéria.', type: 'error' });
+      return;
+    }
+
+    const selectedQuestions = [...subjectQuestions]
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 10)
+      .map(q => {
+        return {
+          ...q,
+          shuffledOptions: q.options.map((text, index) => ({ id: index, text }))
+        };
+      });
+
+    const newMiniSim = {
+      subject,
+      questions: selectedQuestions,
+      currentIndex: 0,
+      answers: [],
+      elapsedTime: 0
+    };
+
+    setActiveMiniSimulation(newMiniSim);
+    setIsMiniSimulado(true);
+    setCurrentExam(selectedQuestions);
+    setExamIndex(0);
+    setAnswers([]);
+    setElapsedTime(0);
+    setHasRatedCurrentQuestion(false);
+    setExamFinished(false);
+    setShowFeedback(false);
+    setSelectedOptionId(null);
+    setView('simulation');
+  };
+
   const resumeSimulation = () => {
     if (!activeSimulation) return;
+    setIsMiniSimulado(false);
     setCurrentExam(activeSimulation.questions);
     setExamIndex(activeSimulation.currentIndex);
     setAnswers(activeSimulation.answers);
@@ -414,6 +800,7 @@ export default function App() {
     setExamFinished(false);
     setShowFeedback(false);
     setSelectedOptionId(null);
+    setHasRatedCurrentQuestion(false);
     setView('simulation');
   };
 
@@ -423,26 +810,61 @@ export default function App() {
     setShowFeedback(true);
   };
 
+  const rateQuestion = async (questionId: string, rating: number) => {
+    if (hasRatedCurrentQuestion) return;
+    setHasRatedCurrentQuestion(true);
+    try {
+      const qRef = doc(db, 'questions', questionId);
+      const qDoc = await getDoc(qRef);
+      if (qDoc.exists()) {
+        const data = qDoc.data() as Question;
+        const newTotalRatings = (data.totalRatings || 0) + 1;
+        const newSumOfRatings = (data.sumOfRatings || 0) + rating;
+        const newDifficulty = Math.round(newSumOfRatings / newTotalRatings);
+        
+        await updateDoc(qRef, {
+          totalRatings: newTotalRatings,
+          sumOfRatings: newSumOfRatings,
+          difficulty: newDifficulty
+        });
+        setNotification({ message: 'Obrigado pela sua avaliação!', type: 'success' });
+      }
+    } catch (error) {
+      console.error('Erro ao avaliar questão:', error);
+      setNotification({ message: 'Erro ao enviar avaliação', type: 'error' });
+    }
+  };
+
   const nextQuestion = async () => {
     const newAnswers = [...answers, selectedOptionId!];
     setAnswers(newAnswers);
     setShowFeedback(false);
     setSelectedOptionId(null);
+    setHasRatedCurrentQuestion(false);
     
     if (examIndex < currentExam.length - 1) {
       const nextIdx = examIndex + 1;
       setExamIndex(nextIdx);
       
-      // Update active simulation state
-      try {
-        await updateDoc(doc(db, 'active_simulations', user!.uid), {
+      if (!isMiniSimulado) {
+        // Update active simulation state
+        try {
+          await updateDoc(doc(db, 'active_simulations', user!.uid), {
+            currentIndex: nextIdx,
+            answers: newAnswers,
+            updatedAt: serverTimestamp(),
+            elapsedTime: elapsedTime || 0
+          });
+        } catch (error) {
+          handleFirestoreError(error, OperationType.UPDATE, 'active_simulations');
+        }
+      } else {
+        setActiveMiniSimulation(prev => prev ? {
+          ...prev,
           currentIndex: nextIdx,
           answers: newAnswers,
-          updatedAt: serverTimestamp(),
           elapsedTime: elapsedTime || 0
-        });
-      } catch (error) {
-        handleFirestoreError(error, OperationType.UPDATE, 'active_simulations');
+        } : null);
       }
     } else {
       finishExam(newAnswers);
@@ -451,12 +873,29 @@ export default function App() {
 
   const finishExam = async (finalAnswers: number[]) => {
     let score = 0;
+    const subjectScores: Record<string, { correct: number; total: number }> = {};
+
     currentExam.forEach((q, idx) => {
-      // Check if the ID of the selected option matches the correctOption index
-      if (q.correctOption === finalAnswers[idx]) {
+      const isCorrect = q.correctOption === finalAnswers[idx];
+      if (isCorrect) {
         score++;
       }
+
+      const subject = q.law || q.category || 'Outros';
+      if (!subjectScores[subject]) {
+        subjectScores[subject] = { correct: 0, total: 0 };
+      }
+      subjectScores[subject].total++;
+      if (isCorrect) {
+        subjectScores[subject].correct++;
+      }
     });
+
+    if (isMiniSimulado) {
+      setActiveMiniSimulation(null);
+      setExamFinished(true);
+      return;
+    }
 
     const result: Omit<SimulationResult, 'id'> = {
       userId: user!.uid,
@@ -464,7 +903,8 @@ export default function App() {
       totalQuestions: currentExam.length,
       date: serverTimestamp(),
       anonymousName: profile!.anonymousName,
-      elapsedTime: elapsedTime || 0
+      elapsedTime: elapsedTime || 0,
+      subjectScores
     };
 
     try {
@@ -534,7 +974,7 @@ export default function App() {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className={`fixed bottom-8 right-8 z-[100] px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 font-bold text-white ${notification.type === 'success' ? 'bg-emerald-600' : 'bg-red-600'}`}
+            className={`fixed bottom-24 md:bottom-8 right-4 md:right-8 z-[100] px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 font-bold text-white ${notification.type === 'success' ? 'bg-emerald-600' : 'bg-red-600'}`}
           >
             {notification.type === 'success' ? <CheckCircle2 className="w-6 h-6" /> : <XCircle className="w-6 h-6" />}
             {notification.message}
@@ -595,6 +1035,7 @@ export default function App() {
                     rows={3}
                     placeholder="Digite o enunciado da questão..."
                     value={newQuestion.text}
+                    translate="no"
                     onChange={(e) => setNewQuestion({...newQuestion, text: e.target.value})}
                   />
                 </div>
@@ -606,6 +1047,7 @@ export default function App() {
                       className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
                       placeholder={`Opção ${String.fromCharCode(65 + i)}`}
                       value={opt}
+                      translate="no"
                       onChange={(e) => {
                         const newOpts = [...(newQuestion.options || [])];
                         newOpts[i] = e.target.value;
@@ -627,13 +1069,16 @@ export default function App() {
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-1">Lei</label>
-                    <input 
-                      type="text" 
-                      className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                      placeholder="Ex: LC 190/2014"
+                    <select 
+                      className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
                       value={newQuestion.law || ''}
                       onChange={(e) => setNewQuestion({...newQuestion, law: e.target.value})}
-                    />
+                    >
+                      <option value="">Selecione uma Lei</option>
+                      {existingLaws.map(law => (
+                        <option key={law} value={law}>{law}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-1">Categoria</label>
@@ -647,12 +1092,40 @@ export default function App() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Justificativa (Artigo da Lei)</label>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Dificuldade</label>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setNewQuestion({ ...newQuestion, difficulty: star })}
+                        className="p-1 transition-all"
+                      >
+                        <Star
+                          className={`w-8 h-8 ${
+                            (newQuestion.difficulty || 0) >= star
+                              ? 'fill-amber-400 text-amber-400'
+                              : 'text-slate-300'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                    <span className="ml-2 text-sm font-bold text-slate-500 self-center">
+                      {newQuestion.difficulty === 1 ? 'Muito Fácil' :
+                       newQuestion.difficulty === 2 ? 'Fácil' :
+                       newQuestion.difficulty === 3 ? 'Média' :
+                       newQuestion.difficulty === 4 ? 'Difícil' : 'Muito Difícil'}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Justificativa</label>
                   <textarea 
-                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" 
-                    rows={2}
-                    placeholder="Ex: Art. 5º, inciso X da CF/88..."
+                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                    rows={3}
+                    placeholder="Explique a resposta correta..."
                     value={newQuestion.justification || ''}
+                    translate="no"
                     onChange={(e) => setNewQuestion({...newQuestion, justification: e.target.value})}
                   />
                 </div>
@@ -669,7 +1142,15 @@ export default function App() {
                           createdAt: serverTimestamp()
                         });
                         setIsAddingQuestion(false);
-                        setNewQuestion({ text: '', options: ['', '', '', '', ''], correctOption: 0, category: 'Lei 127/2008' });
+                        setNewQuestion({ 
+                          text: '', 
+                          options: ['', '', '', '', ''], 
+                          correctOption: 0, 
+                          category: 'Lei 127/2008',
+                          law: '',
+                          justification: '',
+                          difficulty: 3
+                        });
                         setNotification({ message: 'Questão adicionada com sucesso!', type: 'success' });
                       } catch (e) {
                         setNotification({ message: 'Erro ao adicionar questão', type: 'error' });
@@ -692,9 +1173,25 @@ export default function App() {
         )}
       </AnimatePresence>
       <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
-        {/* Sidebar */}
-        <nav className="w-full md:w-72 bg-white border-r border-slate-200 p-6 flex flex-col gap-2">
-          <div className="flex items-center gap-3 mb-10 px-2">
+        {/* Mobile Header */}
+        <header className="md:hidden bg-white border-b border-slate-200 p-4 flex items-center justify-between sticky top-0 z-40">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+              <SergeantIcon />
+            </div>
+            <span className="text-lg font-bold text-slate-900">SimulaCFS</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <img src={profile?.photoURL} className="w-8 h-8 rounded-full border-2 border-white shadow-sm" alt="Avatar" />
+            <button onClick={handleLogout} className="text-red-500 p-2 hover:bg-red-50 rounded-lg transition-colors">
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
+        </header>
+
+        {/* Sidebar / Bottom Nav */}
+        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 px-2 py-2 flex flex-row items-center overflow-x-auto gap-1 md:relative md:w-72 md:border-t-0 md:border-r md:p-6 md:flex-col md:items-stretch md:gap-2 md:overflow-visible md:z-auto shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] md:shadow-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="hidden md:flex items-center gap-3 mb-10 px-2">
             <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
               <SergeantIcon />
             </div>
@@ -702,21 +1199,25 @@ export default function App() {
           </div>
 
           <NavItem active={view === 'dashboard'} onClick={() => setView('dashboard')} icon={<LayoutDashboard />} label="Dashboard" />
-          <NavItem active={view === 'history'} onClick={() => setView('history')} icon={<History />} label="Meu Histórico" />
-          <NavItem active={view === 'ranking'} onClick={() => setView('ranking')} icon={<Trophy />} label="Ranking Geral" />
+          <NavItem active={view === 'mini_simulados'} onClick={() => setView('mini_simulados')} icon={<Target />} label="Mini-Simulados" />
+          <NavItem active={view === 'history'} onClick={() => setView('history')} icon={<History />} label="Histórico" />
+          <NavItem active={view === 'performance'} onClick={() => setView('performance')} icon={<BarChart2 />} label="Desempenho" />
+          <NavItem active={view === 'ranking'} onClick={() => setView('ranking')} icon={<Trophy />} label="Ranking" />
           {!profile?.isUpgraded && (
             <NavItem active={view === 'upgrade'} onClick={() => setView('upgrade')} icon={<Zap />} label="Upgrade" />
           )}
           
           {(profile?.role === 'admin' || user?.email === 'allanjonesms@gmail.com') && (
             <>
-              <div className="mt-8 mb-2 px-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Admin</div>
+              <div className="hidden md:block mt-8 mb-2 px-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Admin</div>
+              <div className="md:hidden w-px h-8 bg-slate-200 mx-1 self-center shrink-0"></div>
               <NavItem active={view === 'admin_users'} onClick={() => setView('admin_users')} icon={<Users />} label="Usuários" />
               <NavItem active={view === 'admin_questions'} onClick={() => setView('admin_questions')} icon={<PlusCircle />} label="Questões" />
+              <NavItem active={view === 'admin_errors'} onClick={() => setView('admin_errors')} icon={<AlertTriangle />} label="Erros" />
             </>
           )}
 
-          <div className="mt-auto pt-6 border-t border-slate-100">
+          <div className="hidden md:block mt-auto pt-6 border-t border-slate-100">
             <div className="flex items-center gap-3 px-4 py-3 mb-4 bg-slate-50 rounded-2xl">
               <img src={profile?.photoURL} className="w-10 h-10 rounded-full border-2 border-white shadow-sm" alt="Avatar" />
               <div className="flex-1 min-w-0">
@@ -735,7 +1236,7 @@ export default function App() {
         </nav>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-10">
+        <main className="flex-1 overflow-y-auto p-4 md:p-10 pb-24 md:pb-10">
           <AnimatePresence mode="wait">
             {view === 'dashboard' && (
               <motion.div key="dashboard" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
@@ -744,14 +1245,6 @@ export default function App() {
                     <h2 className="text-3xl font-bold text-slate-900">Olá, {profile?.displayName}! 👋</h2>
                     <p className="text-slate-500">Bem-vindo de volta ao seu painel de estudos.</p>
                   </div>
-                  {user.email === 'allanjonesms@gmail.com' && (
-                    <button
-                      onClick={() => setView('upgrade')}
-                      className="bg-red-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-red-700 transition-colors"
-                    >
-                      [TESTE] Ir para Upgrade
-                    </button>
-                  )}
                   <button 
                     onClick={activeSimulation ? resumeSimulation : startSimulation}
                     className="flex items-center justify-center gap-2 bg-indigo-600 text-white px-8 py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95"
@@ -762,7 +1255,7 @@ export default function App() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                  <StatCard label="Simulados Realizados" value={history.length} icon={<History className="text-indigo-600" />} />
+                  <StatCard label="Mini-Simulados Realizados" value={history.length} icon={<History className="text-indigo-600" />} />
                   <StatCard label="Média de Acertos" value={history.length > 0 ? `${(history.reduce((a, b) => a + b.score, 0) / history.length).toFixed(1)}` : '0'} icon={<CheckCircle2 className="text-emerald-600" />} />
                   <StatCard label="Status da Conta" value={profile?.isUpgraded ? 'Premium' : 'Gratuito'} icon={<ShieldCheck className="text-amber-600" />} />
                 </div>
@@ -817,7 +1310,7 @@ export default function App() {
                     </table>
                   ) : (
                     <div className="p-10 text-center text-slate-400">
-                      Nenhum simulado realizado ainda.
+                      Nenhum mini-simulado realizado ainda.
                     </div>
                   )}
                 </div>
@@ -825,7 +1318,84 @@ export default function App() {
             )}
             {view === 'upgrade' && (
               <motion.div key="upgrade" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                <UpgradePage onBack={() => setView('dashboard')} userId={user.uid} email={'camilasouzacx@gmail.com'} />
+                <UpgradePage onBack={() => setView('dashboard')} userId={user.uid} email={user.email || ''} />
+              </motion.div>
+            )}
+
+            {view === 'performance' && (
+              <motion.div key="performance" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                <PerformancePage 
+                  history={history} 
+                  allSimulations={allSimulations} 
+                  allUsers={allUsers}
+                  profile={profile} 
+                  onUpgrade={() => setView('upgrade')} 
+                />
+              </motion.div>
+            )}
+
+            {view === 'mini_simulados' && (
+              <motion.div key="mini_simulados" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                  <div>
+                    <h2 className="text-3xl font-bold text-slate-900">Mini-Simulados</h2>
+                    <p className="text-slate-500">Escolha uma matéria e responda 10 questões rapidamente.</p>
+                  </div>
+                </div>
+
+                {!profile?.isUpgraded ? (
+                  <div className="bg-gradient-to-r from-indigo-600 to-violet-600 p-8 rounded-3xl text-white shadow-xl mb-10 relative overflow-hidden">
+                    <div className="relative z-10">
+                      <h3 className="text-2xl font-bold mb-2">Recurso Premium</h3>
+                      <p className="text-indigo-100 mb-6 max-w-md">Os mini-simulados são exclusivos para usuários Premium. Faça o upgrade para ter acesso a este e outros recursos incríveis!</p>
+                      <button 
+                        onClick={() => setView('upgrade')}
+                        className="bg-white text-indigo-600 px-6 py-3 rounded-xl font-bold hover:bg-indigo-50 transition-colors"
+                      >
+                        Fazer Upgrade Agora
+                      </button>
+                    </div>
+                    <Target className="absolute right-[-20px] bottom-[-20px] w-64 h-64 text-white/10 rotate-12" />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {Object.entries(questions.reduce((acc, q) => {
+                      const subject = q.law || q.category || 'Sem Matéria';
+                      acc[subject] = (acc[subject] || 0) + 1;
+                      return acc;
+                    }, {} as Record<string, number>)).map(([subject, count]) => (
+                      <div 
+                        key={subject} 
+                        onClick={() => startMiniSimulation(subject)}
+                        className={`p-6 rounded-2xl border shadow-sm flex flex-col cursor-pointer transition-all group ${
+                          activeMiniSimulation?.subject === subject 
+                            ? 'bg-emerald-50 border-emerald-500 hover:shadow-md' 
+                            : 'bg-white border-slate-200 hover:border-indigo-600 hover:shadow-md'
+                        }`}
+                      >
+                        <h3 className={`text-lg font-bold mb-2 transition-colors ${
+                          activeMiniSimulation?.subject === subject 
+                            ? 'text-emerald-700' 
+                            : 'text-slate-800 group-hover:text-indigo-600'
+                        }`}>{subject}</h3>
+                        <div className="flex items-center justify-between mt-auto">
+                          <p className={`text-sm font-medium ${
+                            activeMiniSimulation?.subject === subject ? 'text-emerald-600' : 'text-slate-500'
+                          }`}>
+                            {activeMiniSimulation?.subject === subject ? 'Em andamento' : `${count} questões disponíveis`}
+                          </p>
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                            activeMiniSimulation?.subject === subject 
+                              ? 'bg-emerald-100 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white' 
+                              : 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white'
+                          }`}>
+                            <Play className="w-5 h-5" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </motion.div>
             )}
 
@@ -834,14 +1404,59 @@ export default function App() {
                 {!examFinished ? (
                   <>
                     <div className="flex items-center justify-between mb-8">
-                      <h2 className="text-2xl font-bold text-slate-900">Simulado em Andamento</h2>
-                      <div className="flex items-center gap-4">
-                        <div className="bg-indigo-100 text-indigo-700 px-4 py-1 rounded-full font-bold text-sm">
-                          {Math.floor(elapsedTime / 60).toString().padStart(2, '0')}:{ (elapsedTime % 60).toString().padStart(2, '0')}
+                      <div className="flex flex-col">
+                        <h2 className="text-2xl font-bold text-slate-900">Simulado em Andamento</h2>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <div className="flex items-center gap-4">
+                          <div className="bg-indigo-100 text-indigo-700 px-4 py-1 rounded-full font-bold text-sm">
+                            {Math.floor(elapsedTime / 60).toString().padStart(2, '0')}:{ (elapsedTime % 60).toString().padStart(2, '0')}
+                          </div>
+                          <span className="bg-indigo-100 text-indigo-700 px-4 py-1 rounded-full font-bold text-sm">
+                            Questão {examIndex + 1} de {currentExam.length}
+                          </span>
                         </div>
-                        <span className="bg-indigo-100 text-indigo-700 px-4 py-1 rounded-full font-bold text-sm">
-                          Questão {examIndex + 1} de {currentExam.length}
-                        </span>
+                        <div className="flex items-center gap-4">
+                          <button 
+                            onClick={() => {
+                              setConfirmModal({
+                                title: isMiniSimulado ? 'Cancelar Mini-Simulado' : 'Cancelar Simulado',
+                                message: isMiniSimulado ? 'Tem certeza que deseja cancelar o mini-simulado atual? Todo o progresso será perdido.' : 'Tem certeza que deseja cancelar o simulado atual? Todo o progresso será perdido.',
+                                onConfirm: async () => {
+                                  try {
+                                    if (user && !isMiniSimulado) {
+                                      await deleteDoc(doc(db, 'active_simulations', user.uid));
+                                    } else if (isMiniSimulado) {
+                                      setActiveMiniSimulation(null);
+                                    }
+                                    setExamFinished(true);
+                                    setAnswers([]);
+                                    setExamIndex(0);
+                                    setElapsedTime(0);
+                                    setIsMiniSimulado(false);
+                                    setView('dashboard');
+                                  } catch (error) {
+                                    handleFirestoreError(error, OperationType.DELETE, 'active_simulations');
+                                  }
+                                }
+                              });
+                            }}
+                            className="flex items-center gap-2 text-slate-500 hover:text-slate-600 text-sm font-bold transition-colors"
+                          >
+                            <XCircle className="w-4 h-4" />
+                            {isMiniSimulado ? 'Cancelar Mini-Simulado' : 'Cancelar Simulado'}
+                          </button>
+                          <button 
+                            onClick={() => {
+                              setReportingQuestion(currentExam[examIndex]);
+                              setIsReportingError(true);
+                            }}
+                            className="flex items-center gap-2 text-red-500 hover:text-red-600 text-sm font-bold transition-colors"
+                          >
+                            <AlertTriangle className="w-4 h-4" />
+                            Informar Erro na Questão
+                          </button>
+                        </div>
                       </div>
                     </div>
 
@@ -851,7 +1466,7 @@ export default function App() {
                           {currentExam[examIndex].law}
                         </div>
                       )}
-                      <p className="text-xl text-slate-800 font-medium leading-relaxed mb-8">
+                      <p className="text-xl text-slate-800 font-medium leading-relaxed mb-8" translate="no">
                         {currentExam[examIndex]?.text}
                       </p>
                       
@@ -885,7 +1500,7 @@ export default function App() {
                               <span className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold transition-colors ${iconClass}`}>
                                 {String.fromCharCode(65 + idx)}
                               </span>
-                              <span className="flex-1 text-slate-700 font-medium">{option.text}</span>
+                              <span className="flex-1 text-slate-700 font-medium" translate="no">{option.text}</span>
                               {showFeedback && isCorrect && <CheckCircle2 className="w-6 h-6 text-emerald-500" />}
                               {showFeedback && isSelected && !isCorrect && <XCircle className="w-6 h-6 text-red-500" />}
                             </button>
@@ -921,7 +1536,7 @@ export default function App() {
                           </div>
                           
                           {currentExam[examIndex].justification && (
-                            <div className="text-slate-600 text-sm leading-relaxed">
+                            <div className="text-slate-600 text-sm leading-relaxed" translate="no">
                               <span className="font-bold block mb-1">Justificativa:</span>
                               {(() => {
                                 const correctOptionLetter = String.fromCharCode(65 + currentExam[examIndex].shuffledOptions.findIndex(o => o.id === currentExam[examIndex].correctOption));
@@ -929,6 +1544,36 @@ export default function App() {
                               })()}
                             </div>
                           )}
+
+                          <div className="mt-6 pt-6 border-t border-slate-200">
+                            <p className="text-sm font-medium text-slate-600 mb-3">Avalie a dificuldade desta questão (opcional):</p>
+                            <div className="flex items-center gap-2">
+                              {[1, 2, 3, 4, 5].map((rating) => (
+                                <button
+                                  key={rating}
+                                  onClick={() => rateQuestion(currentExam[examIndex].id, rating)}
+                                  disabled={hasRatedCurrentQuestion}
+                                  className={`p-1 rounded-lg transition-all ${
+                                    hasRatedCurrentQuestion 
+                                      ? 'cursor-default' 
+                                      : 'hover:bg-amber-50 hover:scale-110 active:scale-95'
+                                  }`}
+                                  title={`${rating} estrela${rating > 1 ? 's' : ''}`}
+                                >
+                                  <Star 
+                                    className={`w-6 h-6 ${
+                                      hasRatedCurrentQuestion
+                                        ? 'text-amber-400 fill-amber-400'
+                                        : 'text-slate-300 hover:text-amber-400'
+                                    }`} 
+                                  />
+                                </button>
+                              ))}
+                              {hasRatedCurrentQuestion && (
+                                <span className="text-xs font-medium text-emerald-600 ml-2 animate-pulse">Avaliado!</span>
+                              )}
+                            </div>
+                          </div>
 
                           <button 
                             onClick={nextQuestion}
@@ -955,7 +1600,10 @@ export default function App() {
                     <p className="text-lg font-bold text-slate-700 mb-10">Questões Corretas</p>
                     
                     <button 
-                      onClick={() => setView('dashboard')}
+                      onClick={() => {
+                        setIsMiniSimulado(false);
+                        setView('dashboard');
+                      }}
                       className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg"
                     >
                       Voltar ao Dashboard
@@ -1019,7 +1667,7 @@ export default function App() {
                       <div className="bg-white p-8 rounded-3xl shadow-2xl border border-slate-100 max-w-sm">
                         <Trophy className="w-12 h-12 text-amber-500 mx-auto mb-4" />
                         <h3 className="text-xl font-bold text-slate-900 mb-2">Ranking Bloqueado</h3>
-                        <p className="text-slate-500 mb-6">Faça o upgrade para ver sua posição e comparar seu desempenho com outros estudantes.</p>
+                        <p className="text-slate-500 mb-6">Faça o upgrade para ver sua posição e comparar seu desempenho com outros sargentos.</p>
                         <button className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors">
                           Ver Planos
                         </button>
@@ -1031,13 +1679,13 @@ export default function App() {
                     <thead className="bg-slate-50 border-b border-slate-200">
                       <tr>
                         <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-20">Posição</th>
-                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Estudante (Anônimo)</th>
+                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Sargento (Anônimo)</th>
                         <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Melhor Pontuação</th>
                         <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Data</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {ranking.map((r, idx) => (
+                      {processedRanking.map((r, idx) => (
                         <tr key={r.id} className={`hover:bg-slate-50 transition-colors ${r.userId === user.uid ? 'bg-indigo-50/50' : ''}`}>
                           <td className="px-6 py-4">
                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold ${
@@ -1053,7 +1701,14 @@ export default function App() {
                             {r.anonymousName} {r.userId === user.uid && <span className="text-xs font-normal text-indigo-600 ml-2">(Você)</span>}
                           </td>
                           <td className="px-6 py-4">
-                            <span className="text-lg font-black text-indigo-600">{r.score}</span>
+                            <span className="text-lg font-black text-indigo-600">
+                              {r.score}
+                              {r.diff !== 0 && (
+                                <sup className={`text-xs ml-0.5 ${r.diff && r.diff > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                                  {r.diff && r.diff > 0 ? `+${r.diff}` : r.diff}
+                                </sup>
+                              )}
+                            </span>
                             <span className="text-slate-400 text-sm ml-1">/ {r.totalQuestions}</span>
                           </td>
                           <td className="px-6 py-4 text-sm text-slate-500">
@@ -1070,28 +1725,146 @@ export default function App() {
             {view === 'admin_users' && profile?.role === 'admin' && (
               <motion.div key="admin_users" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
                 <h2 className="text-3xl font-bold text-slate-900 mb-8">Gestão de Usuários</h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                  <StatCard label="Total de Mini-Simulados" value={allSimulations.length} icon={<History className="text-indigo-600" />} />
+                  <StatCard label="Média de Acertos" value={allSimulations.length > 0 ? `${(allSimulations.reduce((a, b) => a + b.score, 0) / allSimulations.length).toFixed(1)}` : '0'} icon={<CheckCircle2 className="text-emerald-600" />} />
+                  <StatCard label="Total de Usuários" value={allUsers.length} icon={<Users className="text-slate-600" />} />
+                  <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div className="p-3 bg-slate-100 rounded-2xl">
+                      <Zap className="text-amber-600 w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Distribuição</p>
+                      <div className="flex items-center gap-4 mt-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-lg font-bold text-slate-900">{allUsers.filter(u => u.isUpgraded).length}</span>
+                          <span className="text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">Premium</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-lg font-bold text-slate-900">{allUsers.filter(u => !u.isUpgraded).length}</span>
+                          <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">Gratuitos</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
-                  <table className="w-full text-left">
-                    <thead className="bg-slate-50 border-b border-slate-200">
-                      <tr>
-                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Usuário</th>
-                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Email</th>
-                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Plano</th>
-                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
-                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {allUsers.map((u) => (
-                        <tr key={u.uid} className="hover:bg-slate-50 transition-colors">
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <img src={u.photoURL} className="w-8 h-8 rounded-full" alt="" />
-                              <span className="font-bold text-slate-900">{u.displayName}</span>
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead className="bg-slate-50 border-b border-slate-200">
+                        <tr>
+                          <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Usuário</th>
+                          <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Email</th>
+                          <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Plano</th>
+                          <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
+                          <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {allUsers.map((u) => (
+                          <tr key={u.uid} className="hover:bg-slate-50 transition-colors">
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                <img src={u.photoURL} className="w-8 h-8 rounded-full" alt="" />
+                                <span className="font-bold text-slate-900">{u.displayName}</span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-slate-600">{u.email}</td>
+                            <td className="px-6 py-4">
+                              <button 
+                                onClick={() => {
+                                  setConfirmModal({
+                                    title: 'Confirmar Alteração de Plano',
+                                    message: `Deseja realmente alterar o plano de ${u.displayName} para ${u.isUpgraded ? 'Gratuito' : 'Premium'}?`,
+                                    onConfirm: async () => {
+                                      try {
+                                        await updateDoc(doc(db, 'users', u.uid), { isUpgraded: !u.isUpgraded });
+                                      } catch (e) { handleFirestoreError(e, OperationType.UPDATE, `users/${u.uid}`); }
+                                    }
+                                  });
+                                }}
+                                className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${
+                                  u.isUpgraded ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                }`}
+                              >
+                                {u.isUpgraded ? 'Premium' : 'Gratuito'}
+                              </button>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                u.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                              }`}>
+                                {u.isActive ? 'Ativo' : 'Inativo'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <button 
+                                onClick={async () => {
+                                  try {
+                                    await updateDoc(doc(db, 'users', u.uid), { isActive: !u.isActive });
+                                  } catch (e) { handleFirestoreError(e, OperationType.UPDATE, `users/${u.uid}`); }
+                                }}
+                                className={`p-2 rounded-lg transition-colors ${
+                                  u.isActive ? 'text-red-500 hover:bg-red-50' : 'text-emerald-500 hover:bg-emerald-50'
+                                }`}
+                                title={u.isActive ? 'Desativar' : 'Ativar'}
+                              >
+                                {u.isActive ? <UserX className="w-5 h-5" /> : <UserCheck className="w-5 h-5" />}
+                              </button>
+                              <button 
+                                onClick={() => deleteUserSimulations(u.uid)}
+                                className="text-red-600 hover:text-red-800 font-bold text-xs p-2"
+                                title="Limpar Mini-Simulados"
+                              >
+                                <Trash2 className="w-5 h-5" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Card View */}
+                  <div className="md:hidden divide-y divide-slate-100">
+                    {allUsers.map((u) => (
+                      <div key={u.uid} className="p-6 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <img src={u.photoURL} className="w-10 h-10 rounded-full border border-slate-200" alt="" />
+                            <div>
+                              <p className="font-bold text-slate-900 leading-tight">{u.displayName}</p>
+                              <p className="text-xs text-slate-500">{u.email}</p>
                             </div>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-slate-600">{u.email}</td>
-                          <td className="px-6 py-4">
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button 
+                              onClick={async () => {
+                                try {
+                                  await updateDoc(doc(db, 'users', u.uid), { isActive: !u.isActive });
+                                } catch (e) { handleFirestoreError(e, OperationType.UPDATE, `users/${u.uid}`); }
+                              }}
+                              className={`p-2 rounded-xl transition-colors ${
+                                u.isActive ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-500'
+                              }`}
+                            >
+                              {u.isActive ? <UserX className="w-5 h-5" /> : <UserCheck className="w-5 h-5" />}
+                            </button>
+                            <button 
+                              onClick={() => deleteUserSimulations(u.uid)}
+                              className="p-2 bg-slate-50 text-red-600 rounded-xl"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-2">
+                          <div className="space-y-1">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Plano</p>
                             <button 
                               onClick={() => {
                                 setConfirmModal({
@@ -1104,82 +1877,184 @@ export default function App() {
                                   }
                                 });
                               }}
-                              className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${
-                                u.isUpgraded ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${
+                                u.isUpgraded ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600'
                               }`}
                             >
                               {u.isUpgraded ? 'Premium' : 'Gratuito'}
                             </button>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          </div>
+                          <div className="space-y-1 text-right">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</p>
+                            <span className={`inline-block px-3 py-1.5 rounded-full text-xs font-bold ${
                               u.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
                             }`}>
                               {u.isActive ? 'Ativo' : 'Inativo'}
                             </span>
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            <button 
-                              onClick={async () => {
-                                try {
-                                  await updateDoc(doc(db, 'users', u.uid), { isActive: !u.isActive });
-                                } catch (e) { handleFirestoreError(e, OperationType.UPDATE, `users/${u.uid}`); }
-                              }}
-                              className={`p-2 rounded-lg transition-colors ${
-                                u.isActive ? 'text-red-500 hover:bg-red-50' : 'text-emerald-500 hover:bg-emerald-50'
-                              }`}
-                              title={u.isActive ? 'Desativar' : 'Ativar'}
-                            >
-                              {u.isActive ? <UserX className="w-5 h-5" /> : <UserCheck className="w-5 h-5" />}
-                            </button>
-                            <button 
-                              onClick={() => deleteUserSimulations(u.uid)}
-                              className="text-red-600 hover:text-red-800 font-bold text-xs p-2"
-                              title="Limpar Simulados"
-                            >
-                              <Trash2 className="w-5 h-5" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </motion.div>
             )}
 
             {view === 'admin_questions' && profile?.role === 'admin' && (
               <motion.div key="admin_questions" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                  {Object.entries(questions.reduce((acc, q) => {
-                    const law = q.law || 'Sem Lei';
-                    acc[law] = (acc[law] || 0) + 1;
-                    return acc;
-                  }, {} as Record<string, number>)).map(([law, count]) => (
-                    <div key={law} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-                      <div>
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{law}</p>
-                        <p className="text-2xl font-black text-slate-900">{count}</p>
-                      </div>
-                      <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
-                        <BookOpen className="w-6 h-6" />
+                {!selectedAdminLaw ? (
+                  <>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                      <h2 className="text-3xl font-bold text-slate-900">BANCO DE QUESTÕES</h2>
+                      <div className="flex flex-wrap gap-3">
+                        <button 
+                          onClick={() => {
+                            setNewQuestion({ ...newQuestion, law: '' });
+                            setIsAddingQuestion(true);
+                          }}
+                          className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-md"
+                        >
+                          <PlusCircle className="w-5 h-5" />
+                          Nova Questão
+                        </button>
+                        <button 
+                          onClick={seedDecreto1093}
+                          disabled={isSeeding}
+                          className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-md disabled:opacity-50"
+                        >
+                          <Database className="w-5 h-5" />
+                          {isSeeding ? 'Semeando...' : 'Semear Decreto 1.093/81'}
+                        </button>
                       </div>
                     </div>
-                  ))}
-                </div>
 
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                  <h2 className="text-3xl font-bold text-slate-900">Banco de Questões</h2>
-                  <div className="flex flex-wrap gap-3">
-                    <button 
-                      onClick={() => setIsAddingQuestion(true)}
-                      className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-md"
-                    >
-                      <PlusCircle className="w-5 h-5" />
-                      Nova Questão
-                    </button>
-                  </div>
-                </div>
+                    <div className="relative max-w-xl mb-8">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Buscar em todas as questões..."
+                        value={adminSearchTerm}
+                        onChange={(e) => setAdminSearchTerm(e.target.value)}
+                        className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none transition-all shadow-sm"
+                      />
+                    </div>
+
+                    {adminSearchTerm.trim() !== '' ? (
+                      <SubjectPage 
+                        law="Resultados da Busca" 
+                        questions={questions.filter(q => q.text.toLowerCase().includes(adminSearchTerm.toLowerCase()))}
+                        onBack={() => setAdminSearchTerm('')}
+                        onDownloadPDF={() => {}}
+                        onPreview={(q) => {
+                          setPreviewQuestion(q);
+                          setPreviewSelectedOptionIdx(null);
+                          setPreviewShowFeedback(false);
+                        }}
+                        onEdit={(q) => setEditingQuestion(q)}
+                        onDelete={(q) => {
+                          setConfirmModal({
+                            title: "Excluir Questão",
+                            message: "Tem certeza que deseja excluir esta questão permanentemente?",
+                            onConfirm: async () => {
+                              try {
+                                await deleteDoc(doc(db, 'questions', q.id));
+                                setNotification({ message: 'Questão excluída', type: 'success' });
+                              } catch (e) {
+                                setNotification({ message: 'Erro ao excluir', type: 'error' });
+                              }
+                            }
+                          });
+                        }}
+                        onAdd={() => {
+                          setNewQuestion({ ...newQuestion, law: '' });
+                          setIsAddingQuestion(true);
+                        }}
+                        disableLawFilter={true}
+                      />
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                          {Object.entries(questions.reduce((acc, q) => {
+                            const subject = q.law || q.category || 'Sem Matéria';
+                            acc[subject] = (acc[subject] || 0) + 1;
+                            return acc;
+                          }, {} as Record<string, number>)).map(([subject, count]) => (
+                            <div 
+                              key={subject} 
+                              onClick={() => setSelectedAdminLaw(subject)}
+                              className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between cursor-pointer hover:border-indigo-600 hover:shadow-md transition-all group"
+                            >
+                              <div className="flex-1">
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 group-hover:text-indigo-400">{subject}</p>
+                                <p className="text-2xl font-black text-slate-900">{count}</p>
+                              </div>
+                              <div className="flex gap-2">
+                                <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                                  <BookOpen className="w-5 h-5" />
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        {questions.length === 0 && (
+                          <div className="text-center p-20 bg-white rounded-3xl border border-dashed border-slate-300 text-slate-400">
+                            Nenhuma questão cadastrada. Use os botões acima para começar.
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </>
+                ) : (
+                  (() => {
+                    const props = {
+                      questions: questions,
+                      onBack: () => setSelectedAdminLaw(null),
+                      onDownloadPDF: downloadPDF,
+                      onPreview: (q: Question) => {
+                        setPreviewQuestion(q);
+                        setPreviewSelectedOptionIdx(null);
+                        setPreviewShowFeedback(false);
+                      },
+                      onEdit: (q: Question) => {
+                        setEditingQuestion(q);
+                      },
+                      onDelete: (q: Question) => {
+                        setConfirmModal({
+                          title: "Excluir Questão",
+                          message: "Tem certeza que deseja excluir esta questão permanentemente?",
+                          onConfirm: async () => {
+                            try {
+                              await deleteDoc(doc(db, 'questions', q.id));
+                              setNotification({ message: 'Questão excluída', type: 'success' });
+                            } catch (e) {
+                              setNotification({ message: 'Erro ao excluir', type: 'error' });
+                            }
+                          }
+                        });
+                      },
+                      onAdd: () => {
+                        setNewQuestion({ ...newQuestion, law: selectedAdminLaw });
+                        setIsAddingQuestion(true);
+                      }
+                    };
+
+                    switch (selectedAdminLaw) {
+                      case 'Lei 1.102/90':
+                        return <Lei1102 {...props} />;
+                      case 'Lei 053/1990':
+                        return <Lei053 {...props} />;
+                      case 'Lei 127/2008':
+                        return <Lei127 {...props} />;
+                      case 'Decreto 1.093/81':
+                        return <Decreto1093 {...props} />;
+                      case 'Língua Portuguesa':
+                        return <LinguaPortuguesa {...props} />;
+                      default:
+                        return <SubjectPage law={selectedAdminLaw} {...props} />;
+                    }
+                  })()
+                )}
 
                 {editingQuestion && (
                   <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -1192,6 +2067,7 @@ export default function App() {
                             className="w-full p-3 border rounded-xl" 
                             rows={3}
                             value={editingQuestion.text}
+                            translate="no"
                             onChange={(e) => setEditingQuestion({...editingQuestion, text: e.target.value})}
                           />
                         </div>
@@ -1202,6 +2078,7 @@ export default function App() {
                               type="text" 
                               className="w-full p-3 border rounded-xl"
                               value={opt}
+                              translate="no"
                               onChange={(e) => {
                                 const newOpts = [...editingQuestion.options];
                                 newOpts[i] = e.target.value;
@@ -1222,13 +2099,16 @@ export default function App() {
                         </div>
                         <div>
                           <label className="block text-sm font-bold text-slate-700 mb-1">Lei</label>
-                          <input 
-                            type="text" 
-                            className="w-full p-3 border rounded-xl"
+                          <select 
+                            className="w-full p-3 border rounded-xl bg-white"
                             value={editingQuestion.law || ''}
                             onChange={(e) => setEditingQuestion({...editingQuestion, law: e.target.value})}
-                            placeholder="Ex: LC 190/2014"
-                          />
+                          >
+                            <option value="">Selecione uma Lei</option>
+                            {existingLaws.map(law => (
+                              <option key={law} value={law}>{law}</option>
+                            ))}
+                          </select>
                         </div>
                         <div>
                           <label className="block text-sm font-bold text-slate-700 mb-1">Categoria</label>
@@ -1238,6 +2118,44 @@ export default function App() {
                             value={editingQuestion.category || ''}
                             onChange={(e) => setEditingQuestion({...editingQuestion, category: e.target.value})}
                             placeholder="Ex: Generalidades"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-slate-700 mb-2">Dificuldade</label>
+                          <div className="flex gap-2">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                type="button"
+                                onClick={() => setEditingQuestion({ ...editingQuestion, difficulty: star })}
+                                className="p-1 transition-all"
+                              >
+                                <Star
+                                  className={`w-8 h-8 ${
+                                    (editingQuestion.difficulty || 0) >= star
+                                      ? 'fill-amber-400 text-amber-400'
+                                      : 'text-slate-300'
+                                  }`}
+                                />
+                              </button>
+                            ))}
+                            <span className="ml-2 text-sm font-bold text-slate-500 self-center">
+                              {editingQuestion.difficulty === 1 ? 'Muito Fácil' :
+                               editingQuestion.difficulty === 2 ? 'Fácil' :
+                               editingQuestion.difficulty === 3 ? 'Média' :
+                               editingQuestion.difficulty === 4 ? 'Difícil' : 'Muito Difícil'}
+                            </span>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-slate-700 mb-1">Justificativa</label>
+                          <textarea 
+                            className="w-full p-3 border rounded-xl" 
+                            rows={3}
+                            value={editingQuestion.justification || ''}
+                            translate="no"
+                            onChange={(e) => setEditingQuestion({...editingQuestion, justification: e.target.value})}
+                            placeholder="Explique a resposta correta..."
                           />
                         </div>
                         <div className="flex gap-3 pt-4">
@@ -1268,102 +2186,160 @@ export default function App() {
                   </div>
                 )}
 
-                <div className="space-y-12">
-                  {(Object.entries(questions.reduce((acc, q) => {
-                    const law = q.law || 'Sem Lei';
-                    if (!acc[law]) acc[law] = [];
-                    acc[law].push(q);
-                    return acc;
-                  }, {} as Record<string, Question[]>)) as [string, Question[]][]).map(([law, lawQuestions]) => {
-                    const isExpanded = expandedLaws[law] ?? false;
-                    return (
-                    <div key={law} className="space-y-6">
-                      <div 
-                        className="flex items-center gap-4 cursor-pointer group"
-                        onClick={() => setExpandedLaws(prev => ({ ...prev, [law]: !isExpanded }))}
-                      >
-                        <div className="h-px flex-1 bg-slate-200"></div>
-                        <div className="flex items-center gap-2 px-4 bg-slate-50/50 rounded-full py-1 border border-slate-200 hover:bg-slate-100 transition-colors">
-                          <h3 className="text-xl font-black text-slate-400 uppercase tracking-widest">
-                            {law} ({lawQuestions.length})
-                          </h3>
-                          {isExpanded ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
-                        </div>
-                        <div className="h-px flex-1 bg-slate-200"></div>
+                {previewQuestion && (
+                  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                      <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-2xl font-bold">Visualização</h3>
+                        <button onClick={() => setPreviewQuestion(null)} className="p-2 hover:bg-slate-100 rounded-full">
+                          <X className="w-6 h-6" />
+                        </button>
                       </div>
-                      
-                      {isExpanded && (
-                        <div className="grid grid-cols-1 gap-6">
-                          {lawQuestions.map((q) => (
-                            <div key={q.id} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm group">
-                              <div className="flex justify-between items-start mb-4">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded uppercase">
-                                      ID: {q.id.slice(0, 5)}
-                                    </span>
-                                    {q.law && (
-                                      <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded uppercase">
-                                        {q.law}
-                                      </span>
-                                    )}
-                                    {q.category && (
-                                      <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded uppercase">
-                                        {q.category}
-                                      </span>
-                                    )}
-                                  </div>
-                                  <p className="font-bold text-slate-900 whitespace-pre-wrap">{q.text}</p>
-                                </div>
-                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <button 
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setEditingQuestion(q);
-                                    }}
-                                    className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg"
-                                  >
-                                    <Settings className="w-5 h-5" />
-                                  </button>
-                                  <button 
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setConfirmModal({
-                                        title: "Excluir Questão",
-                                        message: "Tem certeza que deseja excluir esta questão permanentemente?",
-                                        onConfirm: async () => {
-                                          try {
-                                            await deleteDoc(doc(db, 'questions', q.id));
-                                            setNotification({ message: 'Questão excluída', type: 'success' });
-                                          } catch (e) {
-                                            setNotification({ message: 'Erro ao excluir', type: 'error' });
-                                          }
-                                        }
-                                      });
-                                    }}
-                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
-                                  >
-                                    <XCircle className="w-5 h-5" />
-                                  </button>
-                                </div>
-                              </div>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {q.options.map((opt, i) => (
-                                  <div key={i} className={`p-3 rounded-xl border text-sm ${i === q.correctOption ? 'bg-emerald-50 border-emerald-200 text-emerald-700 font-bold' : 'bg-slate-50 border-slate-100 text-slate-600'}`}>
-                                    {String.fromCharCode(65 + i)}) {opt}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          ))}
+                      <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 mb-6">
+                        {previewQuestion.law && (
+                          <div className="mb-4 inline-block px-3 py-1 bg-indigo-50 text-indigo-600 text-xs font-bold rounded-lg uppercase tracking-wider border border-indigo-100">
+                            {previewQuestion.law}
+                          </div>
+                        )}
+                        <p className="text-xl text-slate-800 font-medium leading-relaxed mb-8" translate="no">
+                          {previewQuestion.text}
+                        </p>
+                        <div className="grid grid-cols-1 gap-4">
+                          {previewQuestion.options.map((optionText, idx) => {
+                            const isSelected = previewSelectedOptionIdx === idx;
+                            const isCorrect = idx === previewQuestion.correctOption;
+                            
+                            let buttonClass = "flex items-center gap-4 p-4 text-left border-2 rounded-2xl transition-all group ";
+                            if (previewShowFeedback) {
+                              if (isCorrect) {
+                                buttonClass += "border-emerald-500 bg-emerald-50";
+                              } else if (isSelected) {
+                                buttonClass += "border-red-500 bg-red-50";
+                              } else {
+                                buttonClass += "border-slate-100";
+                              }
+                            } else {
+                              buttonClass += isSelected ? "border-indigo-600 bg-indigo-50" : "border-slate-100 hover:border-indigo-600 hover:bg-indigo-50";
+                            }
+
+                            return (
+                              <button 
+                                key={idx}
+                                onClick={() => {
+                                  if (!previewShowFeedback) {
+                                    setPreviewSelectedOptionIdx(idx);
+                                    setPreviewShowFeedback(true);
+                                  }
+                                }}
+                                className={buttonClass}
+                              >
+                                <span className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold ${previewShowFeedback && isCorrect ? 'bg-emerald-600 text-white' : previewShowFeedback && isSelected ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-indigo-600 group-hover:text-white'}`}>
+                                  {String.fromCharCode(65 + idx)}
+                                </span>
+                                <span className="flex-1 text-slate-700 font-medium" translate="no">{optionText}</span>
+                                {previewShowFeedback && isCorrect && <CheckCircle2 className="w-6 h-6 text-emerald-600 ml-auto" />}
+                                {previewShowFeedback && isSelected && !isCorrect && <XCircle className="w-6 h-6 text-red-600 ml-auto" />}
+                              </button>
+                            );
+                          })}
                         </div>
-                      )}
+                        {previewShowFeedback && (
+                          <div className="mt-6 p-6 bg-slate-50 rounded-2xl border border-slate-200">
+                            <h4 className="font-bold text-slate-800 mb-2">Justificativa:</h4>
+                            <p className="text-slate-600" translate="no">{previewQuestion.justification || "Nenhuma justificativa fornecida."}</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  )})}
-                  
-                  {questions.length === 0 && (
+                  </div>
+                )}
+              </motion.div>
+            )}
+            {view === 'admin_errors' && (profile?.role === 'admin' || user?.email === 'allanjonesms@gmail.com') && (
+              <motion.div key="admin_errors" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                  <h2 className="text-3xl font-bold text-slate-900 uppercase tracking-tight">Erros Relatados</h2>
+                  <div className="bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-sm">
+                    <span className="text-sm font-bold text-slate-500">Total: {allErrors.length}</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6">
+                  {allErrors.length > 0 ? (
+                    allErrors.map((err) => (
+                      <div key={err.id} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
+                        <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                                err.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
+                              }`}>
+                                {err.status === 'pending' ? 'Pendente' : 'Resolvido'}
+                              </span>
+                              <span className="text-xs font-bold text-slate-400">
+                                {err.createdAt?.toDate ? err.createdAt.toDate().toLocaleString() : 'Recent'}
+                              </span>
+                            </div>
+                            <h4 className="font-bold text-slate-900 mb-1">Relatado por: {err.userEmail}</h4>
+                            <p className="text-xs text-slate-400 font-mono">ID Questão: {err.questionId}</p>
+                          </div>
+                          <div className="flex gap-2">
+                            <button 
+                              onClick={async () => {
+                                try {
+                                  await updateDoc(doc(db, 'question_errors', err.id), {
+                                    status: err.status === 'pending' ? 'resolved' : 'pending',
+                                    updatedAt: serverTimestamp()
+                                  });
+                                } catch (e) {
+                                  setNotification({ message: 'Erro ao atualizar status', type: 'error' });
+                                }
+                              }}
+                              className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${
+                                err.status === 'pending' 
+                                  ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white' 
+                                  : 'bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white'
+                              }`}
+                            >
+                              {err.status === 'pending' ? 'Marcar como Resolvido' : 'Marcar como Pendente'}
+                            </button>
+                            <button 
+                              onClick={() => {
+                                setConfirmModal({
+                                  title: "Excluir Relatório",
+                                  message: "Deseja excluir este relatório de erro permanentemente?",
+                                  onConfirm: async () => {
+                                    try {
+                                      await deleteDoc(doc(db, 'question_errors', err.id));
+                                      setNotification({ message: 'Relatório excluído', type: 'success' });
+                                    } catch (e) {
+                                      setNotification({ message: 'Erro ao excluir', type: 'error' });
+                                    }
+                                  }
+                                });
+                              }}
+                              className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Enunciado da Questão</p>
+                            <p className="text-slate-700 text-sm italic" translate="no">"{err.questionText}"</p>
+                          </div>
+                          <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
+                            <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-2">Descrição do Erro</p>
+                            <p className="text-indigo-900 text-sm font-medium" translate="no">{err.description}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
                     <div className="text-center p-20 bg-white rounded-3xl border border-dashed border-slate-300 text-slate-400">
-                      Nenhuma questão cadastrada. Use os botões acima para começar.
+                      Nenhum erro relatado até o momento.
                     </div>
                   )}
                 </div>
@@ -1372,6 +2348,84 @@ export default function App() {
           </AnimatePresence>
         </main>
       </div>
+      {/* Report Error Modal */}
+      <AnimatePresence>
+      {isReportingError && reportingQuestion && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[110] flex items-center justify-center p-4"
+        >
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl"
+          >
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-red-100 rounded-2xl">
+                  <AlertTriangle className="w-6 h-6 text-red-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-slate-900">Informar Erro</h3>
+              </div>
+              <button 
+                onClick={() => {
+                  setIsReportingError(false);
+                  setErrorDescription('');
+                  setReportingQuestion(null);
+                }} 
+                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+              >
+                <X className="w-6 h-6 text-slate-400" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Questão Selecionada</p>
+                <p className="text-slate-700 text-sm line-clamp-3 italic" translate="no">
+                  "{reportingQuestion.text}"
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Descreva o erro encontrado</label>
+                <textarea 
+                  className="w-full p-4 border-2 border-slate-100 rounded-2xl focus:border-indigo-600 focus:ring-0 transition-all outline-none" 
+                  rows={4}
+                  value={errorDescription}
+                  onChange={(e) => setErrorDescription(e.target.value)}
+                  placeholder="Ex: A alternativa correta está errada, erro de digitação, etc..."
+                  translate="no"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button 
+                  onClick={handleReportError}
+                  disabled={!errorDescription.trim()}
+                  className="flex-1 bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 shadow-lg shadow-indigo-200"
+                >
+                  Enviar Relatório
+                </button>
+                <button 
+                  onClick={() => {
+                    setIsReportingError(false);
+                    setErrorDescription('');
+                    setReportingQuestion(null);
+                  }}
+                  className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-bold hover:bg-slate-200 transition-all active:scale-95"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
     </ErrorBoundary>
   );
 }
@@ -1382,14 +2436,14 @@ function NavItem({ active, onClick, icon, label }: { active: boolean, onClick: (
   return (
     <button 
       onClick={onClick}
-      className={`flex items-center gap-4 px-4 py-3 rounded-2xl font-bold transition-all ${
+      className={`flex flex-col md:flex-row items-center justify-center md:justify-start gap-1 md:gap-4 px-2 py-2 md:px-4 md:py-3 rounded-xl md:rounded-2xl font-bold transition-all shrink-0 min-w-[72px] md:min-w-0 ${
         active 
           ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' 
           : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
       }`}
     >
-      {React.cloneElement(icon as React.ReactElement, { className: 'w-5 h-5' })}
-      {label}
+      {React.cloneElement(icon as React.ReactElement, { className: 'w-5 h-5 md:w-5 md:h-5' })}
+      <span className="text-[10px] md:text-base whitespace-nowrap">{label}</span>
     </button>
   );
 }

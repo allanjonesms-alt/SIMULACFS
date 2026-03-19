@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import { createServer as createViteServer } from "vite";
 import path from "path";
-import { MercadoPagoConfig, Preference } from "mercadopago";
+import { MercadoPagoConfig, Preference, Payment } from "mercadopago";
 import admin from "firebase-admin";
 
 // Initialize Firebase Admin
@@ -25,7 +25,12 @@ async function startServer() {
   const PORT = 3000;
 
   app.use(express.json());
-  app.use(cors());
+  app.use(cors({
+    origin: 'https://simulacfs-473889295670.us-west1.run.app',
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+  }));
 
   app.use((req, res, next) => {
     console.log(`[DEBUG] ${req.method} ${req.url}`);
@@ -38,18 +43,23 @@ async function startServer() {
   });
 
   app.post("/api/create-preference", async (req, res) => {
+    if (!accessToken) {
+      console.error("MERCADOPAGO_ACCESS_TOKEN is not set.");
+      return res.status(500).json({ error: "Mercado Pago access token is not configured." });
+    }
     const { userId, email, cpf, planName, amount, paymentMethod } = req.body;
     console.log("Creating preference for:", { userId, email, cpf, planName, amount, paymentMethod });
     try {
       const preference = new Preference(client);
+      const baseUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
       const requestBody = {
         items: [{ id: '1', title: planName, quantity: 1, unit_price: Number(amount), currency_id: 'BRL' }],
         external_reference: String(userId),
-        notification_url: `${process.env.APP_URL || 'https://ais-dev-2ljxrupff4fnsdftrofktf-45221046979.us-east1.run.app'}/api/webhook`,
+        notification_url: `${baseUrl}/api/webhook`,
         back_urls: {
-          success: `${process.env.APP_URL || 'https://ais-dev-2ljxrupff4fnsdftrofktf-45221046979.us-east1.run.app'}/`,
-          failure: `${process.env.APP_URL || 'https://ais-dev-2ljxrupff4fnsdftrofktf-45221046979.us-east1.run.app'}/`,
-          pending: `${process.env.APP_URL || 'https://ais-dev-2ljxrupff4fnsdftrofktf-45221046979.us-east1.run.app'}/`
+          success: `${baseUrl}/`,
+          failure: `${baseUrl}/`,
+          pending: `${baseUrl}/`
         },
         payer: { 
           name: 'Cliente',
@@ -73,26 +83,45 @@ async function startServer() {
   });
 
   app.post("/api/webhook", async (req, res) => {
-    const { data, type } = req.body;
+    const { data, type, action } = req.body;
+    console.log("Webhook received:", { type, action, data });
     
-    // Mercado Pago webhook type is typically "payment"
-    if (type === "payment") {
+    // Mercado Pago sends webhooks for various events. We care about "payment" or "payment.created/updated"
+    if (type === "payment" || action === "payment.created" || action === "payment.updated") {
       try {
-        const paymentId = data.id;
-        // Fetch payment details from Mercado Pago API to verify
-        // Correct implementation:
-        // const payment = await new Payment(client).get({ id: paymentId });
+        const paymentId = data?.id || req.query['data.id'];
+        if (!paymentId) {
+          console.warn("No payment ID found in webhook body or query");
+          return res.sendStatus(200);
+        }
+
+        console.log(`Verifying payment ${paymentId}...`);
+        const payment = new Payment(client);
+        const paymentDetails = await payment.get({ id: paymentId });
         
-        // For now, assume payment is approved if webhook is received
-        // In production, MUST verify payment status with Mercado Pago API
-        
-        // Get user ID from external_reference
-        // const userId = payment.external_reference;
-        // await db.collection("users").doc(userId).update({ isUpgraded: true });
-        
-        console.log(`Payment ${paymentId} received.`);
+        console.log("Payment details:", {
+          status: paymentDetails.status,
+          status_detail: paymentDetails.status_detail,
+          external_reference: paymentDetails.external_reference
+        });
+
+        if (paymentDetails.status === "approved") {
+          const userId = paymentDetails.external_reference;
+          if (userId) {
+            console.log(`Upgrading user ${userId}...`);
+            await db.collection("users").doc(userId).update({ 
+              isUpgraded: true,
+              upgradedAt: admin.firestore.FieldValue.serverTimestamp(),
+              lastPaymentId: paymentId
+            });
+            console.log(`User ${userId} upgraded successfully.`);
+          } else {
+            console.warn("No external_reference (userId) found in payment details");
+          }
+        }
       } catch (error) {
-        console.error("Webhook error:", error);
+        console.error("Webhook processing error:", error);
+        // We still return 200 to Mercado Pago to avoid retries if the error is on our side
       }
     }
     res.sendStatus(200);

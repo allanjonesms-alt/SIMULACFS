@@ -17,6 +17,20 @@ export interface Question {
   category?: string;
   law?: string;
   justification?: string;
+  difficulty?: number;
+  totalRatings?: number;
+  sumOfRatings?: number;
+  createdAt: any;
+}
+
+export interface QuestionError {
+  id: string;
+  questionId: string;
+  questionText: string;
+  userId: string;
+  userEmail: string;
+  description: string;
+  status: 'pending' | 'resolved';
   createdAt: any;
 }
 
@@ -28,4 +42,6 @@ export interface SimulationResult {
   date: any;
   anonymousName: string;
   elapsedTime: number;
+  subjectScores?: Record<string, { correct: number; total: number }>;
+  diff?: number;
 }

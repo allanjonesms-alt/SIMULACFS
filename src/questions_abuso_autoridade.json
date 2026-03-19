@@ -1,0 +1,652 @@
+[
+  {
+    "text": "Para que se configure o crime de abuso de autoridade, as condutas descritas na lei devem ser praticadas pelo agente com a finalidade específica de:",
+    "options": [
+      "Agir com negligência ou imperícia no exercício da função.",
+      "Prejudicar outrem, beneficiar a si mesmo ou a terceiro, ou por mero capricho ou satisfação pessoal.",
+      "Cumprir estritamente o dever legal, ainda que cause dano.",
+      "Agir em legítima defesa própria ou de terceiros."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. O Art. 1º, § 1º, exige o \"especial fim de agir\". Sem essa finalidade específica, a conduta pode ser um ilícito administrativo, mas não o crime de abuso de autoridade.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "A divergência na interpretação de lei ou na avaliação de fatos e provas configura abuso de autoridade?",
+    "options": [
+      "Sim, pois o agente público deve ser infalível.",
+      "Não, a lei expressamente exclui o crime por divergência interpretativa (Art. 1º, § 2º).",
+      "Sim, mas apenas se o juiz de segunda instância discordar.",
+      "Somente se o agente for ocupante de cargo em comissão."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. É o chamado \"crime de hermenêutica\", que a lei veda para garantir a autonomia técnica das autoridades.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Quem pode ser sujeito ativo (quem comete) o crime de abuso de autoridade?",
+    "options": [
+      "Apenas servidores públicos concursados.",
+      "Somente autoridades do Poder Judiciário e Ministério Público.",
+      "Qualquer agente público, servidor ou não, da administração direta, indireta ou fundacional de qualquer dos Poderes.",
+      "Apenas militares em serviço ativo."
+    ],
+    "correctOption": 2,
+    "justification": "A resposta correta é a C. O Art. 2º define o sujeito ativo de forma ampla, incluindo até quem trabalha de forma transitória ou sem remuneração (como mesários ou jurados).",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "São efeitos da condenação, que devem ser declarados motivadamente na sentença, EXCETO:",
+    "options": [
+      "Tornar certa a obrigação de indenizar o dano causado pelo crime.",
+      "A inabilitação para o exercício de cargo público por 1 a 5 anos.",
+      "A perda do cargo, do mandato ou da função pública.",
+      "A promoção automática do militar que denunciou o abuso."
+    ],
+    "correctOption": 3,
+    "justification": "A resposta correta é a D. A lei prevê reparação do dano, inabilitação e perda do cargo (Art. 4º), mas não premiações funcionais a terceiros.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "A perda do cargo e a inabilitação para o exercício de função pública são efeitos que:",
+    "options": [
+      "Ocorrem automaticamente após qualquer condenação.",
+      "Dependem da reincidência em crime de abuso de autoridade e não são automáticos.",
+      "Só se aplicam se a pena de prisão for maior que 4 anos.",
+      "Aplicam-se apenas a servidores municipais."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Conforme o Art. 4º, parágrafo único, esses dois efeitos específicos exigem reincidência e devem ser motivados pelo juiz.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "São penas restritivas de direitos substitutivas às privativas de liberdade previstas nesta lei:",
+    "options": [
+      "Prestação de serviços à comunidade e suspensão do exercício do cargo por 1 a 6 meses com perda dos vencimentos.",
+      "Pagamento de cesta básica e multa.",
+      "Proibição de frequentar bares e igrejas.",
+      "Exílio do território nacional por 2 anos."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. O Art. 5º elenca a prestação de serviços e a suspensão do cargo como penas alternativas possíveis.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Decretar medida de privação da liberdade em manifesta desconformidade com as hipóteses legais (Art. 9º) gera pena de:",
+    "options": [
+      "Detenção, de 1 a 4 anos, e multa.",
+      "Prisão simples de 6 meses.",
+      "Reclusão de 10 a 20 anos.",
+      "Apenas advertência por escrito."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. Este é um dos tipos penais que visam proteger a liberdade de locomoção contra decisões arbitrárias.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Deixar de comunicar a prisão em flagrante à autoridade judiciária no prazo legal configura crime se praticado com dolo específico. Qual o prazo para essa comunicação?",
+    "options": [
+      "24 horas.",
+      "Imediatamente (Art. 12, I).",
+      "48 horas.",
+      "5 dias úteis."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. O Art. 12, inciso I, pune a falta de comunicação imediata ao juiz.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Constranger o preso, mediante violência ou grave ameaça, a exibir-se à curiosidade pública (Art. 13, I) configura abuso. A pena prevista é:",
+    "options": [
+      "Detenção, de 1 a 4 anos, e multa.",
+      "Multa de 10 salários mínimos.",
+      "Demissão imediata sem processo.",
+      "Reclusão de 2 a 5 anos."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. A lei protege a dignidade e a imagem do preso contra exposições humilhantes.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Manter presos de sexos diferentes na mesma cela ou espaço de confinamento (Art. 21) é crime de abuso de autoridade com pena de:",
+    "options": [
+      "Reclusão de 4 a 8 anos.",
+      "Detenção, de 1 a 4 anos, e multa.",
+      "Apenas infração administrativa do diretor do presídio.",
+      "Detenção de 6 meses a 2 anos."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. A mesma pena se aplica se o preso menor de idade for mantido com adultos.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Invadir ou adentrar, clandestinamente ou astuciosamente, imóvel alheio fora das hipóteses legais (Art. 22) prevê pena de:",
+    "options": [
+      "Detenção, de 1 a 4 anos, e multa.",
+      "Detenção, de 6 meses a 1 ano.",
+      "Multa apenas.",
+      "Reclusão de 5 a 10 anos."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. Este artigo protege a inviolabilidade do domicílio contra abusos policiais e judiciais.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Conforme a Lei 13.869/19, NÃO configura crime a entrada em imóvel alheio sem consentimento do ocupante quando:",
+    "options": [
+      "O agente quer apenas conhecer o interior da residência.",
+      "Para prestar socorro ou quando houver fundados indícios de flagrante delito.",
+      "O proprietário estiver devendo impostos.",
+      "For dia de feriado nacional."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. A própria lei ressalva as hipóteses constitucionais de entrada (Art. 22, § 2º).",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Cumprir mandado de busca e apreensão domiciliar após as 21h ou antes das 5h (Art. 22, § 1º, III) configura abuso e tem pena de:",
+    "options": [
+      "Multa diária.",
+      "Detenção, de 1 a 4 anos, e multa.",
+      "Suspensão da CNH do policial.",
+      "Fato atípico se houver autorização do delegado."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. A lei estabeleceu um critério temporal (21h às 05h) para definir o que é \"noite\" para fins de busca domiciliar.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Inovar artificiosamente, no curso de diligência, o estado de lugar, de coisa ou de pessoa, com o fim de eximir-se de responsabilidade (Art. 23) é o crime de:",
+    "options": [
+      "Prevaricação.",
+      "Fraude processual qualificada pelo abuso de autoridade.",
+      "Estrito cumprimento do dever legal.",
+      "Omissão de socorro."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. O Art. 23 pune a alteração da cena do crime ou de provas para incriminar alguém ou se proteger.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Constranger, sob violência ou grave ameaça, o depoente a admitir fato que possa incriminá-lo (Art. 15, parágrafo único, I) é punido com:",
+    "options": [
+      "Detenção, de 1 a 4 anos, e multa.",
+      "Detenção, de 6 meses a 2 anos.",
+      "Advertência por escrito.",
+      "Apenas anulação do depoimento."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. Protege o direito constitucional ao silêncio e a não autoincriminação.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Prosseguir com interrogatório de pessoa que tenha decidido exercer o direito ao silêncio (Art. 15, I) configura abuso?",
+    "options": [
+      "Sim, é crime punido com detenção de 1 a 4 anos.",
+      "Não, o interrogatório deve continuar até o fim.",
+      "Apenas se o advogado não estiver presente.",
+      "Somente se o crime investigado for hediondo."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. O respeito à vontade de silenciar do investigado é um pilar da lei.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "O crime de \"dar início à persecução penal sem justa causa fundamentada\" (Art. 30) exige que o agente saiba que o investigado é:",
+    "options": [
+      "Pobre.",
+      "Inocente.",
+      "Político.",
+      "Reincidente."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. O abuso ocorre quando a autoridade sabe da inocência e ainda assim inicia o processo por má-fé.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Estender injustificadamente a investigação, procrastinando-a em prejuízo do investigado (Art. 31), gera pena de:",
+    "options": [
+      "Detenção, de 6 meses a 2 anos, e multa.",
+      "Detenção, de 1 a 4 anos.",
+      "Apenas multa.",
+      "Reclusão de 1 ano."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Visa combater o uso de inquéritos eternos como forma de punição antecipada.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Negar ao interessado, seu advogado ou defensor acesso aos autos de investigação (Art. 32) é abuso de autoridade, SALVO:",
+    "options": [
+      "Se o advogado não for conhecido do delegado.",
+      "Em relação a diligências em curso e ainda não documentadas.",
+      "Se o crime for de corrupção.",
+      "Se o investigado for estrangeiro."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Aplica-se a Súmula Vinculante 14 do STF; o acesso é amplo, exceto ao que está sendo feito \"em segredo\" no momento.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "A ação penal nos crimes de abuso de autoridade é:",
+    "options": [
+      "Pública condicionada à representação da vítima.",
+      "Privada exclusiva.",
+      "Pública incondicionada.",
+      "Pública condicionada à autorização do Governador."
+    ],
+    "correctOption": 2,
+    "justification": "A resposta correta é a C. Conforme o Art. 3º, a ação é pública incondicionada, mas admite-se a ação privada subsidiária se o MP não agir no prazo.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Se o Ministério Público não oferecer a denúncia no prazo legal, a vítima pode ajuizar:",
+    "options": [
+      "Uma queixa-crime (Ação Privada Subsidiária da Pública).",
+      "Uma reclamação no Facebook.",
+      "Um pedido de desculpas.",
+      "Uma ação de despejo contra o agente."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. É uma garantia prevista no Art. 3º, § 1º, em conformidade com a Constituição.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "As sanções civis e administrativas aplicadas por abuso de autoridade são:",
+    "options": [
+      "Dependentes da sanção penal em todos os casos.",
+      "Independentes da sanção penal (Art. 6º).",
+      "Aplicadas apenas se o agente for preso.",
+      "Nulas se não houver multa."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. O agente pode ser absolvido no crime e ainda assim ser punido administrativamente.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Faz coisa julgada no âmbito cível e administrativo a sentença penal que reconhecer ter sido o ato praticado em:",
+    "options": [
+      "Estado de embriaguez.",
+      "Estrito cumprimento do dever legal ou legítima defesa.",
+      "Dia de domingo.",
+      "Legítima defesa apenas se for contra animais."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. As excludentes de ilicitude reconhecidas no penal impedem a punição administrativa (Art. 8º).",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Constranger o preso a produzir prova contra si mesmo (Art. 13, III) é crime punido com:",
+    "options": [
+      "Detenção de 1 a 4 anos e multa.",
+      "Somente advertência.",
+      "Reclusão de 2 a 5 anos.",
+      "Prestação de serviços à comunidade por 1 semana."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. Protege a liberdade de não produzir provas contra si (nemo tenetur se detegere).",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Divulgar gravação de trechos de conversa de investigado que não tenham relação com a prova (Art. 28) configura abuso com pena de:",
+    "options": [
+      "Detenção, de 1 a 4 anos, e multa.",
+      "Detenção, de 6 meses a 1 ano.",
+      "Apenas censura administrativa.",
+      "Reclusão de 5 anos."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. Visa evitar o vazamento de áudios íntimos ou irrelevantes para humilhar o investigado.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Decretar a indisponibilidade de ativos financeiros em quantia que exceda visivelmente o valor estimado do débito (Art. 36) é crime de abuso praticado por:",
+    "options": [
+      "Policiais Militares.",
+      "Autoridades Judiciárias (Juízes).",
+      "Agentes de trânsito.",
+      "Médicos legistas."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Trata-se do bloqueio excessivo de contas bancárias.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "O crime de \"Demorar demasiadamente o exame de pedido de liberdade\" (Art. 37) aplica-se:",
+    "options": [
+      "Apenas a advogados.",
+      "Ao juiz que, dentro de prazo razoável, deixar de proferir decisão.",
+      "Aos policiais civis que fazem a guarda.",
+      "Apenas ao Ministério Público."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Pune a inércia judicial que mantém a pessoa presa indevidamente.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Antecipar o responsável pelas investigações, por meio de rede social, atribuição de culpa antes de concluídas as apurações (Art. 38) gera pena de:",
+    "options": [
+      "Detenção, de 6 meses a 2 anos, e multa.",
+      "Detenção, de 1 a 4 anos.",
+      "Multa de 100 reais.",
+      "Perda do celular."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. Visa coibir o \"espetáculo\" midiático e a condenação antecipada pela autoridade.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "A Lei 13.869/2019 alterou a Lei de Prisão Temporária para exigir que o mandado de prisão:",
+    "options": [
+      "Seja lido por um padre.",
+      "Indique expressamente o período de duração da prisão e o dia em que o preso deve ser libertado.",
+      "Seja apenas verbal.",
+      "Não tenha data de validade."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. É uma garantia para evitar prisões temporárias que se tornam definitivas por esquecimento.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "O uso de algemas, embora não citado com um crime específico na lei, deve seguir a Súmula Vinculante 11 do STF. O abuso no uso de algemas pode ser enquadrado em qual conceito geral da Lei 13.869?",
+    "options": [
+      "Constranger o preso a situação vexatória ou humilhante (Art. 13, II).",
+      "Exercício regular de direito.",
+      "Legítima defesa.",
+      "Estrito cumprimento do dever legal."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. O uso injustificado de algemas para humilhar o agente pode configurar abuso de autoridade.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "A competência para julgar crimes de abuso de autoridade cometidos por militares estaduais (como PMMS) contra civis é da:",
+    "options": [
+      "Justiça Militar Estadual.",
+      "Justiça Comum (Estadual ou Federal, conforme o caso).",
+      "Justiça Eleitoral.",
+      "Tribunal do Júri sempre."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. A Lei de Abuso de Autoridade é processada na justiça comum, salvo raras exceções de competência especial.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Solicitar benefícios para si em razão do cargo, fora das hipóteses legais, pode configurar abuso de autoridade se houver o fim de:",
+    "options": [
+      "Ajudar a economia nacional.",
+      "Beneficiar a si mesmo ou a terceiro (Art. 1º, § 1º).",
+      "Cumprir a meta do mês.",
+      "Apenas brincar com os amigos."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. O dolo específico é o coração da nova lei.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Exigir informação ou descumprir dever de sigilo sem justa causa (Art. 25) tem pena de:",
+    "options": [
+      "Detenção, de 1 a 4 anos, e multa.",
+      "Reclusão de 10 anos.",
+      "Apenas multa.",
+      "Advertência verbal."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. Protege o sigilo de dados e comunicações.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Deixar de identificar-se ao preso no momento de sua captura (Art. 16) configura crime com pena de:",
+    "options": [
+      "Detenção, de 6 meses a 2 anos, e multa.",
+      "Reclusão de 5 anos.",
+      "Demissão.",
+      "Fato atípico no Brasil."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. O preso tem o direito de saber quem é a autoridade responsável por sua custódia.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Interrogar à noite pessoa mantida em prisão cautelar, fora das hipóteses de flagrante ou assistência de advogado (Art. 18), é abuso punido com:",
+    "options": [
+      "Detenção, de 1 a 4 anos, e multa.",
+      "Detenção, de 6 meses a 2 anos.",
+      "Nada, a polícia trabalha 24h.",
+      "Multa apenas."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Visa evitar métodos de interrogatório que causem exaustão física e mental.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Impedir, sem justa causa, a entrevista pessoal e reservada do preso com seu advogado (Art. 20) gera pena de:",
+    "options": [
+      "Detenção, de 1 a 4 anos, e multa.",
+      "Detenção, de 6 meses a 2 anos.",
+      "Reclusão de 8 anos.",
+      "Perda da carteira da OAB."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. É uma violação direta das prerrogativas da defesa.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Retificar erro de forma imediata quando constatado o abuso de autoridade pode:",
+    "options": [
+      "Aumentar a pena.",
+      "Ser usado pela defesa para demonstrar ausência de dolo específico.",
+      "Gerar prisão perpétua.",
+      "Não tem relevância nenhuma."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Como o crime exige vontade de prejudicar ou satisfação pessoal, a correção rápida ajuda a afastar o crime.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "O crime de \"submeter o preso a interrogatório policial durante o repouso noturno\" (Art. 18) admite exceção se:",
+    "options": [
+      "O preso for perigoso.",
+      "Houver flagrante delito ou se o preso, assistido por advogado, consentir em depor.",
+      "O delegado estiver com pressa.",
+      "For noite de lua cheia."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. São as duas exceções legais que permitem o interrogatório noturno.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Coibir o exercício de atividade profissional por mero capricho (Art. 29) é abuso com pena de:",
+    "options": [
+      "Detenção, de 1 a 4 anos, e multa.",
+      "Detenção, de 6 meses a 2 anos.",
+      "Apenas cassação do alvará.",
+      "Reclusão de 3 anos."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. Pune a autoridade que impede o trabalho de alguém por perseguição pessoal.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "A aplicação da pena restritiva de direitos pode ser feita:",
+    "options": [
+      "De forma isolada ou cumulativa (Art. 5º, parágrafo único).",
+      "Apenas se o réu for rico.",
+      "Somente em conjunto com a prisão.",
+      "Apenas se a vítima perdoar."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. O juiz tem discricionariedade para ajustar a pena alternativa.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Cobrar tributo ou taxa indevidamente com abuso de autoridade é crime previsto em qual lei?",
+    "options": [
+      "Lei 13.869/2019 (Abuso).",
+      "Código Tributário apenas.",
+      "Lei de Crimes contra a Ordem Tributária.",
+      "Lei de Licitações."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. A nova lei absorveu condutas que antes eram dispersas em outros diplomas.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "A recusa em fornecer cópia do termo de interrogatório ao investigado (Art. 32) é punida com:",
+    "options": [
+      "Detenção de 6 meses a 2 anos e multa.",
+      "Reclusão de 4 anos.",
+      "Nenhuma punição penal.",
+      "Apenas multa."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. Garante a documentação dos atos para a defesa.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "A Lei Maria da Penha e a Lei de Abuso de Autoridade podem ser aplicadas juntas?",
+    "options": [
+      "Sim, se uma autoridade agredir a esposa no exercício da função com dolo específico de prejudicá-la.",
+      "Não, uma anula a outra.",
+      "Apenas se houver morte.",
+      "Somente se o juiz for o mesmo."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. O concurso de crimes é possível se as condutas preencherem os requisitos de ambas.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Se o agente público comete abuso por \"satisfação pessoal\", isso significa que ele:",
+    "options": [
+      "Agiu para cumprir a lei.",
+      "Agiu para se sentir superior ou por vingança pessoal.",
+      "Estava bêbado.",
+      "Estava sob coação."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. É uma das faces do dolo específico exigido no Art. 1º.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "O descumprimento de alvará de soltura imediatamente após a ciência (Art. 37) é crime de:",
+    "options": [
+      "Sequestro e cárcere privado comum.",
+      "Abuso de autoridade.",
+      "Prevaricação apenas.",
+      "Omissão de rendimentos."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. A liberdade deve ser restaurada assim que a ordem judicial chega.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Impedir o acesso de familiares ao preso em situações não permitidas pela lei (Art. 20) configura abuso?",
+    "options": [
+      "Sim, se feito para prejudicar ou por capricho.",
+      "Não, a família nunca pode visitar.",
+      "Apenas no Natal.",
+      "Somente se o preso for estrangeiro."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. A assistência da família é um direito do preso.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "A instauração de sindicância administrativa contra alguém sabidamente inocente (Art. 30) é crime de abuso punido com:",
+    "options": [
+      "Detenção de 6 meses a 2 anos e multa.",
+      "Reclusão de 10 anos.",
+      "Apenas advertência.",
+      "Perda da aposentadoria."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. Pune a perseguição no âmbito administrativo.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "Policial que utiliza força excessiva em abordagem por \"mero capricho\" responde por:",
+    "options": [
+      "Lesão corporal apenas.",
+      "Lesão corporal em concurso com abuso de autoridade.",
+      "Nada, o policial pode tudo.",
+      "Apenas falta funcional."
+    ],
+    "correctOption": 1,
+    "justification": "A resposta correta é a B. As condutas podem somar-se se houver o dolo específico do abuso.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "O prazo para a ação privada subsidiária da pública é de:",
+    "options": [
+      "6 meses a contar do esgotamento do prazo do Ministério Público.",
+      "10 anos.",
+      "24 horas.",
+      "15 dias."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. Conforme o Art. 3º, § 2º.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  },
+  {
+    "text": "A Lei 13.869/2019 aplica-se a militares das Forças Armadas?",
+    "options": [
+      "Sim, aplica-se a todos os militares federais e estaduais (Art. 2º).",
+      "Não, eles têm lei própria.",
+      "Apenas em tempo de guerra.",
+      "Somente se o General autorizar."
+    ],
+    "correctOption": 0,
+    "justification": "A resposta correta é a A. A abrangência da lei é total sobre qualquer agente público da União, Estados e Municípios.",
+    "law": "Leis Extravagantes",
+    "category": "Lei de Abuso de Autoridade (Lei 13.869/2019)"
+  }
+]

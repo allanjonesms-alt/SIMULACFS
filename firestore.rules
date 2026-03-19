@@ -25,8 +25,9 @@ service cloud.firestore {
 
     function isAdmin() {
       return isAuthenticated() && (
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-        (request.auth.token.email == "allanjonesms@gmail.com" && request.auth.token.email_verified == true)
+        request.auth.uid == "8I83FFoO4ASDc1vh2rN8fBN8AzE2" ||
+        ('email' in request.auth.token && (request.auth.token.email == "allanjonesms@gmail.com" || request.auth.token.email == "herek.alexandre@gmail.com")) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
       );
     }
 
@@ -44,7 +45,7 @@ service cloud.firestore {
       return data.keys().hasAll(['text', 'options', 'correctOption']) &&
              data.text is string &&
              data.options is list &&
-             data.options.size() == 5 &&
+             data.options.size() >= 4 &&
              data.correctOption is int &&
              data.correctOption >= 0 && data.correctOption <= 4 &&
              (!('category' in data) || data.category is string) &&
@@ -58,6 +59,18 @@ service cloud.firestore {
              data.score is int &&
              data.totalQuestions is int &&
              data.anonymousName is string;
+    }
+
+    function isValidQuestionError(data) {
+      return data.keys().hasAll(['questionId', 'questionText', 'userId', 'userEmail', 'description', 'status', 'createdAt', 'updatedAt']) &&
+             data.questionId is string &&
+             data.questionText is string &&
+             data.userId == request.auth.uid &&
+             data.userEmail is string &&
+             data.description is string &&
+             data.description.size() > 0 &&
+             data.description.size() < 2000 &&
+             data.status in ['pending', 'resolved'];
     }
 
     // Rules
@@ -81,6 +94,12 @@ service cloud.firestore {
 
     match /active_simulations/{userId} {
       allow read, write: if isOwner(userId);
+    }
+
+    match /question_errors/{errorId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated() && isValidQuestionError(request.resource.data);
+      allow update, delete: if isAdmin();
     }
   }
 }

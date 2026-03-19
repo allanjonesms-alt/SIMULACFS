@@ -29,6 +29,7 @@
         "correctOption": { "type": "integer" },
         "category": { "type": "string" },
         "law": { "type": "string" },
+        "difficulty": { "type": "integer", "description": "Difficulty level from 1 to 5 stars" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["text", "options", "correctOption"]
@@ -58,6 +59,21 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "questions", "currentIndex", "answers"]
+    },
+    "QuestionError": {
+      "title": "Question Error",
+      "description": "Report of an error in a question",
+      "type": "object",
+      "properties": {
+        "questionId": { "type": "string" },
+        "questionText": { "type": "string" },
+        "userId": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "resolved"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["questionId", "questionText", "userId", "userEmail", "description", "status", "createdAt"]
     }
   },
   "firestore": {
@@ -76,6 +92,10 @@
     "/active_simulations/{userId}": {
       "schema": "ActiveSimulation",
       "description": "Current active simulation for a user"
+    },
+    "/question_errors/{errorId}": {
+      "schema": "QuestionError",
+      "description": "Reports of errors in questions"
     }
   }
 }

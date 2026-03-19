@@ -1,0 +1,652 @@
+[
+  {
+    "text": "Segundo o regulamento, a movimentação de pessoal tem por finalidade precípua:",
+    "options": [
+      "Atender exclusivamente aos interesses particulares do militar.",
+      "Assegurar a presença do efetivo necessário às Organizações Militares (OM) e o desenvolvimento da carreira.",
+      "Punir militares que apresentam baixo desempenho técnico.",
+      "Garantir que todo militar sirva na capital do Estado."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. A movimentação é uma ferramenta de gestão de pessoal para equilíbrio da força e maturação profissional (Art. 3º).",
+    "difficulty": 3
+  },
+  {
+    "text": "A modalidade de movimentação denominada \"NOMEAÇÃO\" aplica-se quando:",
+    "options": [
+      "O militar é transferido de um batalhão para outro na mesma cidade.",
+      "O militar é designado para cargo em comissão ou função gratificada prevista em lei.",
+      "O militar recebe uma promoção por bravura.",
+      "O militar ingressa na corporação como soldado."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. A nomeação é o ato administrativo específico para o provimento de cargos ou funções (Art. 4º).",
+    "difficulty": 3
+  },
+  {
+    "text": "Entende-se por \"SEDE\", para fins de aplicação deste decreto:",
+    "options": [
+      "O prédio onde funciona o Comando-Geral.",
+      "Todo o território do Estado de Mato Grosso do Sul.",
+      "O município ou os municípios vizinhos cujas áreas urbanas sejam contíguas, onde o militar serve.",
+      "A residência oficial do militar."
+    ],
+    "correctOption": 2,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a C. O conceito de sede é geográfico-administrativo e define se o militar terá direito a indenizações por mudança (Art. 2º).",
+    "difficulty": 3
+  },
+  {
+    "text": "A movimentação \"EX-OFFICIO\" é aquela realizada:",
+    "options": [
+      "A pedido do militar por motivo de saúde.",
+      "Por interesse da administração pública, independente da vontade do militar.",
+      "Por permuta entre dois militares de mesma graduação.",
+      "Para fins de núpcias ou luto."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. É o ato discricionário da autoridade para atender às necessidades do serviço.",
+    "difficulty": 3
+  },
+  {
+    "text": "Qual é o período de \"TRÂNSITO\" concedido ao militar movimentado para outra sede, salvo determinação em contrário?",
+    "options": [
+      "Até 5 dias.",
+      "Até 10 dias.",
+      "Até 15 dias.",
+      "Até 30 dias."
+    ],
+    "correctOption": 2,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a C. O trânsito é o período de afastamento para os preparativos da viagem (Art. 18).",
+    "difficulty": 3
+  },
+  {
+    "text": "O período de \"INSTALAÇÃO\" é destinado ao militar para as providências de sua nova residência. Esse prazo é de até:",
+    "options": [
+      "24 horas.",
+      "48 horas.",
+      "5 dias.",
+      "10 dias."
+    ],
+    "correctOption": 3,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a D. A instalação ocorre após a chegada à nova sede e visa a organização do ambiente doméstico.",
+    "difficulty": 3
+  },
+  {
+    "text": "A movimentação por \"CONVENIÊNCIA DA DISCIPLINA\" pode ser aplicada ao militar que:",
+    "options": [
+      "Cometeu uma falta leve e pediu transferência.",
+      "Tem sua permanência na OM considerada prejudicial à disciplina ou ao decoro, conforme fundamentação.",
+      "Concluiu um curso de especialização com nota máxima.",
+      "Está em gozo de licença prêmio."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. É uma medida administrativa para preservar a ordem e a hierarquia da unidade.",
+    "difficulty": 3
+  },
+  {
+    "text": "O militar que se movimenta por \"PERMUTA\" deve atender aos seguintes requisitos, EXCETO:",
+    "options": [
+      "Ambros os militares devem pertencer ao mesmo Quadro e graduação/posto.",
+      "Não deve haver prejuízo para o serviço.",
+      "A administração deve arcar com todas as despesas de transporte de bagagem.",
+      "Deve haver concordância mútua e autorização do Comando."
+    ],
+    "correctOption": 2,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a C. Na permuta (a pedido), as despesas decorrentes da movimentação correm por conta dos interessados.",
+    "difficulty": 3
+  },
+  {
+    "text": "A competência para movimentar Oficiais Superiores (Coronéis e Tenentes-Coronéis) dentro da estrutura da PMMS é do:",
+    "options": [
+      "Governador do Estado.",
+      "Comandante-Geral da PMMS.",
+      "Secretário de Estado de Justiça e Segurança Pública.",
+      "Tribunal de Justiça Militar."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. Embora cargos de confiança possam envolver o Governador, a movimentação ordinária é atribuição do Comandante-Geral.",
+    "difficulty": 3
+  },
+  {
+    "text": "O militar movimentado por motivo de saúde própria ou de dependente (médica) exige:",
+    "options": [
+      "Apenas uma declaração escrita do militar.",
+      "Parecer favorável de Junta de Inspeção de Saúde (JIS) da Corporação.",
+      "Autorização do prefeito da nova cidade.",
+      "Que o militar pague as custas da movimentação."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. A necessidade técnica da mudança deve ser atestada oficialmente por médicos militares.",
+    "difficulty": 3
+  },
+  {
+    "text": "Considera-se \"DESLIGAMENTO\" o ato administrativo pelo qual o militar:",
+    "options": [
+      "Pede demissão da corporação.",
+      "Deixa de pertencer ao estado efetivo da OM onde servia, após a publicação da movimentação.",
+      "Entra em gozo de férias anuais.",
+      "É promovido à graduação superior."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. O desligamento encerra o vínculo administrativo imediato com a unidade anterior.",
+    "difficulty": 3
+  },
+  {
+    "text": "O militar que se casar tem direito ao afastamento por \"NÚPCIAS\" por um período de:",
+    "options": [
+      "3 dias.",
+      "5 dias.",
+      "8 dias.",
+      "10 dias."
+    ],
+    "correctOption": 2,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a C. É uma dispensa do serviço para fins de gala, conforme o Estatuto e este regulamento.",
+    "difficulty": 3
+  },
+  {
+    "text": "O afastamento por \"LUTO\" é concedido em caso de falecimento de dependentes diretos ou parentes próximos. Qual o prazo?",
+    "options": [
+      "2 dias.",
+      "5 dias.",
+      "8 dias.",
+      "15 dias."
+    ],
+    "correctOption": 2,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a C. O prazo de 8 dias visa atender ao período de nojo por falecimento de parentes previstos em lei.",
+    "difficulty": 3
+  },
+  {
+    "text": "A movimentação para fins de \"ESTÁGIO\" ou \"CURSO\" é considerada:",
+    "options": [
+      "Permanente.",
+      "Temporária.",
+      "A pedido sempre.",
+      "Nula para fins de contagem de tempo."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. O militar é movimentado para a escola/centro de ensino e retorna ou é remanejado após a conclusão.",
+    "difficulty": 3
+  },
+  {
+    "text": "O militar pode ser movimentado para \"NÚCLEO DE FORMAÇÃO\" na condição de:",
+    "options": [
+      "Aluno, instrutor ou monitor.",
+      "Apenas se for Oficial Superior.",
+      "Somente se estiver punido.",
+      "Sem direito a diárias ou ajudas de custo."
+    ],
+    "correctOption": 0,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a A. São as funções típicas em estabelecimentos de ensino militar.",
+    "difficulty": 3
+  },
+  {
+    "text": "Na movimentação por INTERESSE PRÓPRIO (a pedido), o militar:",
+    "options": [
+      "Recebe ajuda de custo e transporte.",
+      "Não faz jus a indenizações por mudança, salvo se a lei dispuser o contrário.",
+      "Tem prioridade sobre as movimentações ex-officio.",
+      "Deve obrigatoriamente ter 10 anos de serviço."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. O ônus financeiro da vontade particular do militar não recai sobre o Estado.",
+    "difficulty": 3
+  },
+  {
+    "text": "O conceito de \"ADJUNÇÃO\" refere-se à situação em que o militar:",
+    "options": [
+      "É transferido definitivamente para outra sede.",
+      "É colocado à disposição de outra OM ou órgão externo por tempo determinado, mantendo seu vínculo na origem.",
+      "É promovido sem ter o interstício completo.",
+      "É demitido a bem da disciplina."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. É um empréstimo temporário de força de trabalho entre unidades ou poderes.",
+    "difficulty": 3
+  },
+  {
+    "text": "O militar movimentado deve apresentar-se na nova OM após o término do trânsito e instalação. Caso não o faça, será considerado:",
+    "options": [
+      "Em gozo de licença automática.",
+      "Ausente ou desertor, conforme o tempo de atraso.",
+      "Promovido por antiguidade.",
+      "Disponível para o administrativo."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. A apresentação é dever funcional rigoroso.",
+    "difficulty": 3
+  },
+  {
+    "text": "A movimentação entre Organizações Militares sediadas na mesma localidade (mesma sede):",
+    "options": [
+      "Dá direito a 15 dias de trânsito.",
+      "Não dá direito a trânsito ou instalação, salvo casos excepcionais.",
+      "Gera pagamento de ajuda de custo.",
+      "Exige autorização do Governador."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. Se não há mudança de residência/sede, presume-se que o militar não necessita de tempo para mudança.",
+    "difficulty": 3
+  },
+  {
+    "text": "No caso de movimentação de praça, quem normalmente assina o ato (ato delegado)?",
+    "options": [
+      "O Secretário de Segurança.",
+      "O Comandante-Geral ou o Chefe da Seção de Pessoal (PM-1).",
+      "O Comandante da Unidade de destino.",
+      "O Deputado Estadual."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. A gestão de praças é delegada aos órgãos de pessoal do Comando-Geral.",
+    "difficulty": 3
+  },
+  {
+    "text": "O militar que serve em unidade de fronteira tem direito a movimentação após:",
+    "options": [
+      "1 ano de serviço.",
+      "2 anos de serviço (conforme critérios de rodízio).",
+      "10 anos de serviço.",
+      "Somente se for promovido."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. O regulamento prevê o rodízio em áreas consideradas especiais para evitar o desgaste excessivo.",
+    "difficulty": 3
+  },
+  {
+    "text": "A movimentação para \"CARGO ELETIVO\" (político) exige que o militar:",
+    "options": [
+      "Seja demitido imediatamente.",
+      "Seja afastado (agregado) nos termos da Constituição e legislação específica.",
+      "Continue trabalhando normalmente enquanto faz campanha.",
+      "Seja promovido por bravura."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. O afastamento é obrigatório para garantir a isonomia do processo eleitoral.",
+    "difficulty": 3
+  },
+  {
+    "text": "A interrupção do período de trânsito ou instalação pode ocorrer:",
+    "options": [
+      "Por vontade do militar para receber mais cedo.",
+      "Por imperiosa necessidade do serviço ou ordem de autoridade superior.",
+      "Apenas se houver guerra declarada.",
+      "Nunca, são direitos intocáveis."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. O interesse público prevalece sobre o período de afastamento do militar.",
+    "difficulty": 3
+  },
+  {
+    "text": "Considera-se \"CLASSIFICAÇÃO\" o ato de:",
+    "options": [
+      "Punir o militar.",
+      "Destinar o militar para uma OM específica após promoção, curso ou nomeação.",
+      "Dar nota ao militar na ficha de merecimento.",
+      "Escolher o uniforme do dia."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. A classificação ocorre logo após a movimentação ou formação.",
+    "difficulty": 3
+  },
+  {
+    "text": "O militar que possui cônjuge também militar da PMMS:",
+    "options": [
+      "Deve obrigatoriamente servir na mesma sala.",
+      "Terá sua movimentação facilitada para a mesma sede, sempre que possível e sem prejuízo ao serviço.",
+      "Não pode ser movimentado nunca.",
+      "Deve pedir demissão se o cônjuge for transferido."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. A administração busca preservar a unidade familiar, respeitando a conveniência do serviço.",
+    "difficulty": 3
+  },
+  {
+    "text": "A movimentação de uma praça para \"FREQUENTAR CURSO\" de duração superior a 6 meses implica em:",
+    "options": [
+      "Desligamento do estado efetivo da unidade de origem.",
+      "Manutenção do militar na escala de serviço da origem.",
+      "Perda do direito ao salário.",
+      "Promoção automática ao final do primeiro mês."
+    ],
+    "correctOption": 0,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a A. Cursos longos exigem que o militar pertença administrativamente ao órgão de ensino.",
+    "difficulty": 3
+  },
+  {
+    "text": "O período de trânsito pode ser gozado na localidade de origem ou de destino?",
+    "options": [
+      "Apenas na de origem.",
+      "Apenas na de destino.",
+      "Em qualquer localidade, à escolha do militar, desde que comunique o paradeiro.",
+      "Apenas na sede do Comando-Geral."
+    ],
+    "correctOption": 2,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a C. O trânsito é tempo para o militar, não havendo restrição geográfica rígida, desde que ele se apresente no prazo.",
+    "difficulty": 3
+  },
+  {
+    "text": "O militar que completar o tempo máximo de permanência em uma função de confiança:",
+    "options": [
+      "Deve ser exonerado e movimentado para função de linha.",
+      "Pode ficar nela eternamente se o Comandante quiser.",
+      "Deve ser promovido por bravura.",
+      "Entra em licença prêmio obrigatória."
+    ],
+    "correctOption": 0,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a A. O regulamento visa a rotatividade e evita a perpetuação em cargos administrativos/gratificados.",
+    "difficulty": 3
+  },
+  {
+    "text": "A \"REVERSÃO\" é o ato pelo qual o militar agregado:",
+    "options": [
+      "É expulso da corporação.",
+      "Retorna ao estado efetivo da sua unidade ou quadro.",
+      "Muda de nome social.",
+      "Pede para não ser promovido."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. É o oposto da agregação.",
+    "difficulty": 3
+  },
+  {
+    "text": "Na movimentação ex-officio, o transporte de dependentes e bagagem é:",
+    "options": [
+      "Pago pelo próprio militar.",
+      "Custeado pelo Estado, conforme regulamentação de transporte.",
+      "Proibido por lei.",
+      "Realizado apenas em viaturas operacionais."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. Como a mudança é interesse da administração, o Estado arca com os custos.",
+    "difficulty": 3
+  },
+  {
+    "text": "Se o militar estiver em gozo de férias e for publicada sua movimentação, o trânsito começa:",
+    "options": [
+      "No dia da publicação.",
+      "Imediatamente, interrompendo as férias.",
+      "No dia seguinte ao término das férias.",
+      "Somente no ano seguinte."
+    ],
+    "correctOption": 2,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a C. O militar tem the direito de completar seu descanso antes de iniciar os procedimentos de mudança.",
+    "difficulty": 3
+  },
+  {
+    "text": "A movimentação por \"NECESSIDADE DO SERVIÇO\" deve ser sempre:",
+    "options": [
+      "Verbal.",
+      "Por telefone.",
+      "Fundamentada e publicada em boletim oficial.",
+      "Mantida em sigilo absoluto."
+    ],
+    "correctOption": 2,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a C. Todo ato administrativo de movimentação exige publicidade e motivação.",
+    "difficulty": 3
+  },
+  {
+    "text": "O militar que se encontrar \"SUB JUDICE\" (respondendo a processo):",
+    "options": [
+      "Não pode ser movimentado para fora da sede do juízo sem autorização judicial.",
+      "Deve ser transferido para outro estado.",
+      "Perde o direito ao trânsito.",
+      "É obrigado a servir na corregedoria."
+    ],
+    "correctOption": 0,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a A. A necessidade de comparecimento aos atos processuais limita a discricionariedade da movimentação.",
+    "difficulty": 3
+  },
+  {
+    "text": "O conceito de \"REMANEJAMENTO\" interno em um Batalhão (de uma Companhia para outra na mesma sede) é competência do:",
+    "options": [
+      "Governador.",
+      "Comandante da própria Unidade (Batalhão).",
+      "Comandante-Geral apenas.",
+      "Ministério Público."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. Trata-se de organização interna da força de trabalho dentro da autonomia do Comandante da Unidade.",
+    "difficulty": 3
+  },
+  {
+    "text": "A movimentação para prestar serviço em Órgãos da União ou outros Estados é considerada:",
+    "options": [
+      "De natureza militar e tempo integral.",
+      "De natureza civil e suspende a contagem de tempo militar.",
+      "Proibida pelo Decreto 1.093.",
+      "Apenas para oficiais subalternos."
+    ],
+    "correctOption": 0,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a A. (Geralmente regulada por convênio, mas mantém o status militar para fins de carreira).",
+    "difficulty": 3
+  },
+  {
+    "text": "Qual o prazo máximo para um militar permanecer na condição de \"ADJUNTO\" em outra unidade?",
+    "options": [
+      "30 dias.",
+      "6 meses.",
+      "1 ano (podendo ser renovado).",
+      "Indeterminado."
+    ],
+    "correctOption": 2,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a C. A temporariedade é característica da adjunção.",
+    "difficulty": 3
+  },
+  {
+    "text": "O militar que, por motivo de movimentação, tiver que mudar de residência para outra sede, terá direito a:",
+    "options": [
+      "Ajuda de custo equivalente a um mês de remuneração.",
+      "Apenas passagens de ônibus.",
+      "Um bônus de Natal antecipado.",
+      "Promoção imediata."
+    ],
+    "correctOption": 0,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a A. (Conforme a Lei de Remuneração e este regulamento).",
+    "difficulty": 3
+  },
+  {
+    "text": "A movimentação \"PARA FINS DE TRATAMENTO DE SAÚDE\" pode ser negada se:",
+    "options": [
+      "O militar tiver muitas punições.",
+      "Houver recurso médico disponível na sede atual que supra a necessidade do tratamento.",
+      "O militar for muito antigo.",
+      "A nova sede for muito longe."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. A movimentação médica é subsidiária à inexistência de recursos locais.",
+    "difficulty": 3
+  },
+  {
+    "text": "O militar que, ao final do trânsito, solicitar dispensa do serviço por motivo de doença:",
+    "options": [
+      "Tem o trânsito prorrogado automaticamente.",
+      "Deve ser inspecionado por médico militar para validar a interrupção da apresentação.",
+      "É considerado desertor de imediato.",
+      "Perde o cargo."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. O controle médico evita simulações para protelar a apresentação na nova unidade.",
+    "difficulty": 3
+  },
+  {
+    "text": "A movimentação de Oficiais para o cargo de \"AJUDANTE DE ORDENS\" é de livre escolha do:",
+    "options": [
+      "Comandante-Geral.",
+      "Autoridade a quem o Oficial irá servir (Governador, por exemplo).",
+      "Diretor de Pessoal.",
+      "Conselho de Oficiais Superiores."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. É um cargo de confiança pessoal extrema.",
+    "difficulty": 3
+  },
+  {
+    "text": "O ato de movimentação que não for seguido de desligamento no prazo de 10 dias úteis (sem justificativa):",
+    "options": [
+      "Torna-se nulo.",
+      "Gera responsabilidade funcional para o Comandante da Unidade de origem.",
+      "Dá direito a dobro de salário ao militar.",
+      "É considerado normal."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. O atraso injustificado no desligamento prejudica o planejamento da corporação.",
+    "difficulty": 3
+  },
+  {
+    "text": "O militar em trânsito mantém seu vínculo de subordinação com:",
+    "options": [
+      "A unidade de destino.",
+      "A unidade de origem, até a efetiva apresentação no destino.",
+      "Ninguém, ele está \"solto\".",
+      "Apenas com o Governador."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. A subordinação administrativa cessa apenas com a apresentação na nova OM.",
+    "difficulty": 3
+  },
+  {
+    "text": "A movimentação para unidade de ensino visando o aperfeiçoamento (CAS ou CAO) é:",
+    "options": [
+      "Obrigatória para quem preenche os requisitos de carreira.",
+      "Apenas para quem é voluntário.",
+      "Proibida se o militar tiver filhos.",
+      "Realizada por sorteio."
+    ],
+    "correctOption": 0,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a A. Faz parte do desenvolvimento profissional obrigatório para a promoção.",
+    "difficulty": 3
+  },
+  {
+    "text": "O militar movimentado ex-officio que possuir filhos em idade escolar:",
+    "options": [
+      "Não pode ser movimentado durante o ano letivo.",
+      "Tem garantido o direito de matrícula em escola pública na nova sede em qualquer época.",
+      "Deve deixar os filhos com parentes.",
+      "Perde a vaga na escola anterior sem direito a nova."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. É uma garantia legal para minimizar o impacto na família do servidor.",
+    "difficulty": 3
+  },
+  {
+    "text": "Na contagem do tempo de trânsito, o dia do desligamento é:",
+    "options": [
+      "O primeiro dia do trânsito.",
+      "Um dia útil antes do trânsito.",
+      "Excluído da contagem, iniciando-se no dia seguinte.",
+      "O último dia de trabalho."
+    ],
+    "correctOption": 0,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a A. (Normalmente o trânsito inicia-se na data do desligamento publicada).",
+    "difficulty": 3
+  },
+  {
+    "text": "A movimentação para exercer função na \"CORREGEDORIA GERAL\":",
+    "options": [
+      "Exige que o militar esteja no comportamento \"Excepcional\".",
+      "É vedada para praças.",
+      "É de livre designação do Comandante-Geral, observados critérios de idoneidade.",
+      "Só dura 3 meses."
+    ],
+    "correctOption": 2,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a C. A confiança e o perfil técnico são primordiais para o órgão de correição.",
+    "difficulty": 3
+  },
+  {
+    "text": "No caso de movimentação por permuta, se um dos militares desistir após a publicação:",
+    "options": [
+      "O outro é transferido sozinho.",
+      "O ato deve ser tornado sem efeito para ambos, se a permuta for condicional.",
+      "Ambos são punidos com prisão.",
+      "O desistente paga multa ao Estado."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. A permuta é um ato jurídico bilateral; sem uma das partes, perde o objeto.",
+    "difficulty": 3
+  },
+  {
+    "text": "O militar \"EXCEDENTE\" em uma unidade:",
+    "options": [
+      "Não trabalha.",
+      "É o primeiro da lista para ser movimentado ex-officio para preencher vagas em outras sedes.",
+      "Tem direito a aumento salarial.",
+      "Deve ser demitido."
+    ],
+    "correctOption": 1,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a B. A administração utiliza os excedentes para equilibrar o efetivo onde há falta.",
+    "difficulty": 3
+  },
+  {
+    "text": "A movimentação para a \"RESERVA REMUNERADA\" é considerada:",
+    "options": [
+      "Movimentação definitiva fora do serviço ativo.",
+      "Adjunção temporária.",
+      "Nomeação para cargo civil.",
+      "Trânsito prolongado."
+    ],
+    "correctOption": 0,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a A. Encerra o ciclo de movimentações no serviço ativo.",
+    "difficulty": 3
+  },
+  {
+    "text": "O Regulamento de Movimentação de 1981 aplica-se:",
+    "options": [
+      "Somente aos Oficiais.",
+      "Somente às Praças.",
+      "A todos os militares da PMMS (Oficiais e Praças).",
+      "Apenas aos funcionários civis da PM."
+    ],
+    "correctOption": 2,
+    "law": "Decreto 1.093/81",
+    "justification": "A resposta correta é a C. É o regulamento geral de movimentação da corporação.",
+    "difficulty": 3
+  }
+]
