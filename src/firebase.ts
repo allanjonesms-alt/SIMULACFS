@@ -60,14 +60,17 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   throw new Error(JSON.stringify(errInfo));
 }
 
-// Connection Test
-async function testConnection() {
+export async function sendNotification(userId: string, title: string, message: string, type: 'info' | 'success' | 'warning') {
   try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-  } catch (error) {
-    if(error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration. ");
-    }
+    await addDoc(collection(db, 'notifications'), {
+      userId,
+      title,
+      message,
+      type,
+      read: false,
+      createdAt: serverTimestamp()
+    });
+  } catch (e) {
+    handleFirestoreError(e, OperationType.CREATE, 'notifications');
   }
 }
-testConnection();

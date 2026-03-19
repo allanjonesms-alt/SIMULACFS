@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { 
   auth, db, googleProvider, 
-  handleFirestoreError, OperationType 
+  handleFirestoreError, OperationType, sendNotification 
 } from './firebase';
 import { 
   onAuthStateChanged, signInWithPopup, signOut, User 
@@ -190,6 +190,24 @@ export default function App() {
       return dateB - dateA;
     }).slice(0, 50);
   }, [allSimulations]);
+
+  const averages = useMemo(() => {
+    const fullSims = history.filter(s => !s.isMiniSimulado);
+    const miniSims = history.filter(s => s.isMiniSimulado);
+
+    const fullAvg = fullSims.length > 0 
+      ? fullSims.reduce((acc, s) => acc + (s.score / s.totalQuestions), 0) / fullSims.length 
+      : 0;
+    
+    const miniAvg = miniSims.length > 0 
+      ? miniSims.reduce((acc, s) => acc + (s.score / s.totalQuestions), 0) / miniSims.length 
+      : 0;
+
+    return {
+      full: (fullAvg * 100).toFixed(1),
+      mini: (miniAvg * 100).toFixed(1)
+    };
+  }, [history]);
   
   // Simulation state
   const [currentExam, setCurrentExam] = useState<ExamQuestion[]>([]);
@@ -211,6 +229,30 @@ export default function App() {
   const [isMiniSimulado, setIsMiniSimulado] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const debouncedSaveSimulation = useCallback((userId: string, data: any) => {
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+    }
+    saveTimerRef.current = setTimeout(async () => {
+      try {
+        await updateDoc(doc(db, 'active_simulations', userId), {
+          ...data,
+          updatedAt: serverTimestamp(),
+        });
+      } catch (error) {
+        handleFirestoreError(error, OperationType.UPDATE, 'active_simulations');
+      }
+    }, 3000); // Wait 3 seconds of inactivity before saving
+  }, []);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, []);
 
   // Error reporting state
   const [isReportingError, setIsReportingError] = useState(false);
@@ -249,8 +291,10 @@ export default function App() {
         
         if (userDoc.exists()) {
           const data = userDoc.data() as UserProfile;
+          console.log("Perfil carregado:", data);
           // Auto-upgrade to admin and premium if email matches
           if (isAdminEmail && (data.role !== 'admin' || !data.isUpgraded)) {
+            console.log("Atualizando perfil para admin/premium");
             const updates: Partial<UserProfile> = {};
             if (data.role !== 'admin') updates.role = 'admin';
             if (!data.isUpgraded) updates.isUpgraded = true;
@@ -261,6 +305,7 @@ export default function App() {
             setProfile(data);
           }
         } else {
+          console.log("Criando novo perfil para:", user.email);
           // Create new profile
           const newProfile: UserProfile = {
             uid: user.uid,
@@ -312,7 +357,10 @@ export default function App() {
         const uList = snapshot.docs.map(doc => doc.data() as UserProfile);
         uList.sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
         setAllUsers(uList);
-      }, (error) => handleFirestoreError(error, OperationType.LIST, 'users'));
+      }, (error) => {
+        console.error("Erro ao carregar usuários:", error);
+        handleFirestoreError(error, OperationType.LIST, 'users');
+      });
       
       // Active simulation listener
       const activeUnsubscribe = onSnapshot(doc(db, 'active_simulations', user.uid), (snapshot) => {
@@ -785,16 +833,11 @@ export default function App() {
       
       if (!isMiniSimulado) {
         // Update active simulation state
-        try {
-          await updateDoc(doc(db, 'active_simulations', user!.uid), {
-            currentIndex: nextIdx,
-            answers: newAnswers,
-            updatedAt: serverTimestamp(),
-            elapsedTime: elapsedTime || 0
-          });
-        } catch (error) {
-          handleFirestoreError(error, OperationType.UPDATE, 'active_simulations');
-        }
+        debouncedSaveSimulation(user!.uid, {
+          currentIndex: nextIdx,
+          answers: newAnswers,
+          elapsedTime: elapsedTime || 0
+        });
       } else {
         setActiveMiniSimulation(prev => prev ? {
           ...prev,
@@ -980,6 +1023,12 @@ export default function App() {
           </div>
 
           <NavItem active={view === 'dashboard'} onClick={() => setView('dashboard')} icon={<LayoutDashboard />} label="Dashboard" />
+          <NavItem 
+            active={view === 'simulation' && !isMiniSimulado} 
+            onClick={activeSimulation ? resumeSimulation : startSimulation} 
+            icon={<Play className="w-5 h-5" />} 
+            label="Simulado Completo" 
+          />
           <NavItem active={view === 'mini_simulados'} onClick={() => setView('mini_simulados')} icon={<Target />} label="Mini-Simulados" />
           <NavItem active={view === 'history'} onClick={() => setView('history')} icon={<History />} label="Histórico" />
           <NavItem active={view === 'performance'} onClick={() => setView('performance')} icon={<BarChart2 />} label="Desempenho" />
@@ -1364,7 +1413,19 @@ export default function App() {
                     </div>
                   </>
                 ) : (
-                  <div className="text-center bg-white p-12 rounded-3xl shadow-2xl border border-slate-100">
+                  <div className="text-center bg-white p-12 rounded-3xl shadow-2xl border border-slate-100 relative">
+                    <button 
+                      onClick={() => {
+                        setIsMiniSimulado(false);
+                        setExamFinished(false);
+                        setView('dashboard');
+                      }}
+                      className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
+                      title="Fechar"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+
                     <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
                       <Trophy className="w-12 h-12 text-emerald-600" />
                     </div>
@@ -1374,14 +1435,26 @@ export default function App() {
                     <div className="text-6xl font-black text-indigo-600 mb-4">
                       {answers.filter((a, i) => a === currentExam[i].correctOption).length} / {currentExam.length}
                     </div>
-                    <p className="text-lg font-bold text-slate-700 mb-10">Questões Corretas</p>
+                    <p className="text-lg font-bold text-slate-700 mb-8">Questões Corretas</p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+                      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Média Simulados</p>
+                        <p className="text-3xl font-black text-indigo-600">{averages.full}%</p>
+                      </div>
+                      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Média Mini-Simulados</p>
+                        <p className="text-3xl font-black text-amber-600">{averages.mini}%</p>
+                      </div>
+                    </div>
                     
                     <button 
                       onClick={() => {
                         setIsMiniSimulado(false);
+                        setExamFinished(false);
                         setView('dashboard');
                       }}
-                      className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg"
+                      className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg w-full md:w-auto"
                     >
                       Voltar ao Dashboard
                     </button>
@@ -1710,6 +1783,14 @@ export default function App() {
                                     status: err.status === 'pending' ? 'resolved' : 'pending',
                                     updatedAt: serverTimestamp()
                                   });
+                                  if (err.status === 'pending') {
+                                    await sendNotification(
+                                      err.userId,
+                                      'Erro Corrigido',
+                                      `O erro que você relatou na questão "${err.questionText}" foi corrigido. Obrigado pela sua contribuição!`,
+                                      'success'
+                                    );
+                                  }
                                 } catch (e) {
                                   setNotification({ message: 'Erro ao atualizar status', type: 'error' });
                                 }

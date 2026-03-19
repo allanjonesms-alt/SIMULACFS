@@ -74,6 +74,20 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["questionId", "questionText", "userId", "userEmail", "description", "status", "createdAt"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "User notification",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["info", "success", "warning"] },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "message", "type", "read", "createdAt"]
     }
   },
   "firestore": {
@@ -96,6 +110,10 @@
     "/question_errors/{errorId}": {
       "schema": "QuestionError",
       "description": "Reports of errors in questions"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "User notifications"
     }
   }
 }

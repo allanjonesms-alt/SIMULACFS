@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Question } from '../types';
+import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
 import { Star, Download, Play, Settings, XCircle, ChevronLeft, Search } from 'lucide-react';
 
 interface SubjectPageProps {
@@ -116,7 +118,9 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
                     ))}
                   </div>
                 </div>
-                <p className="font-bold text-slate-900 whitespace-pre-wrap" translate="no">{q.text}</p>
+                <div className="font-bold text-slate-900 whitespace-pre-wrap" translate="no">
+                  <ReactMarkdown rehypePlugins={[rehypeRaw]}>{q.text}</ReactMarkdown>
+                </div>
               </div>
               {isAdmin && (
                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">

@@ -1,13 +1,16 @@
-import React, { useState, useCallback } from 'react';
-import { motion } from 'motion/react';
+import React, { useState, useCallback, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   PlusCircle, Database, Search, BookOpen, X, Save,
-  Book, ChevronLeft, Download, Eye, Edit2, Trash2
+  Book, ChevronLeft, Download, Eye, Edit2, Trash2,
+  CheckCircle2, Loader2
 } from 'lucide-react';
 import { 
   doc, deleteDoc, updateDoc, addDoc, collection, serverTimestamp 
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, handleFirestoreError, OperationType } from '../firebase';
 import { Question, UserProfile } from '../types';
 import SubjectPage from '../components/SubjectPage';
 import Lei1102 from './subjects/Lei1102';
@@ -28,6 +31,13 @@ interface AdminQuestionsProps {
   onBack: () => void;
 }
 
+const FormatButtons = ({ onInsert }: { onInsert: (start: string, end: string) => void }) => (
+  <div className="flex gap-2 mb-2">
+    <button type="button" onClick={() => onInsert('**', '**')} className="px-2 py-1 bg-slate-100 rounded text-xs font-bold hover:bg-slate-200">Negrito</button>
+    <button type="button" onClick={() => onInsert('<u>', '</u>')} className="px-2 py-1 bg-slate-100 rounded text-xs font-bold hover:bg-slate-200 underline">Sublinhado</button>
+  </div>
+);
+
 const AdminQuestions: React.FC<AdminQuestionsProps> = ({
   questions,
   profile,
@@ -36,11 +46,32 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
   downloadPDF,
   onBack
 }) => {
+  const handleInsert = (textareaRef: React.RefObject<HTMLTextAreaElement | null>, setter: React.Dispatch<React.SetStateAction<any>>, start: string, end: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const startPos = textarea.selectionStart;
+    const endPos = textarea.selectionEnd;
+    const text = textarea.value;
+    const selectedText = text.substring(startPos, endPos);
+    const newText = text.substring(0, startPos) + start + selectedText + end + text.substring(endPos);
+    setter((prev: any) => ({ ...prev, text: newText }));
+    
+    // Focus back to textarea and set selection
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(startPos + start.length, endPos + start.length);
+    }, 0);
+  };
+
   const [selectedAdminLaw, setSelectedAdminLaw] = useState<string | null>(null);
   const [adminSearchTerm, setAdminSearchTerm] = useState('');
   const [isSeeding, setIsSeeding] = useState(false);
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
+  const editingTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const newQuestionTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [previewQuestion, setPreviewQuestion] = useState<Question | null>(null);
   const [previewSelectedOptionIdx, setPreviewSelectedOptionIdx] = useState<number | null>(null);
   const [previewShowFeedback, setPreviewShowFeedback] = useState(false);
@@ -53,6 +84,7 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
 
   const handleSaveQuestion = async () => {
     if (!editingQuestion) return;
+    setIsSaving(true);
     try {
       const { id, ...data } = editingQuestion;
       await updateDoc(doc(db, 'questions', id), {
@@ -60,9 +92,16 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
         updatedAt: serverTimestamp()
       });
       setNotification({ message: 'Questão atualizada com sucesso!', type: 'success' });
-      setEditingQuestion(null);
+      setIsSuccess(true);
+      setTimeout(() => {
+        setEditingQuestion(null);
+        setIsSuccess(false);
+        setIsSaving(false);
+      }, 1500);
     } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `questions/${editingQuestion.id}`);
       setNotification({ message: 'Erro ao atualizar questão', type: 'error' });
+      setIsSaving(false);
     }
   };
 
@@ -71,23 +110,32 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
       setNotification({ message: 'Preencha o enunciado e a lei', type: 'error' });
       return;
     }
+    setIsSaving(true);
     try {
       await addDoc(collection(db, 'questions'), {
         ...newQuestion,
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       });
       setNotification({ message: 'Questão criada com sucesso!', type: 'success' });
-      setIsAddingQuestion(false);
-      setNewQuestion({
-        text: '',
-        options: ['', '', '', '', ''],
-        correctOption: 0,
-        law: '',
-        category: '',
-        justification: ''
-      });
+      setIsSuccess(true);
+      setTimeout(() => {
+        setIsAddingQuestion(false);
+        setIsSuccess(false);
+        setIsSaving(false);
+        setNewQuestion({
+          text: '',
+          options: ['', '', '', '', ''],
+          correctOption: 0,
+          law: '',
+          category: '',
+          justification: ''
+        });
+      }, 1500);
     } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, 'questions');
       setNotification({ message: 'Erro ao criar questão', type: 'error' });
+      setIsSaving(false);
     }
   };
 
@@ -255,218 +303,308 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
       )}
 
       {/* Modal Editar */}
-      {editingQuestion && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <h3 className="text-2xl font-bold mb-6">Editar Questão</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Enunciado</label>
-                <textarea 
-                  className="w-full p-3 border rounded-xl" 
-                  rows={3}
-                  value={editingQuestion.text}
-                  translate="no"
-                  onChange={(e) => setEditingQuestion({...editingQuestion, text: e.target.value})}
-                />
-              </div>
-              {editingQuestion.options.map((opt, i) => (
-                <div key={i}>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Alternativa {String.fromCharCode(65 + i)}</label>
-                  <input 
-                    type="text" 
-                    className="w-full p-3 border rounded-xl"
-                    value={opt}
-                    translate="no"
-                    onChange={(e) => {
-                      const newOpts = [...editingQuestion.options];
-                      newOpts[i] = e.target.value;
-                      setEditingQuestion({...editingQuestion, options: newOpts});
-                    }}
-                  />
-                </div>
-              ))}
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Índice da Correta (0-4)</label>
-                <input 
-                  type="number" 
-                  min="0" max="4"
-                  className="w-full p-3 border rounded-xl"
-                  value={editingQuestion.correctOption}
-                  onChange={(e) => setEditingQuestion({...editingQuestion, correctOption: parseInt(e.target.value)})}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Lei / Matéria</label>
-                <select 
-                  className="w-full p-3 border rounded-xl bg-white"
-                  value={editingQuestion.law || ''}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    const updates: any = { law: val };
-                    if (val === 'Provas Anteriores') {
-                      updates.category = 'Provas Anteriores';
-                    }
-                    setEditingQuestion({...editingQuestion, ...updates});
-                  }}
-                >
-                  <option value="">Sem Lei</option>
-                  <option value="Lei 1.102/90">Lei 1.102/90</option>
-                  <option value="Lei 053/1990">Lei 053/1990</option>
-                  <option value="Lei 127/2008">Lei 127/2008</option>
-                  <option value="Decreto 1.093/81">Decreto 1.093/81</option>
-                  <option value="RDPMMS">RDPMMS</option>
-                  <option value="Conselho de Disciplina">Conselho de Disciplina</option>
-                  <option value="Língua Portuguesa">Língua Portuguesa</option>
-                  <option value="Provas Anteriores">Provas Anteriores</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Categoria</label>
-                <input 
-                  type="text" 
-                  className="w-full p-3 border rounded-xl"
-                  value={editingQuestion.category || ''}
-                  placeholder="Ex: Direito Administrativo, Provas Anteriores..."
-                  onChange={(e) => setEditingQuestion({...editingQuestion, category: e.target.value})}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Justificativa</label>
-                <textarea 
-                  className="w-full p-3 border rounded-xl" 
-                  rows={3}
-                  value={editingQuestion.justification || ''}
-                  placeholder="Explicação da resposta correta..."
-                  onChange={(e) => setEditingQuestion({...editingQuestion, justification: e.target.value})}
-                />
-              </div>
-            </div>
-            <div className="flex gap-3 mt-8">
+      <AnimatePresence>
+        {editingQuestion && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto relative"
+            >
               <button 
-                onClick={() => setEditingQuestion(null)}
-                className="flex-1 py-3 border rounded-xl font-bold hover:bg-slate-50"
+                onClick={() => {
+                  setEditingQuestion(null);
+                  setIsSuccess(false);
+                  setIsSaving(false);
+                }} 
+                className="absolute right-6 top-6 p-2 hover:bg-slate-100 rounded-full transition-colors"
               >
-                Cancelar
+                <X className="w-6 h-6 text-slate-400" />
               </button>
-              <button 
-                onClick={handleSaveQuestion}
-                className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 flex items-center justify-center gap-2"
-              >
-                <Save className="w-5 h-5" />
-                Salvar
-              </button>
-            </div>
+
+              <AnimatePresence mode="wait">
+                {isSuccess ? (
+                  <motion.div 
+                    key="success"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex flex-col items-center justify-center py-12 text-center"
+                  >
+                    <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6">
+                      <CheckCircle2 className="w-10 h-10" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-slate-900 mb-2">Questão Atualizada!</h3>
+                    <p className="text-slate-500">As alterações foram salvas com sucesso.</p>
+                  </motion.div>
+                ) : (
+                  <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <h3 className="text-2xl font-bold mb-6">Editar Questão</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Enunciado</label>
+                        <FormatButtons onInsert={(s, e) => handleInsert(editingTextareaRef, setEditingQuestion, s, e)} />
+                        <textarea 
+                          ref={editingTextareaRef}
+                          className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none" 
+                          rows={3}
+                          value={editingQuestion.text}
+                          translate="no"
+                          onChange={(e) => setEditingQuestion({...editingQuestion, text: e.target.value})}
+                        />
+                      </div>
+                      {editingQuestion.options.map((opt, i) => (
+                        <div key={i}>
+                          <label className="block text-sm font-bold text-slate-700 mb-1">Alternativa {String.fromCharCode(65 + i)}</label>
+                          <input 
+                            type="text" 
+                            className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none"
+                            value={opt}
+                            translate="no"
+                            onChange={(e) => {
+                              const newOpts = [...editingQuestion.options];
+                              newOpts[i] = e.target.value;
+                              setEditingQuestion({...editingQuestion, options: newOpts});
+                            }}
+                          />
+                        </div>
+                      ))}
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Índice da Correta (0-4)</label>
+                        <input 
+                          type="number" 
+                          min="0" max="4"
+                          className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none"
+                          value={editingQuestion.correctOption}
+                          onChange={(e) => setEditingQuestion({...editingQuestion, correctOption: parseInt(e.target.value)})}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Lei / Matéria</label>
+                        <select 
+                          className="w-full p-3 border rounded-xl bg-white focus:ring-2 focus:ring-indigo-600 outline-none"
+                          value={editingQuestion.law || ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            const updates: any = { law: val };
+                            if (val === 'Provas Anteriores') {
+                              updates.category = 'Provas Anteriores';
+                            }
+                            setEditingQuestion({...editingQuestion, ...updates});
+                          }}
+                        >
+                          <option value="">Sem Lei</option>
+                          <option value="Lei 1.102/90">Lei 1.102/90</option>
+                          <option value="Lei 053/1990">Lei 053/1990</option>
+                          <option value="Lei 127/2008">Lei 127/2008</option>
+                          <option value="Decreto 1.093/81">Decreto 1.093/81</option>
+                          <option value="RDPMMS">RDPMMS</option>
+                          <option value="Conselho de Disciplina">Conselho de Disciplina</option>
+                          <option value="Língua Portuguesa">Língua Portuguesa</option>
+                          <option value="Provas Anteriores">Provas Anteriores</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Categoria</label>
+                        <input 
+                          type="text" 
+                          className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none"
+                          value={editingQuestion.category || ''}
+                          placeholder="Ex: Direito Administrativo, Provas Anteriores..."
+                          onChange={(e) => setEditingQuestion({...editingQuestion, category: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Justificativa</label>
+                        <textarea 
+                          className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none" 
+                          rows={3}
+                          value={editingQuestion.justification || ''}
+                          placeholder="Explicação da resposta correta..."
+                          onChange={(e) => setEditingQuestion({...editingQuestion, justification: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-3 mt-8">
+                      <button 
+                        onClick={() => setEditingQuestion(null)}
+                        className="flex-1 py-3 border rounded-xl font-bold hover:bg-slate-50 transition-colors"
+                        disabled={isSaving}
+                      >
+                        Cancelar
+                      </button>
+                      <button 
+                        onClick={handleSaveQuestion}
+                        disabled={isSaving}
+                        className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSaving ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <Save className="w-5 h-5" />
+                        )}
+                        {isSaving ? 'Salvando...' : 'Salvar'}
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
       {/* Modal Nova Questão */}
-      {isAddingQuestion && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <h3 className="text-2xl font-bold mb-6">Nova Questão</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Enunciado</label>
-                <textarea 
-                  className="w-full p-3 border rounded-xl" 
-                  rows={3}
-                  value={newQuestion.text}
-                  translate="no"
-                  onChange={(e) => setNewQuestion({...newQuestion, text: e.target.value})}
-                />
-              </div>
-              {newQuestion.options?.map((opt, i) => (
-                <div key={i}>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Alternativa {String.fromCharCode(65 + i)}</label>
-                  <input 
-                    type="text" 
-                    className="w-full p-3 border rounded-xl"
-                    value={opt}
-                    translate="no"
-                    onChange={(e) => {
-                      const newOpts = [...(newQuestion.options || [])];
-                      newOpts[i] = e.target.value;
-                      setNewQuestion({...newQuestion, options: newOpts});
-                    }}
-                  />
-                </div>
-              ))}
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Índice da Correta (0-4)</label>
-                <input 
-                  type="number" 
-                  min="0" max="4"
-                  className="w-full p-3 border rounded-xl"
-                  value={newQuestion.correctOption}
-                  onChange={(e) => setNewQuestion({...newQuestion, correctOption: parseInt(e.target.value)})}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Lei / Matéria</label>
-                <select 
-                  className="w-full p-3 border rounded-xl bg-white"
-                  value={newQuestion.law || ''}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    const updates: any = { law: val };
-                    if (val === 'Provas Anteriores') {
-                      updates.category = 'Provas Anteriores';
-                    }
-                    setNewQuestion({...newQuestion, ...updates});
-                  }}
-                >
-                  <option value="">Selecione a Lei</option>
-                  <option value="Lei 1.102/90">Lei 1.102/90</option>
-                  <option value="Lei 053/1990">Lei 053/1990</option>
-                  <option value="Lei 127/2008">Lei 127/2008</option>
-                  <option value="Decreto 1.093/81">Decreto 1.093/81</option>
-                  <option value="RDPMMS">RDPMMS</option>
-                  <option value="Conselho de Disciplina">Conselho de Disciplina</option>
-                  <option value="Língua Portuguesa">Língua Portuguesa</option>
-                  <option value="Provas Anteriores">Provas Anteriores</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Categoria</label>
-                <input 
-                  type="text" 
-                  className="w-full p-3 border rounded-xl"
-                  value={newQuestion.category || ''}
-                  placeholder="Ex: Direito Administrativo, Provas Anteriores..."
-                  onChange={(e) => setNewQuestion({...newQuestion, category: e.target.value})}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Justificativa</label>
-                <textarea 
-                  className="w-full p-3 border rounded-xl" 
-                  rows={3}
-                  value={newQuestion.justification || ''}
-                  placeholder="Explicação da resposta correta..."
-                  onChange={(e) => setNewQuestion({...newQuestion, justification: e.target.value})}
-                />
-              </div>
-            </div>
-            <div className="flex gap-3 mt-8">
+      <AnimatePresence>
+        {isAddingQuestion && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto relative"
+            >
               <button 
-                onClick={() => setIsAddingQuestion(false)}
-                className="flex-1 py-3 border rounded-xl font-bold hover:bg-slate-50"
+                onClick={() => {
+                  setIsAddingQuestion(false);
+                  setIsSuccess(false);
+                  setIsSaving(false);
+                }} 
+                className="absolute right-6 top-6 p-2 hover:bg-slate-100 rounded-full transition-colors"
               >
-                Cancelar
+                <X className="w-6 h-6 text-slate-400" />
               </button>
-              <button 
-                onClick={handleCreateQuestion}
-                className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 flex items-center justify-center gap-2"
-              >
-                <PlusCircle className="w-5 h-5" />
-                Criar Questão
-              </button>
-            </div>
+
+              <AnimatePresence mode="wait">
+                {isSuccess ? (
+                  <motion.div 
+                    key="success"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex flex-col items-center justify-center py-12 text-center"
+                  >
+                    <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6">
+                      <PlusCircle className="w-10 h-10" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-slate-900 mb-2">Questão Criada!</h3>
+                    <p className="text-slate-500">A nova questão foi registrada com sucesso no banco de dados.</p>
+                  </motion.div>
+                ) : (
+                  <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <h3 className="text-2xl font-bold mb-6">Nova Questão</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Enunciado</label>
+                        <FormatButtons onInsert={(s, e) => handleInsert(newQuestionTextareaRef, setNewQuestion, s, e)} />
+                        <textarea 
+                          ref={newQuestionTextareaRef}
+                          className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none" 
+                          rows={3}
+                          value={newQuestion.text}
+                          translate="no"
+                          onChange={(e) => setNewQuestion({...newQuestion, text: e.target.value})}
+                        />
+                      </div>
+                      {newQuestion.options?.map((opt, i) => (
+                        <div key={i}>
+                          <label className="block text-sm font-bold text-slate-700 mb-1">Alternativa {String.fromCharCode(65 + i)}</label>
+                          <input 
+                            type="text" 
+                            className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none"
+                            value={opt}
+                            translate="no"
+                            onChange={(e) => {
+                              const newOpts = [...(newQuestion.options || [])];
+                              newOpts[i] = e.target.value;
+                              setNewQuestion({...newQuestion, options: newOpts});
+                            }}
+                          />
+                        </div>
+                      ))}
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Índice da Correta (0-4)</label>
+                        <input 
+                          type="number" 
+                          min="0" max="4"
+                          className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none"
+                          value={newQuestion.correctOption}
+                          onChange={(e) => setNewQuestion({...newQuestion, correctOption: parseInt(e.target.value)})}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Lei / Matéria</label>
+                        <select 
+                          className="w-full p-3 border rounded-xl bg-white focus:ring-2 focus:ring-indigo-600 outline-none"
+                          value={newQuestion.law || ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            const updates: any = { law: val };
+                            if (val === 'Provas Anteriores') {
+                              updates.category = 'Provas Anteriores';
+                            }
+                            setNewQuestion({...newQuestion, ...updates});
+                          }}
+                        >
+                          <option value="">Selecione a Lei</option>
+                          <option value="Lei 1.102/90">Lei 1.102/90</option>
+                          <option value="Lei 053/1990">Lei 053/1990</option>
+                          <option value="Lei 127/2008">Lei 127/2008</option>
+                          <option value="Decreto 1.093/81">Decreto 1.093/81</option>
+                          <option value="RDPMMS">RDPMMS</option>
+                          <option value="Conselho de Disciplina">Conselho de Disciplina</option>
+                          <option value="Língua Portuguesa">Língua Portuguesa</option>
+                          <option value="Provas Anteriores">Provas Anteriores</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Categoria</label>
+                        <input 
+                          type="text" 
+                          className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none"
+                          value={newQuestion.category || ''}
+                          placeholder="Ex: Direito Administrativo, Provas Anteriores..."
+                          onChange={(e) => setNewQuestion({...newQuestion, category: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Justificativa</label>
+                        <textarea 
+                          className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none" 
+                          rows={3}
+                          value={newQuestion.justification || ''}
+                          placeholder="Explicação da resposta correta..."
+                          onChange={(e) => setNewQuestion({...newQuestion, justification: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-3 mt-8">
+                      <button 
+                        onClick={() => setIsAddingQuestion(false)}
+                        className="flex-1 py-3 border rounded-xl font-bold hover:bg-slate-50 transition-colors"
+                        disabled={isSaving}
+                      >
+                        Cancelar
+                      </button>
+                      <button 
+                        onClick={handleCreateQuestion}
+                        disabled={isSaving}
+                        className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSaving ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <PlusCircle className="w-5 h-5" />
+                        )}
+                        {isSaving ? 'Criando...' : 'Criar Questão'}
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
       {/* Modal Preview */}
       {previewQuestion && (
@@ -480,9 +618,9 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
             </div>
             
             <div className="space-y-6">
-              <p className="text-lg text-slate-800 leading-relaxed font-medium" translate="no">
-                {previewQuestion.text}
-              </p>
+              <div className="text-lg text-slate-800 leading-relaxed font-medium" translate="no">
+                <ReactMarkdown rehypePlugins={[rehypeRaw]}>{previewQuestion.text}</ReactMarkdown>
+              </div>
               
               <div className="space-y-3">
                 {previewQuestion.options.map((opt, idx) => (

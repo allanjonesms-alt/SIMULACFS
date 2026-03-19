@@ -5,7 +5,7 @@ import {
   LineChart, Line, ReferenceLine
 } from 'recharts';
 import { SimulationResult, UserProfile } from '../types';
-import { BarChart2, Target } from 'lucide-react';
+import { BarChart2, Target, ChevronDown } from 'lucide-react';
 
 interface PerformancePageProps {
   history: SimulationResult[];
@@ -16,6 +16,7 @@ interface PerformancePageProps {
 }
 
 const normalizeSubject = (subject: string) => {
+  if (subject === 'Leis' || subject === 'Provas Anteriores') return 'Provas Anteriores';
   let displaySubject = subject;
   if (
     subject.includes('Maria da Penha') || 
@@ -44,7 +45,8 @@ const normalizeSubject = (subject: string) => {
 
 export default function PerformancePage({ history, allSimulations, allUsers, profile, onUpgrade }: PerformancePageProps) {
   const [selectedUserId, setSelectedUserId] = useState<string>(profile.uid);
-  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+  const [selectedSubject, setSelectedSubject] = useState<string>('Geral');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const isAdmin = profile.role === 'admin';
 
@@ -70,12 +72,6 @@ export default function PerformancePage({ history, allSimulations, allUsers, pro
     });
     return ['Geral', ...Array.from(subjects).sort()];
   }, [userHistory]);
-
-  useEffect(() => {
-    if (availableSubjects.length > 0 && !selectedSubject) {
-      setSelectedSubject('Geral');
-    }
-  }, [availableSubjects, selectedSubject]);
 
   if (!profile.isUpgraded && !isAdmin) {
     return (
@@ -259,22 +255,46 @@ export default function PerformancePage({ history, allSimulations, allUsers, pro
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <h3 className="text-xl font-bold text-slate-800">Desempenho por Matéria</h3>
               
-              <div className="flex flex-wrap gap-2">
-                {availableSubjects.map(subject => (
-                  <button
-                    key={subject}
-                    onClick={() => setSelectedSubject(subject)}
-                    className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                      selectedSubject === subject
-                        ? subject === 'Geral' 
-                          ? 'bg-emerald-600 text-white shadow-md' 
-                          : 'bg-indigo-600 text-white shadow-md'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
-                    {subject}
-                  </button>
-                ))}
+              <div className="relative">
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="flex items-center justify-between gap-3 bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 hover:border-indigo-300 transition-all shadow-sm min-w-[200px]"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${selectedSubject === 'Geral' ? 'bg-emerald-500' : 'bg-indigo-500'}`} />
+                    <span>{selectedSubject}</span>
+                  </div>
+                  <ChevronDown size={16} className={`text-slate-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {isDropdownOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setIsDropdownOpen(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="absolute right-0 mt-2 w-full min-w-[200px] bg-white border border-slate-100 rounded-2xl shadow-xl z-20 py-2 overflow-hidden"
+                    >
+                      {availableSubjects.map(subject => (
+                        <button
+                          key={subject}
+                          onClick={() => {
+                            setSelectedSubject(subject);
+                            setIsDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2.5 text-sm font-bold transition-colors flex items-center gap-3 ${
+                            selectedSubject === subject 
+                              ? 'bg-slate-50 text-indigo-600' 
+                              : 'text-slate-600 hover:bg-slate-50'
+                          }`}
+                        >
+                          <div className={`w-1.5 h-1.5 rounded-full ${subject === 'Geral' ? 'bg-emerald-500' : 'bg-indigo-500'} ${selectedSubject === subject ? 'opacity-100' : 'opacity-0'}`} />
+                          {subject}
+                        </button>
+                      ))}
+                    </motion.div>
+                  </>
+                )}
               </div>
             </div>
 
