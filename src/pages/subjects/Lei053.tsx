@@ -3,7 +3,7 @@ import SubjectPage from '../../components/SubjectPage';
 import { Question } from '../../types';
 
 interface Lei053Props {
-  questions: Question[];
+  questions?: Question[];
   onBack: () => void;
   onDownloadPDF: (law: string) => void;
   onPreview?: (q: Question) => void;

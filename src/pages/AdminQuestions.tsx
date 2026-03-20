@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { Question, UserProfile } from '../types';
+import { useQuestions } from '../hooks/useQuestions';
 import SubjectPage from '../components/SubjectPage';
 import Lei1102 from './subjects/Lei1102';
 import Lei053 from './subjects/Lei053';
@@ -23,11 +24,10 @@ import LinguaPortuguesa from './subjects/LinguaPortuguesa';
 import Leis from './subjects/Leis';
 
 interface AdminQuestionsProps {
-  questions: Question[];
   profile: UserProfile | null;
   setNotification: (notif: { message: string; type: 'success' | 'error' } | null) => void;
   setConfirmModal: (modal: { title: string; message: string; onConfirm: () => void } | null) => void;
-  downloadPDF: (law: string, questions: Question[]) => void;
+  downloadPDF: (law: string) => void;
   onBack: () => void;
 }
 
@@ -39,13 +39,13 @@ const FormatButtons = ({ onInsert }: { onInsert: (start: string, end: string) =>
 );
 
 const AdminQuestions: React.FC<AdminQuestionsProps> = ({
-  questions,
   profile,
   setNotification,
   setConfirmModal,
   downloadPDF,
   onBack
 }) => {
+  const { questions } = useQuestions();
   const handleInsert = (textareaRef: React.RefObject<HTMLTextAreaElement | null>, setter: React.Dispatch<React.SetStateAction<any>>, start: string, end: string) => {
     const textarea = textareaRef.current;
     if (!textarea) return;
@@ -54,7 +54,7 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
     const text = textarea.value;
     const selectedText = text.substring(startPos, endPos);
     const newText = text.substring(0, startPos) + start + selectedText + end + text.substring(endPos);
-    setter((prev: any) => ({ ...prev, text: newText }));
+    setter((prev: any) => prev ? ({ ...prev, text: newText }) : null);
     
     // Focus back to textarea and set selection
     setTimeout(() => {
@@ -84,6 +84,7 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
 
   const handleSaveQuestion = async () => {
     if (!editingQuestion) return;
+    console.log("Salvando questão:", editingQuestion.text);
     setIsSaving(true);
     try {
       const { id, ...data } = editingQuestion;
@@ -91,6 +92,7 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
         ...data,
         updatedAt: serverTimestamp()
       });
+      console.log("Questão salva com sucesso no Firestore");
       setNotification({ message: 'Questão atualizada com sucesso!', type: 'success' });
       setIsSuccess(true);
       setTimeout(() => {
@@ -99,6 +101,7 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
         setIsSaving(false);
       }, 1500);
     } catch (error) {
+      console.error("Erro ao salvar questão:", error);
       handleFirestoreError(error, OperationType.UPDATE, `questions/${editingQuestion.id}`);
       setNotification({ message: 'Erro ao atualizar questão', type: 'error' });
       setIsSaving(false);
@@ -140,7 +143,6 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
   };
 
   const props = {
-    questions: questions,
     onBack: () => setSelectedAdminLaw(null),
     onDownloadPDF: downloadPDF,
     onPreview: (q: Question) => {
@@ -168,7 +170,10 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
     onAdd: () => {
       setNewQuestion({ ...newQuestion, law: selectedAdminLaw || '' });
       setIsAddingQuestion(true);
-    }
+    },
+    profile: profile,
+    setNotification: setNotification,
+    setConfirmModal: setConfirmModal,
   };
 
   return (
@@ -350,7 +355,7 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
                           rows={3}
                           value={editingQuestion.text}
                           translate="no"
-                          onChange={(e) => setEditingQuestion({...editingQuestion, text: e.target.value})}
+                          onChange={(e) => setEditingQuestion(prev => prev ? {...prev, text: e.target.value} : null)}
                         />
                       </div>
                       {editingQuestion.options.map((opt, i) => (
@@ -502,7 +507,7 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
                           rows={3}
                           value={newQuestion.text}
                           translate="no"
-                          onChange={(e) => setNewQuestion({...newQuestion, text: e.target.value})}
+                          onChange={(e) => setNewQuestion(prev => ({...prev, text: e.target.value}))}
                         />
                       </div>
                       {newQuestion.options?.map((opt, i) => (
@@ -618,7 +623,7 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
             </div>
             
             <div className="space-y-6">
-              <div className="text-lg text-slate-800 leading-relaxed font-medium" translate="no">
+              <div className="text-lg text-slate-800 leading-relaxed font-medium [&_strong]:font-bold [&_u]:underline" translate="no">
                 <ReactMarkdown rehypePlugins={[rehypeRaw]}>{previewQuestion.text}</ReactMarkdown>
               </div>
               

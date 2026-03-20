@@ -33,8 +33,8 @@ async function startServer() {
   }));
 
   app.use((req, res, next) => {
-    console.log(`[DEBUG] ${req.method} ${req.url}`);
     if (req.method === 'POST' && req.url === '/api/webhook') {
+      console.log(`[DEBUG] ${req.method} ${req.url}`);
       console.log(`[DEBUG] Webhook Body:`, JSON.stringify(req.body, null, 2));
       console.log(`[DEBUG] Webhook Query:`, JSON.stringify(req.query, null, 2));
     }

@@ -47,6 +47,11 @@ export default function PerformancePage({ history, allSimulations, allUsers, pro
   const [selectedUserId, setSelectedUserId] = useState<string>(profile.uid);
   const [selectedSubject, setSelectedSubject] = useState<string>('Geral');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const isAdmin = profile.role === 'admin';
 
@@ -298,7 +303,7 @@ export default function PerformancePage({ history, allSimulations, allUsers, pro
               </div>
             </div>
 
-            {selectedSubject ? (
+            {selectedSubject && mounted ? (
               <div className="h-80 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={subjectHistoryData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
@@ -325,7 +330,7 @@ export default function PerformancePage({ history, allSimulations, allUsers, pro
               </div>
             ) : (
               <div className="h-80 flex items-center justify-center text-slate-400">
-                Selecione uma matéria para ver o desempenho histórico.
+                {selectedSubject ? 'Carregando gráfico...' : 'Selecione uma matéria para ver o desempenho histórico.'}
               </div>
             )}
           </motion.div>
@@ -334,19 +339,21 @@ export default function PerformancePage({ history, allSimulations, allUsers, pro
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
             <h3 className="text-xl font-bold text-slate-800 mb-6">Evolução Geral (% de Acertos)</h3>
             <div className="h-80 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={historicalData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="data" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} domain={[0, 100]} />
-                  <RechartsTooltip 
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  />
-                  <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
-                  <Line type="monotone" dataKey="meuDesempenho" name="Meu Desempenho" stroke="#4f46e5" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                  <Line type="monotone" dataKey="mediaGeral" name="Média Geral" stroke="#94a3b8" strokeWidth={2} strokeDasharray="5 5" dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
+              {mounted && (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={historicalData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="data" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} domain={[0, 100]} />
+                    <RechartsTooltip 
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    />
+                    <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
+                    <Line type="monotone" dataKey="meuDesempenho" name="Meu Desempenho" stroke="#4f46e5" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="mediaGeral" name="Média Geral" stroke="#94a3b8" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </motion.div>
 
@@ -354,21 +361,23 @@ export default function PerformancePage({ history, allSimulations, allUsers, pro
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
             <h3 className="text-xl font-bold text-slate-800 mb-6">Tempo Médio por Questão</h3>
             <div className="h-64 w-full max-w-2xl mx-auto">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={timeData} layout="vertical" margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                  <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} tickFormatter={(val) => `${val}s`} />
-                  <YAxis type="category" dataKey="name" hide />
-                  <RechartsTooltip 
-                    cursor={{ fill: '#f8fafc' }}
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                    formatter={(value: number) => formatTime(value)}
-                  />
-                  <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
-                  <Bar dataKey="meuTempo" name="Meu Tempo" fill="#10b981" radius={[0, 4, 4, 0]} barSize={32} />
-                  <Bar dataKey="mediaGeral" name="Média Geral" fill="#94a3b8" radius={[0, 4, 4, 0]} barSize={32} />
-                </BarChart>
-              </ResponsiveContainer>
+              {mounted && (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={timeData} layout="vertical" margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                    <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} tickFormatter={(val) => `${val}s`} />
+                    <YAxis type="category" dataKey="name" hide />
+                    <RechartsTooltip 
+                      cursor={{ fill: '#f8fafc' }}
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      formatter={(value: number) => formatTime(value)}
+                    />
+                    <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
+                    <Bar dataKey="meuTempo" name="Meu Tempo" fill="#10b981" radius={[0, 4, 4, 0]} barSize={32} />
+                    <Bar dataKey="mediaGeral" name="Média Geral" fill="#94a3b8" radius={[0, 4, 4, 0]} barSize={32} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </motion.div>
         </>

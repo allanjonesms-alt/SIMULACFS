@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { Question } from '../types';
+import { useQuestions } from '../hooks/useQuestions';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import { Star, Download, Play, Settings, XCircle, ChevronLeft, Search } from 'lucide-react';
 
 interface SubjectPageProps {
   law: string;
-  questions: Question[];
+  questions?: Question[];
   onBack: () => void;
   onDownloadPDF: (law: string) => void;
   onPreview?: (q: Question) => void;
@@ -19,7 +20,7 @@ interface SubjectPageProps {
 
 const SubjectPage: React.FC<SubjectPageProps> = ({
   law,
-  questions,
+  questions: propQuestions,
   onBack,
   onDownloadPDF,
   onPreview,
@@ -29,6 +30,8 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
   disableLawFilter = false,
   isAdmin = false
 }) => {
+  const { questions: fetchedQuestions, loading } = useQuestions();
+  const questions = propQuestions || fetchedQuestions;
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredQuestions = useMemo(() => {
@@ -39,6 +42,14 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
     }
     return filtered;
   }, [questions, law, searchTerm, disableLawFilter]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">

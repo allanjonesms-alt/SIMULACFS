@@ -39,14 +39,23 @@ import {
   BarChart2,
   Search,
   Target,
-  Database
+  Database,
+  MessageCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { UserProfile, Question, SimulationResult, QuestionError } from './types';
 import UpgradePage from './components/UpgradePage';
+import StatCard from './components/StatCard';
 import PerformancePage from './pages/Performance';
+import ContatoPage from './pages/Contato';
+import { RankingPage } from './components/RankingPage';
+import { ErrorReportModal } from './components/ErrorReportModal';
+import { ErrorReportPage } from './components/ErrorReportPage';
+import { MiniSimuladoPage } from './pages/MiniSimulado';
+import { HistoryPage } from './pages/HistoryPage';
+import UsersPage from './pages/Users';
 import AdminQuestions from './pages/AdminQuestions';
 import Lei1102 from './pages/subjects/Lei1102';
 import Lei053 from './pages/subjects/Lei053';
@@ -77,67 +86,27 @@ interface ActiveSimulation {
   elapsedTime: number;
 }
 
-// --- Components ---
-
-const ErrorBoundary = ({ children }: { children: React.ReactNode }) => {
-  const [hasError, setHasError] = useState(false);
-  const [errorInfo, setErrorInfo] = useState<string | null>(null);
-
-  useEffect(() => {
-    const handleError = (event: ErrorEvent) => {
-      if (event.error?.message?.startsWith('{')) {
-        setHasError(true);
-        setErrorInfo(event.error.message);
-      }
-    };
-    window.addEventListener('error', handleError);
-    return () => window.removeEventListener('error', handleError);
-  }, []);
-
-  if (hasError) {
-    const info = JSON.parse(errorInfo || '{}');
-    return (
-      <div className="min-h-screen bg-red-50 flex items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full border border-red-100">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Erro de Permissão</h2>
-          <p className="text-gray-600 mb-6">
-            Ocorreu um erro ao acessar os dados. Isso pode ser devido a permissões insuficientes ou conta inativa.
-          </p>
-          <div className="bg-gray-50 p-4 rounded-lg mb-6 overflow-auto max-h-40 text-xs font-mono">
-            {JSON.stringify(info, null, 2)}
-          </div>
-          <button 
-            onClick={() => window.location.reload()}
-            className="w-full bg-red-600 text-white py-3 rounded-xl font-semibold hover:bg-red-700 transition-colors"
-          >
-            Recarregar Aplicativo
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return <>{children}</>;
-};
-
-const SergeantIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M10 80 L50 60 L90 80" stroke="#FFD700" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M10 60 L50 40 L90 60" stroke="#FFD700" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M10 40 L50 20 L90 40" stroke="#FFD700" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { MaintenancePage } from './components/MaintenancePage';
+import { SergeantIcon } from './components/SergeantIcon';
 
 // --- Main App ---
 
+import { useQuestions } from './hooks/useQuestions';
+
 export default function App() {
+  const { questions } = useQuestions();
+  const [isMaintenanceMode] = useState(false); // Set to true to show maintenance page
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'dashboard' | 'simulation' | 'history' | 'performance' | 'ranking' | 'admin_users' | 'admin_questions' | 'admin_errors' | 'upgrade' | 'mini_simulados' | 'conselho_disciplina'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'simulation' | 'history' | 'performance' | 'ranking' | 'admin_users' | 'admin_questions' | 'admin_errors' | 'upgrade' | 'mini_simulados' | 'conselho_disciplina' | 'contato'>('dashboard');
+  
+  if (isMaintenanceMode) {
+    return <MaintenancePage />;
+  }
   
   // Data states
-  const [questions, setQuestions] = useState<Question[]>([]);
   const [history, setHistory] = useState<SimulationResult[]>([]);
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const [allSimulations, setAllSimulations] = useState<SimulationResult[]>([]);
@@ -219,14 +188,6 @@ export default function App() {
   const [pendingRating, setPendingRating] = useState<number | null>(null);
   const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
   const [activeSimulation, setActiveSimulation] = useState<ActiveSimulation | null>(null);
-  const [activeMiniSimulation, setActiveMiniSimulation] = useState<{
-    subject: string;
-    questions: ExamQuestion[];
-    currentIndex: number;
-    answers: number[];
-    elapsedTime: number;
-  } | null>(null);
-  const [isMiniSimulado, setIsMiniSimulado] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -256,7 +217,6 @@ export default function App() {
 
   // Error reporting state
   const [isReportingError, setIsReportingError] = useState(false);
-  const [errorDescription, setErrorDescription] = useState('');
   const [reportingQuestion, setReportingQuestion] = useState<Question | null>(null);
 
   const existingLaws = useMemo(() => {
@@ -332,75 +292,36 @@ export default function App() {
   useEffect(() => {
     if (!user || !profile) return;
 
-    // Questions listener
-    const qUnsubscribe = onSnapshot(collection(db, 'questions'), (snapshot) => {
-      const qList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Question));
-      setQuestions(qList);
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'questions'));
-
-    // History listener (only own)
+    // History listener (only own): Keep as onSnapshot for real-time history updates
     const hQuery = query(collection(db, 'simulations'), where('userId', '==', user.uid), orderBy('date', 'desc'));
     const hUnsubscribe = onSnapshot(hQuery, (snapshot) => {
       const hList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SimulationResult));
       setHistory(hList);
     }, (error) => handleFirestoreError(error, OperationType.LIST, 'simulations'));
 
-    // All simulations listener (for performance averages)
-    const sUnsubscribe = onSnapshot(collection(db, 'simulations'), (snapshot) => {
-      const sList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SimulationResult));
-      setAllSimulations(sList);
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'simulations'));
+    // All simulations: Load initially and refresh every 15 minutes
+    const fetchAllSimulations = async () => {
+      try {
+        const snapshot = await getDocs(query(collection(db, 'simulations'), limit(50)));
+        const sList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SimulationResult));
+        setAllSimulations(sList);
+      } catch (error) {
+        handleFirestoreError(error, OperationType.LIST, 'simulations');
+      }
+    };
 
-    // Admin: Users listener
-    if (profile.role === 'admin') {
-      const uUnsubscribe = onSnapshot(collection(db, 'users'), (snapshot) => {
-        const uList = snapshot.docs.map(doc => doc.data() as UserProfile);
-        uList.sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
-        setAllUsers(uList);
-      }, (error) => {
-        console.error("Erro ao carregar usuários:", error);
-        handleFirestoreError(error, OperationType.LIST, 'users');
-      });
-      
-      // Active simulation listener
-      const activeUnsubscribe = onSnapshot(doc(db, 'active_simulations', user.uid), (snapshot) => {
-        if (snapshot.exists()) {
-          const data = snapshot.data();
-          setActiveSimulation({ 
-            id: snapshot.id, 
-            ...data, 
-            elapsedTime: data.elapsedTime || 0 
-          } as ActiveSimulation);
-        } else {
-          setActiveSimulation(null);
-        }
-      }, (error) => {
-        // Ignore permission denied if not exists yet
-        if (!error.message.includes('permission-denied')) {
-          handleFirestoreError(error, OperationType.GET, 'active_simulations');
-        }
-      });
+    fetchAllSimulations();
+    const simulationsInterval = setInterval(fetchAllSimulations, 15 * 60 * 1000);
 
-      // Admin: Question errors listener
-      const eUnsubscribe = onSnapshot(collection(db, 'question_errors'), (snapshot) => {
-        const eList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as QuestionError));
-        setAllErrors(eList);
-      }, (error) => handleFirestoreError(error, OperationType.LIST, 'question_errors'));
-
-      return () => {
-        qUnsubscribe();
-        hUnsubscribe();
-        sUnsubscribe();
-        uUnsubscribe();
-        activeUnsubscribe();
-        eUnsubscribe();
-      };
-    }
-
-    // Active simulation listener for non-admin
+    // Active simulation listener
     const activeUnsubscribe = onSnapshot(doc(db, 'active_simulations', user.uid), (snapshot) => {
       if (snapshot.exists()) {
-        setActiveSimulation({ id: snapshot.id, ...snapshot.data() } as ActiveSimulation);
+        const data = snapshot.data();
+        setActiveSimulation({ 
+          id: snapshot.id, 
+          ...data, 
+          elapsedTime: data.elapsedTime || 0 
+        } as ActiveSimulation);
       } else {
         setActiveSimulation(null);
       }
@@ -410,16 +331,35 @@ export default function App() {
       }
     });
 
+    // Admin: Users listener: Load once
+    if (profile.role === 'admin') {
+      getDocs(collection(db, 'users')).then(snapshot => {
+        const uList = snapshot.docs.map(doc => doc.data() as UserProfile);
+        uList.sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
+        setAllUsers(uList);
+      }).catch(error => {
+        console.error("Erro ao carregar usuários:", error);
+        handleFirestoreError(error, OperationType.LIST, 'users');
+      });
+
+      // Admin: Question errors listener: Load once
+      getDocs(collection(db, 'question_errors')).then(snapshot => {
+        const eList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as QuestionError));
+        setAllErrors(eList);
+      }).catch(error => handleFirestoreError(error, OperationType.LIST, 'question_errors'));
+    }
+
     return () => {
-      qUnsubscribe();
       hUnsubscribe();
-      sUnsubscribe();
       activeUnsubscribe();
+      clearInterval(simulationsInterval);
     };
   }, [user, profile]);
 
   const [loginError, setLoginError] = useState<string | null>(null);
 
+  const [isMiniSimulado, setIsMiniSimulado] = useState(false);
+  const [activeMiniSimulation, setActiveMiniSimulation] = useState<ActiveSimulation | null>(null);
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
   const [confirmModal, setConfirmModal] = useState<{title: string, message: string, onConfirm: () => void} | null>(null);
 
@@ -570,35 +510,6 @@ export default function App() {
 
   const handleLogout = () => signOut(auth);
 
-  const handleReportError = async () => {
-    if (!user || !reportingQuestion || !errorDescription.trim()) return;
-
-    try {
-      await addDoc(collection(db, 'question_errors'), {
-        questionId: reportingQuestion.id,
-        questionText: reportingQuestion.text,
-        userEmail: user.email || 'Anônimo',
-        userId: user.uid,
-        description: errorDescription.trim(),
-        status: 'pending',
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
-
-      setIsReportingError(false);
-      setErrorDescription('');
-      setReportingQuestion(null);
-      
-      setConfirmModal({
-        title: "Obrigado!",
-        message: "Sua correção foi enviada com sucesso. Iremos analisar a questão para melhorar nossos serviços.",
-        onConfirm: () => setConfirmModal(null)
-      });
-    } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'question_errors');
-    }
-  };
-
   const deleteUserSimulations = async (targetUserId: string) => {
     if (!profile || profile.role !== 'admin') {
       setNotification({ message: 'Ação não permitida.', type: 'error' });
@@ -689,85 +600,7 @@ export default function App() {
     }
   };
 
-  const startMiniSimulation = async (subject: string) => {
-    if (!profile?.isActive) {
-      setNotification({ message: 'Sua conta está desativada. Entre em contato com o administrador.', type: 'error' });
-      return;
-    }
-    
-    if (!profile.isUpgraded) {
-      setNotification({ message: 'Mini-simulados são exclusivos para usuários Premium. Faça o upgrade!', type: 'error' });
-      return;
-    }
 
-    if (activeMiniSimulation?.subject === subject) {
-      setIsMiniSimulado(true);
-      setCurrentExam(activeMiniSimulation.questions);
-      setExamIndex(activeMiniSimulation.currentIndex);
-      setAnswers(activeMiniSimulation.answers);
-      setElapsedTime(activeMiniSimulation.elapsedTime);
-      setExamFinished(false);
-      setShowFeedback(false);
-      setSelectedOptionId(null);
-      setHasRatedCurrentQuestion(false);
-      setPendingRating(null);
-      setView('simulation');
-      return;
-    }
-
-    if (activeMiniSimulation && activeMiniSimulation.subject !== subject) {
-      setConfirmModal({
-        title: 'Novo Mini-Simulado',
-        message: `Você já tem um mini-simulado de "${activeMiniSimulation.subject}" em andamento. Deseja iniciar um novo de "${subject}" e perder o progresso atual?`,
-        onConfirm: () => {
-          startNewMiniSimulation(subject);
-        }
-      });
-      return;
-    }
-
-    startNewMiniSimulation(subject);
-  };
-
-  const startNewMiniSimulation = (subject: string) => {
-    const subjectQuestions = questions.filter(q => (q.law || q.category || 'Sem Matéria') === subject);
-
-    if (subjectQuestions.length === 0) {
-      setNotification({ message: 'Nenhuma questão disponível para esta matéria.', type: 'error' });
-      return;
-    }
-
-    const selectedQuestions = [...subjectQuestions]
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 10)
-      .map(q => {
-        return {
-          ...q,
-          shuffledOptions: q.options.map((text, index) => ({ id: index, text }))
-        };
-      });
-
-    const newMiniSim = {
-      subject,
-      questions: selectedQuestions,
-      currentIndex: 0,
-      answers: [],
-      elapsedTime: 0
-    };
-
-    setActiveMiniSimulation(newMiniSim);
-    setIsMiniSimulado(true);
-    setCurrentExam(selectedQuestions);
-    setExamIndex(0);
-    setAnswers([]);
-    setElapsedTime(0);
-    setHasRatedCurrentQuestion(false);
-    setPendingRating(null);
-    setExamFinished(false);
-    setShowFeedback(false);
-    setSelectedOptionId(null);
-    setView('simulation');
-  };
 
   const resumeSimulation = () => {
     if (!activeSimulation) return;
@@ -883,18 +716,23 @@ export default function App() {
     };
 
     try {
-      await addDoc(collection(db, 'simulations'), result);
+      const batch = writeBatch(db);
       
+      // 1. Add simulation result
+      const simulationRef = doc(collection(db, 'simulations'));
+      batch.set(simulationRef, result);
+      
+      // 2. Delete active simulation state
       if (!isMiniSimulado) {
-        // Delete active simulation state
-        await deleteDoc(doc(db, 'active_simulations', user!.uid));
+        batch.delete(doc(db, 'active_simulations', user!.uid));
       } else {
         setActiveMiniSimulation(null);
       }
       
+      await batch.commit();
       setExamFinished(true);
     } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'simulations');
+      handleFirestoreError(error, OperationType.WRITE, 'simulations');
     }
   };
 
@@ -1033,6 +871,7 @@ export default function App() {
           <NavItem active={view === 'history'} onClick={() => setView('history')} icon={<History />} label="Histórico" />
           <NavItem active={view === 'performance'} onClick={() => setView('performance')} icon={<BarChart2 />} label="Desempenho" />
           <NavItem active={view === 'ranking'} onClick={() => setView('ranking')} icon={<Trophy />} label="Ranking" />
+          <NavItem active={view === 'contato'} onClick={() => setView('contato')} icon={<MessageCircle />} label="Contato" />
           {!profile?.isUpgraded && (
             <NavItem active={view === 'upgrade'} onClick={() => setView('upgrade')} icon={<Zap />} label="Upgrade" />
           )}
@@ -1165,69 +1004,27 @@ export default function App() {
             )}
 
             {view === 'mini_simulados' && (
-              <motion.div key="mini_simulados" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-                  <div>
-                    <h2 className="text-3xl font-bold text-slate-900">Mini-Simulados</h2>
-                    <p className="text-slate-500">Escolha uma matéria e responda 10 questões rapidamente.</p>
-                  </div>
-                </div>
-
-                {!profile?.isUpgraded ? (
-                  <div className="bg-gradient-to-r from-indigo-600 to-violet-600 p-8 rounded-3xl text-white shadow-xl mb-10 relative overflow-hidden">
-                    <div className="relative z-10">
-                      <h3 className="text-2xl font-bold mb-2">Recurso Premium</h3>
-                      <p className="text-indigo-100 mb-6 max-w-md">Os mini-simulados são exclusivos para usuários Premium. Faça o upgrade para ter acesso a este e outros recursos incríveis!</p>
-                      <button 
-                        onClick={() => setView('upgrade')}
-                        className="bg-white text-indigo-600 px-6 py-3 rounded-xl font-bold hover:bg-indigo-50 transition-colors"
-                      >
-                        Fazer Upgrade Agora
-                      </button>
-                    </div>
-                    <Target className="absolute right-[-20px] bottom-[-20px] w-64 h-64 text-white/10 rotate-12" />
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {Object.entries(questions.reduce((acc, q) => {
-                      let subject = q.law || q.category || 'Sem Matéria';
-                      if (subject === 'Leis') subject = 'Provas Anteriores';
-                      acc[subject] = (acc[subject] || 0) + 1;
-                      return acc;
-                    }, {} as Record<string, number>)).map(([subject, count]) => (
-                      <div 
-                        key={subject} 
-                        onClick={() => startMiniSimulation(subject)}
-                        className={`p-6 rounded-2xl border shadow-sm flex flex-col cursor-pointer transition-all group ${
-                          activeMiniSimulation?.subject === subject 
-                            ? 'bg-emerald-50 border-emerald-500 hover:shadow-md' 
-                            : 'bg-white border-slate-200 hover:border-indigo-600 hover:shadow-md'
-                        }`}
-                      >
-                        <h3 className={`text-lg font-bold mb-2 transition-colors ${
-                          activeMiniSimulation?.subject === subject 
-                            ? 'text-emerald-700' 
-                            : 'text-slate-800 group-hover:text-indigo-600'
-                        }`}>{subject}</h3>
-                        <div className="flex items-center justify-between mt-auto">
-                          <p className={`text-sm font-medium ${
-                            activeMiniSimulation?.subject === subject ? 'text-emerald-600' : 'text-slate-500'
-                          }`}>
-                            {activeMiniSimulation?.subject === subject ? 'Em andamento' : `${count} questões disponíveis`}
-                          </p>
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-                            activeMiniSimulation?.subject === subject 
-                              ? 'bg-emerald-100 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white' 
-                              : 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white'
-                          }`}>
-                            <Play className="w-5 h-5" />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </motion.div>
+              <MiniSimuladoPage 
+                profile={profile} 
+                questions={questions} 
+                isMiniSimulado={isMiniSimulado}
+                setIsMiniSimulado={setIsMiniSimulado}
+                activeMiniSimulation={activeMiniSimulation}
+                setActiveMiniSimulation={setActiveMiniSimulation}
+                setNotification={setNotification}
+                setView={setView}
+                setCurrentExam={setCurrentExam}
+                setExamIndex={setExamIndex}
+                setAnswers={setAnswers}
+                setElapsedTime={setElapsedTime}
+                setExamFinished={setExamFinished}
+                setShowFeedback={setShowFeedback}
+                setSelectedOptionId={setSelectedOptionId}
+                setHasRatedCurrentQuestion={setHasRatedCurrentQuestion}
+                setPendingRating={setPendingRating}
+                setConfirmModal={setConfirmModal}
+                user={user}
+              />
             )}
 
             {view === 'simulation' && (
@@ -1464,120 +1261,20 @@ export default function App() {
             )}
 
             {view === 'history' && (
-              <motion.div key="history" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-                <h2 className="text-3xl font-bold text-slate-900 mb-8">Meu Histórico</h2>
-                <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
-                  <table className="w-full text-left">
-                    <thead className="bg-slate-50 border-b border-slate-200">
-                      <tr>
-                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Tipo</th>
-                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Data</th>
-                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Acertos</th>
-                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Total</th>
-                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Aproveitamento</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {history.map((h) => (
-                        <tr key={h.id} className="hover:bg-slate-50 transition-colors">
-                          <td className="px-6 py-4">
-                            <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
-                              h.isMiniSimulado ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-700'
-                            }`}>
-                              {h.isMiniSimulado ? 'Mini' : 'Simulado'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-slate-600">
-                            {h.date?.toDate ? h.date.toDate().toLocaleString() : 'Recent'}
-                          </td>
-                          <td className="px-6 py-4 font-bold text-emerald-600">{h.score}</td>
-                          <td className="px-6 py-4 text-slate-600">{h.totalQuestions}</td>
-                          <td className="px-6 py-4">
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                              (h.score / h.totalQuestions) >= 0.7 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-                            }`}>
-                              {((h.score / h.totalQuestions) * 100).toFixed(0)}%
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </motion.div>
+              <HistoryPage history={history} />
             )}
 
             {view === 'ranking' && (
-              <motion.div key="ranking" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-                <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-3xl font-bold text-slate-900">Ranking Geral</h2>
-                  {!profile?.isUpgraded && (
-                    <span className="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-2 rounded-xl text-sm font-bold">
-                      <Lock className="w-4 h-4" />
-                      Acesso Limitado (Upgrade necessário)
-                    </span>
-                  )}
-                </div>
+              <RankingPage 
+                processedRanking={processedRanking} 
+                profile={profile} 
+                user={user} 
+                onUpgradeClick={() => setView('upgrade')} 
+              />
+            )}
 
-                <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm relative">
-                  {!profile?.isUpgraded && (
-                    <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex items-center justify-center p-6 text-center">
-                      <div className="bg-white p-8 rounded-3xl shadow-2xl border border-slate-100 max-w-sm">
-                        <Trophy className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-                        <h3 className="text-xl font-bold text-slate-900 mb-2">Ranking Bloqueado</h3>
-                        <p className="text-slate-500 mb-6">Faça o upgrade para ver sua posição e comparar seu desempenho com outros sargentos.</p>
-                        <button className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors">
-                          Ver Planos
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  <table className="w-full text-left">
-                    <thead className="bg-slate-50 border-b border-slate-200">
-                      <tr>
-                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest w-20">Posição</th>
-                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Sargento (Anônimo)</th>
-                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Melhor Pontuação</th>
-                        <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Data</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {processedRanking.map((r, idx) => (
-                        <tr key={r.id} className={`hover:bg-slate-50 transition-colors ${r.userId === user.uid ? 'bg-indigo-50/50' : ''}`}>
-                          <td className="px-6 py-4">
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold ${
-                              idx === 0 ? 'bg-amber-100 text-amber-700' : 
-                              idx === 1 ? 'bg-slate-200 text-slate-700' : 
-                              idx === 2 ? 'bg-orange-100 text-orange-700' : 
-                              'text-slate-400'
-                            }`}>
-                              {idx + 1}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 font-bold text-slate-900">
-                            {r.anonymousName} {r.userId === user.uid && <span className="text-xs font-normal text-indigo-600 ml-2">(Você)</span>}
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className="text-lg font-black text-indigo-600">
-                              {r.score}
-                              {r.diff !== 0 && (
-                                <sup className={`text-xs ml-0.5 ${r.diff && r.diff > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                                  {r.diff && r.diff > 0 ? `+${r.diff}` : r.diff}
-                                </sup>
-                              )}
-                            </span>
-                            <span className="text-slate-400 text-sm ml-1">/ {r.totalQuestions}</span>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-slate-500">
-                            {r.date?.toDate ? r.date.toDate().toLocaleDateString() : 'Recent'}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </motion.div>
+            {view === 'contato' && (
+              <ContatoPage />
             )}
 
             {view === 'conselho_disciplina' && (
@@ -1591,154 +1288,13 @@ export default function App() {
               </motion.div>
             )}
             {view === 'admin_users' && profile?.role === 'admin' && (
-              <motion.div key="admin_users" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-                <h2 className="text-3xl font-bold text-slate-900 mb-8">Gestão de Usuários</h2>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                  <StatCard label="Total de Simulados" value={allSimulations.filter(s => !s.isMiniSimulado).length} icon={<History className="text-indigo-600" />} />
-                  <StatCard label="Média de Acertos" value={allSimulations.filter(s => !s.isMiniSimulado).length > 0 ? `${(allSimulations.filter(s => !s.isMiniSimulado).reduce((a, b) => a + b.score, 0) / allSimulations.filter(s => !s.isMiniSimulado).length).toFixed(1)}` : '0'} icon={<CheckCircle2 className="text-emerald-600" />} />
-                  <StatCard label="Total de Usuários" value={allUsers.length} icon={<Users className="text-slate-600" />} />
-                  <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-4">
-                    <div className="p-3 bg-slate-100 rounded-2xl">
-                      <Zap className="text-amber-600 w-6 h-6" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Distribuição</p>
-                      <div className="flex items-center gap-4 mt-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-lg font-bold text-slate-900">{allUsers.filter(u => u.isUpgraded).length}</span>
-                          <span className="text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">Premium</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-lg font-bold text-slate-900">{allUsers.filter(u => !u.isUpgraded).length}</span>
-                          <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">Gratuitos</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <UsersPage allSimulations={allSimulations} allUsers={allUsers} setAllUsers={setAllUsers} />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {allUsers.map((u) => (
-                    <div key={u.uid} className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-all space-y-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                          <img src={u.photoURL} className="w-12 h-12 rounded-2xl border border-slate-100 shadow-sm" alt="" />
-                          <div className="overflow-hidden">
-                            <p className="font-bold text-slate-900 leading-tight truncate">{u.displayName}</p>
-                            <p className="text-xs text-slate-500 truncate">{u.email}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button 
-                            onClick={async () => {
-                              try {
-                                await updateDoc(doc(db, 'users', u.uid), { isActive: !u.isActive });
-                              } catch (e) { handleFirestoreError(e, OperationType.UPDATE, `users/${u.uid}`); }
-                            }}
-                            className={`p-2 rounded-xl transition-colors ${
-                              u.isActive ? 'bg-red-50 text-red-500 hover:bg-red-100' : 'bg-emerald-50 text-emerald-500 hover:bg-emerald-100'
-                            }`}
-                            title={u.isActive ? 'Desativar' : 'Ativar'}
-                          >
-                            {u.isActive ? <UserX className="w-5 h-5" /> : <UserCheck className="w-5 h-5" />}
-                          </button>
-                          <button 
-                            onClick={() => deleteUserSimulations(u.uid)}
-                            className="p-2 bg-slate-50 text-red-600 rounded-xl hover:bg-red-50 transition-colors"
-                            title="Limpar Mini-Simulados"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4 pt-2">
-                        <div className="space-y-1">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Plano</p>
-                          <button 
-                            onClick={() => {
-                              setConfirmModal({
-                                title: 'Confirmar Alteração de Plano',
-                                message: `Deseja realmente alterar o plano de ${u.displayName} para ${u.isUpgraded ? 'Gratuito' : 'Premium'}?`,
-                                onConfirm: async () => {
-                                  try {
-                                    await updateDoc(doc(db, 'users', u.uid), { 
-                                      isUpgraded: !u.isUpgraded,
-                                      upgradedAt: !u.isUpgraded ? serverTimestamp() : null
-                                    });
-                                  } catch (e) { handleFirestoreError(e, OperationType.UPDATE, `users/${u.uid}`); }
-                                }
-                              });
-                            }}
-                            className={`px-3 py-1.5 rounded-full text-[10px] font-black transition-colors uppercase tracking-wider ${
-                              u.isUpgraded ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                            }`}
-                          >
-                            {u.isUpgraded ? 'Premium' : 'Gratuito'}
-                          </button>
-                        </div>
-                        <div className="space-y-1 text-right">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Papel</p>
-                          <button 
-                            onClick={async () => {
-                              try {
-                                await updateDoc(doc(db, 'users', u.uid), { role: u.role === 'admin' ? 'user' : 'admin' });
-                              } catch (e) { handleFirestoreError(e, OperationType.UPDATE, `users/${u.uid}`); }
-                            }}
-                            className={`text-xs font-bold px-3 py-1.5 rounded-full transition-all ${
-                              u.role === 'admin' ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                            }`}
-                          >
-                            {u.role === 'admin' ? 'Admin' : 'Usuário'}
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                          <History className="w-3.5 h-3.5 text-slate-400" />
-                          <span className="text-xs font-bold text-slate-600">
-                            {allSimulations.filter(s => s.userId === u.uid).length} simulados
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                          <span className="text-xs font-bold text-slate-600">
-                            {allSimulations.filter(s => s.userId === u.uid).length > 0 
-                              ? (allSimulations.filter(s => s.userId === u.uid).reduce((a, b) => a + b.score, 0) / allSimulations.filter(s => s.userId === u.uid).length).toFixed(1)
-                              : '0'
-                            } média
-                          </span>
-                        </div>
-                      </div>
-
-                      {u.isUpgraded && (
-                        <div className="pt-4 border-t border-slate-100">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Adesão Premium</p>
-                          <p className="text-xs font-medium text-slate-600">
-                            {u.upgradedAt ? (
-                              new Date(u.upgradedAt?.seconds ? u.upgradedAt.seconds * 1000 : u.upgradedAt).toLocaleDateString('pt-BR', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })
-                            ) : 'Data não registrada'}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
             )}
 
             {view === 'admin_questions' && profile?.role === 'admin' && (
               <motion.div key="admin_questions" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
                 <AdminQuestions 
-                  questions={questions}
                   profile={profile}
                   setNotification={setNotification}
                   setConfirmModal={setConfirmModal}
@@ -1748,184 +1304,26 @@ export default function App() {
               </motion.div>
             )}
             {view === 'admin_errors' && (profile?.role === 'admin' || user?.email === 'allanjonesms@gmail.com') && (
-              <motion.div key="admin_errors" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                  <h2 className="text-3xl font-bold text-slate-900 uppercase tracking-tight">Erros Relatados</h2>
-                  <div className="bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-sm">
-                    <span className="text-sm font-bold text-slate-500">Total: {allErrors.length}</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-6">
-                  {allErrors.length > 0 ? (
-                    allErrors.map((err) => (
-                      <div key={err.id} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
-                        <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                                err.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
-                              }`}>
-                                {err.status === 'pending' ? 'Pendente' : 'Resolvido'}
-                              </span>
-                              <span className="text-xs font-bold text-slate-400">
-                                {err.createdAt?.toDate ? err.createdAt.toDate().toLocaleString() : 'Recent'}
-                              </span>
-                            </div>
-                            <h4 className="font-bold text-slate-900 mb-1">Relatado por: {err.userEmail}</h4>
-                            <p className="text-xs text-slate-400 font-mono">ID Questão: {err.questionId}</p>
-                          </div>
-                          <div className="flex gap-2">
-                            <button 
-                              onClick={async () => {
-                                try {
-                                  await updateDoc(doc(db, 'question_errors', err.id), {
-                                    status: err.status === 'pending' ? 'resolved' : 'pending',
-                                    updatedAt: serverTimestamp()
-                                  });
-                                  if (err.status === 'pending') {
-                                    await sendNotification(
-                                      err.userId,
-                                      'Erro Corrigido',
-                                      `O erro que você relatou na questão "${err.questionText}" foi corrigido. Obrigado pela sua contribuição!`,
-                                      'success'
-                                    );
-                                  }
-                                } catch (e) {
-                                  setNotification({ message: 'Erro ao atualizar status', type: 'error' });
-                                }
-                              }}
-                              className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${
-                                err.status === 'pending' 
-                                  ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white' 
-                                  : 'bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white'
-                              }`}
-                            >
-                              {err.status === 'pending' ? 'Marcar como Resolvido' : 'Marcar como Pendente'}
-                            </button>
-                            <button 
-                              onClick={() => {
-                                setConfirmModal({
-                                  title: "Excluir Relatório",
-                                  message: "Deseja excluir este relatório de erro permanentemente?",
-                                  onConfirm: async () => {
-                                    try {
-                                      await deleteDoc(doc(db, 'question_errors', err.id));
-                                      setNotification({ message: 'Relatório excluído', type: 'success' });
-                                    } catch (e) {
-                                      setNotification({ message: 'Erro ao excluir', type: 'error' });
-                                    }
-                                  }
-                                });
-                              }}
-                              className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all"
-                            >
-                              <Trash2 className="w-5 h-5" />
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="space-y-4">
-                          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Enunciado da Questão</p>
-                            <p className="text-slate-700 text-sm italic" translate="no">"{err.questionText}"</p>
-                          </div>
-                          <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
-                            <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-2">Descrição do Erro</p>
-                            <p className="text-indigo-900 text-sm font-medium" translate="no">{err.description}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center p-20 bg-white rounded-3xl border border-dashed border-slate-300 text-slate-400">
-                      Nenhum erro relatado até o momento.
-                    </div>
-                  )}
-                </div>
-              </motion.div>
+              <ErrorReportPage 
+                allErrors={allErrors} 
+                setNotification={setNotification} 
+                setConfirmModal={setConfirmModal} 
+              />
             )}
           </AnimatePresence>
         </main>
       </div>
       {/* Report Error Modal */}
-      <AnimatePresence>
-      {isReportingError && reportingQuestion && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[110] flex items-center justify-center p-4"
-        >
-          <motion.div 
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl"
-          >
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-red-100 rounded-2xl">
-                  <AlertTriangle className="w-6 h-6 text-red-600" />
-                </div>
-                <h3 className="text-2xl font-bold text-slate-900">Informar Erro</h3>
-              </div>
-              <button 
-                onClick={() => {
-                  setIsReportingError(false);
-                  setErrorDescription('');
-                  setReportingQuestion(null);
-                }} 
-                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
-              >
-                <X className="w-6 h-6 text-slate-400" />
-              </button>
-            </div>
-
-            <div className="space-y-6">
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Questão Selecionada</p>
-                <p className="text-slate-700 text-sm line-clamp-3 italic" translate="no">
-                  "{reportingQuestion.text}"
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Descreva o erro encontrado</label>
-                <textarea 
-                  className="w-full p-4 border-2 border-slate-100 rounded-2xl focus:border-indigo-600 focus:ring-0 transition-all outline-none" 
-                  rows={4}
-                  value={errorDescription}
-                  onChange={(e) => setErrorDescription(e.target.value)}
-                  placeholder="Ex: A alternativa correta está errada, erro de digitação, etc..."
-                  translate="no"
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <button 
-                  onClick={handleReportError}
-                  disabled={!errorDescription.trim()}
-                  className="flex-1 bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 shadow-lg shadow-indigo-200"
-                >
-                  Enviar Relatório
-                </button>
-                <button 
-                  onClick={() => {
-                    setIsReportingError(false);
-                    setErrorDescription('');
-                    setReportingQuestion(null);
-                  }}
-                  className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-bold hover:bg-slate-200 transition-all active:scale-95"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+      <ErrorReportModal 
+        isOpen={isReportingError}
+        onClose={() => {
+          setIsReportingError(false);
+          setReportingQuestion(null);
+        }}
+        question={reportingQuestion}
+        user={user}
+        setConfirmModal={setConfirmModal}
+      />
     </ErrorBoundary>
   );
 }
@@ -1942,22 +1340,11 @@ function NavItem({ active, onClick, icon, label }: { active: boolean, onClick: (
           : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
       }`}
     >
-      {React.cloneElement(icon as React.ReactElement, { className: 'w-5 h-5 md:w-5 md:h-5' })}
+      <span className="w-5 h-5 md:w-5 md:h-5">
+        {icon}
+      </span>
       <span className="text-[10px] md:text-base whitespace-nowrap">{label}</span>
     </button>
   );
 }
 
-function StatCard({ label, value, icon }: { label: string, value: string | number, icon: React.ReactNode }) {
-  return (
-    <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-6">
-      <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center">
-        {React.cloneElement(icon as React.ReactElement, { className: 'w-7 h-7' })}
-      </div>
-      <div>
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{label}</p>
-        <p className="text-2xl font-black text-slate-900">{value}</p>
-      </div>
-    </div>
-  );
-}

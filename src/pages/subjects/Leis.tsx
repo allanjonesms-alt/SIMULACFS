@@ -3,9 +3,9 @@ import SubjectPage from '../../components/SubjectPage';
 import { Question, UserProfile } from '../../types';
 
 interface LeisProps {
-  questions: Question[];
+  questions?: Question[];
   onBack: () => void;
-  onDownloadPDF: (law: string, questions: Question[]) => void;
+  onDownloadPDF: (law: string) => void;
   onPreview: (q: Question) => void;
   onEdit: (q: Question) => void;
   onDelete: (q: Question) => void;
