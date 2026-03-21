@@ -125,6 +125,7 @@ async function startServer() {
               await userRef.update({ 
                 isUpgraded: true,
                 upgradedAt: admin.firestore.FieldValue.serverTimestamp(),
+                paymentDate: admin.firestore.FieldValue.serverTimestamp(),
                 lastPaymentId: String(paymentId)
               });
               console.log(`[WEBHOOK] User ${userId} upgraded successfully.`);

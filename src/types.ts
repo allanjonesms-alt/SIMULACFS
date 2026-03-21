@@ -8,6 +8,7 @@ export interface UserProfile {
   isUpgraded: boolean;
   upgradedAt?: any;
   anonymousName: string;
+  phone?: string;
 }
 
 export interface Question {

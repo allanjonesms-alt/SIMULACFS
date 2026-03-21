@@ -1,8 +1,8 @@
 import React from 'react';
-import { updateDoc, doc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
+import { updateDoc, doc, collection, query, where, getDocs, writeBatch, getDoc, deleteDoc } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { UserProfile, SimulationResult } from '../types';
-import { Users as UsersIcon, Zap, UserCheck, UserX, Trash2 } from 'lucide-react';
+import { Users as UsersIcon, Zap, UserCheck, UserX, Trash2, Search, FileText, Award, MessageCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import StatCard from '../components/StatCard';
 
@@ -26,6 +26,29 @@ const UsersPage: React.FC<UsersProps> = ({ allSimulations, allUsers, setAllUsers
   };
 
   const [searchTerm, setSearchTerm] = React.useState('');
+  
+  const deleteUserAccount = async (userId: string) => {
+    if (!window.confirm('Tem certeza que deseja excluir permanentemente este usuário e todos os seus dados? Esta ação não pode ser desfeita.')) return;
+    try {
+      const batch = writeBatch(db);
+      
+      // 1. Delete user document
+      batch.delete(doc(db, 'users', userId));
+      
+      // 2. Delete active simulation
+      batch.delete(doc(db, 'active_simulations', userId));
+      
+      // 3. Delete all simulations
+      const q = query(collection(db, 'simulations'), where('userId', '==', userId));
+      const snapshot = await getDocs(q);
+      snapshot.docs.forEach(doc => batch.delete(doc.ref));
+      
+      await batch.commit();
+      
+      setAllUsers(prev => prev.filter(u => u.uid !== userId));
+      alert('Usuário e todos os seus dados excluídos com sucesso!');
+    } catch (e) { handleFirestoreError(e, OperationType.DELETE, 'users'); }
+  };
 
   const filteredUsers = allUsers.filter(u => 
     u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -80,14 +103,60 @@ const UsersPage: React.FC<UsersProps> = ({ allSimulations, allUsers, setAllUsers
                 <div className="overflow-hidden">
                   <p className="font-bold text-slate-900 leading-tight truncate">{u.displayName}</p>
                   <p className="text-xs text-slate-500 truncate">{u.email}</p>
+                  <input
+                    type="text"
+                    placeholder="Telefone (5567...)"
+                    className="text-xs mt-1 p-1 w-full rounded border border-slate-200"
+                    value={u.phone || ''}
+                    onChange={async (e) => {
+                      const newPhone = e.target.value;
+                      setAllUsers(prev => prev.map(user => user.uid === u.uid ? { ...user, phone: newPhone } : user));
+                      try {
+                        await updateDoc(doc(db, 'users', u.uid), { phone: newPhone });
+                      } catch (e) { handleFirestoreError(e, OperationType.UPDATE, `users/${u.uid}`); }
+                    }}
+                  />
+                  <div className="flex gap-4 mt-2">
+                    <div className="flex items-center gap-1 text-xs font-bold text-slate-600">
+                      <FileText className="w-4 h-4 text-indigo-500" />
+                      {allSimulations.filter(s => s.userId === u.uid && s.isMiniSimulado !== true).length}
+                    </div>
+                    <div className="flex items-center gap-1 text-xs font-bold text-slate-600">
+                      <Award className="w-4 h-4 text-amber-500" />
+                      {(() => {
+                        const userSims = allSimulations.filter(s => s.userId === u.uid && s.isMiniSimulado !== true);
+                        if (userSims.length === 0) return '0%';
+                        const avg = userSims.reduce((acc, s) => acc + (s.score / s.totalQuestions) * 100, 0) / userSims.length;
+                        return `${avg.toFixed(1)}%`;
+                      })()}
+                    </div>
+                  </div>
                 </div>
               </div>
+              <button 
+                onClick={() => deleteUserAccount(u.uid)}
+                className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
+                title="Excluir Usuário"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
             <div className="flex items-center justify-between pt-4 border-t border-slate-100">
               <span className={`text-xs font-bold px-2 py-1 rounded-full ${u.isUpgraded ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}`}>
                 {u.isUpgraded ? 'Premium' : 'Gratuito'}
               </span>
               <div className="flex items-center gap-2">
+                {u.phone && (
+                  <a
+                    href={`https://wa.me/${u.phone.replace(/\D/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-colors"
+                    title="Enviar WhatsApp"
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                  </a>
+                )}
                 <button 
                   onClick={async () => {
                     try {
@@ -114,13 +183,6 @@ const UsersPage: React.FC<UsersProps> = ({ allSimulations, allUsers, setAllUsers
                   }`}
                 >
                   {u.isActive ? <UserX className="w-5 h-5" /> : <UserCheck className="w-5 h-5" />}
-                </button>
-                <button 
-                  onClick={() => deleteUserSimulations(u.uid)}
-                  className="p-2 bg-slate-50 text-red-600 rounded-xl hover:bg-red-50 transition-colors"
-                  title="Limpar Mini-Simulados"
-                >
-                  <Trash2 className="w-5 h-5" />
                 </button>
               </div>
             </div>

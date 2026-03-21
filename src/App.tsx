@@ -46,6 +46,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { UserProfile, Question, SimulationResult, QuestionError } from './types';
+import AdminPage from './pages/Admin';
 import UpgradePage from './components/UpgradePage';
 import StatCard from './components/StatCard';
 import PerformancePage from './pages/Performance';
@@ -93,6 +94,7 @@ import { SergeantIcon } from './components/SergeantIcon';
 // --- Main App ---
 
 import { useQuestions } from './hooks/useQuestions';
+import { useSimulation } from './hooks/useSimulation';
 
 export default function App() {
   const { questions } = useQuestions();
@@ -100,7 +102,9 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'dashboard' | 'simulation' | 'history' | 'performance' | 'ranking' | 'admin_users' | 'admin_questions' | 'admin_errors' | 'upgrade' | 'mini_simulados' | 'conselho_disciplina' | 'contato'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'simulation' | 'history' | 'performance' | 'ranking' | 'admin' | 'upgrade' | 'mini_simulados' | 'conselho_disciplina' | 'contato' | 'instructions'>('dashboard');
+  const [pendingSimulationType, setPendingSimulationType] = useState<'full' | 'mini' | 'start_mini' | null>(null);
+  const [pendingSubject, setPendingSubject] = useState<string | null>(null);
   
   if (isMaintenanceMode) {
     return <MaintenancePage />;
@@ -178,69 +182,9 @@ export default function App() {
     };
   }, [history]);
   
-  // Simulation state
-  const [currentExam, setCurrentExam] = useState<ExamQuestion[]>([]);
-  const [examIndex, setExamIndex] = useState(0);
-  const [answers, setAnswers] = useState<number[]>([]); // Stores the ID of the selected option
-  const [examFinished, setExamFinished] = useState(false);
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [hasRatedCurrentQuestion, setHasRatedCurrentQuestion] = useState(false);
-  const [pendingRating, setPendingRating] = useState<number | null>(null);
-  const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
-  const [activeSimulation, setActiveSimulation] = useState<ActiveSimulation | null>(null);
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // Simulation state will be initialized after setNotification.
 
-  const debouncedSaveSimulation = useCallback((userId: string, data: any) => {
-    if (saveTimerRef.current) {
-      clearTimeout(saveTimerRef.current);
-    }
-    saveTimerRef.current = setTimeout(async () => {
-      try {
-        await updateDoc(doc(db, 'active_simulations', userId), {
-          ...data,
-          updatedAt: serverTimestamp(),
-        });
-      } catch (error) {
-        handleFirestoreError(error, OperationType.UPDATE, 'active_simulations');
-      }
-    }, 3000); // Wait 3 seconds of inactivity before saving
-  }, []);
-
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    };
-  }, []);
-
-  // Error reporting state
-  const [isReportingError, setIsReportingError] = useState(false);
-  const [reportingQuestion, setReportingQuestion] = useState<Question | null>(null);
-
-  const existingLaws = useMemo(() => {
-    const laws = questions.map(q => q.law).filter(Boolean) as string[];
-    return Array.from(new Set(laws)).sort();
-  }, [questions]);
-
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (view === 'simulation' && !examFinished && !isPaused) {
-      timer = setInterval(() => {
-        setElapsedTime((prev) => prev + 1);
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [view, examFinished, isPaused]);
-
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      setIsPaused(document.hidden);
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, []);
+  // Simulation functions are now in useSimulation hook.
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -275,7 +219,8 @@ export default function App() {
             role: isAdminEmail ? 'admin' : 'user',
             isActive: true,
             isUpgraded: isAdminEmail, // Admins should be upgraded by default
-            anonymousName: `Estudante_${Math.floor(Math.random() * 10000)}`
+            anonymousName: `Estudante_${Math.floor(Math.random() * 10000)}`,
+            phone: ''
           };
           await setDoc(doc(db, 'users', user.uid), newProfile);
           setProfile(newProfile);
@@ -359,8 +304,46 @@ export default function App() {
   const [loginError, setLoginError] = useState<string | null>(null);
 
   const [isMiniSimulado, setIsMiniSimulado] = useState(false);
-  const [activeMiniSimulation, setActiveMiniSimulation] = useState<ActiveSimulation | null>(null);
+  const [activeMiniSimulations, setActiveMiniSimulations] = useState<ActiveSimulation[]>([]);
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+  const [isReportingError, setIsReportingError] = useState(false);
+  const [reportingQuestion, setReportingQuestion] = useState<Question | null>(null);
+
+  // Simulation state
+  const {
+    currentExam,
+    examIndex,
+    answers,
+    examFinished,
+    showFeedback,
+    hasRatedCurrentQuestion,
+    pendingRating,
+    selectedOptionId,
+    activeSimulation,
+    elapsedTime,
+    isPaused,
+    setElapsedTime,
+    setIsPaused,
+    startSimulation,
+    resumeSimulation,
+    submitAnswer,
+    setPendingRating,
+    nextQuestion,
+    setExamFinished,
+    setActiveSimulation,
+    setCurrentExam,
+    setExamIndex,
+    setAnswers,
+    setShowFeedback,
+    setSelectedOptionId,
+    setHasRatedCurrentQuestion
+  } = useSimulation(user, profile, questions, history, setNotification, setView);
+
+  // Pause/resume timer based on view
+  useEffect(() => {
+    setIsPaused(view !== 'simulation');
+  }, [view, setIsPaused]);
+
   const [confirmModal, setConfirmModal] = useState<{title: string, message: string, onConfirm: () => void} | null>(null);
 
   const downloadPDF = (law: string) => {
@@ -529,212 +512,7 @@ export default function App() {
     }
   };
 
-  const startSimulation = async () => {
-    if (activeSimulation) {
-      setNotification({ message: 'Você já tem um simulado em andamento. Por favor, retome-o.', type: 'error' });
-      return;
-    }
-    
-    if (!profile?.isActive) {
-      setNotification({ message: 'Sua conta está desativada. Entre em contato com o administrador.', type: 'error' });
-      return;
-    }
-    
-    // Check if user can take more simulations
-    if (!profile.isUpgraded && history.length >= 1) {
-      setNotification({ message: 'Você já realizou seu simulado gratuito. Faça o upgrade!', type: 'error' });
-      return;
-    }
-
-    // Separate questions by category
-    const portugueseQuestions = questions.filter(q => q.law === 'Língua Portuguesa');
-    const otherQuestions = questions.filter(q => q.law !== 'Língua Portuguesa');
-
-    if (portugueseQuestions.length === 0 && otherQuestions.length === 0) {
-      setNotification({ message: 'Nenhuma questão disponível no momento.', type: 'error' });
-      return;
-    }
-
-    // Pick 20 from Portuguese and 30 from others
-    const selectedPortuguese = [...portugueseQuestions]
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 20);
-      
-    const selectedOthers = [...otherQuestions]
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 30);
-
-    const combinedQuestions = [...selectedPortuguese, ...selectedOthers];
-
-    const selectedQuestions = combinedQuestions.map(q => {
-      return {
-        ...q,
-        shuffledOptions: q.options.map((text, index) => ({ id: index, text }))
-      };
-    });
-
-    try {
-      // Save active simulation state
-      await setDoc(doc(db, 'active_simulations', user!.uid), {
-        userId: user!.uid,
-        questions: selectedQuestions,
-        currentIndex: 0,
-        answers: [],
-        updatedAt: serverTimestamp(),
-        elapsedTime: 0
-      });
-
-      setIsMiniSimulado(false);
-      setCurrentExam(selectedQuestions);
-      setExamIndex(0);
-      setAnswers([]);
-      setElapsedTime(0);
-      setExamFinished(false);
-      setShowFeedback(false);
-      setSelectedOptionId(null);
-      setHasRatedCurrentQuestion(false);
-      setPendingRating(null);
-      setView('simulation');
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, 'active_simulations');
-    }
-  };
-
-
-
-  const resumeSimulation = () => {
-    if (!activeSimulation) return;
-    setIsMiniSimulado(false);
-    setCurrentExam(activeSimulation.questions);
-    setExamIndex(activeSimulation.currentIndex);
-    setAnswers(activeSimulation.answers);
-    setElapsedTime(activeSimulation.elapsedTime || 0);
-    setExamFinished(false);
-    setShowFeedback(false);
-    setSelectedOptionId(null);
-    setHasRatedCurrentQuestion(false);
-    setPendingRating(null);
-    setView('simulation');
-  };
-
-  const submitAnswer = (optionId: number) => {
-    if (showFeedback) return;
-    setSelectedOptionId(optionId);
-    setShowFeedback(true);
-  };
-
-  const rateQuestion = async (questionId: string, rating: number) => {
-    if (hasRatedCurrentQuestion) return;
-    setHasRatedCurrentQuestion(true);
-    try {
-      const qRef = doc(db, 'questions', questionId);
-      const qDoc = await getDoc(qRef);
-      if (qDoc.exists()) {
-        const data = qDoc.data() as Question;
-        const newTotalRatings = (data.totalRatings || 0) + 1;
-        const newSumOfRatings = (data.sumOfRatings || 0) + rating;
-        const newDifficulty = Math.round(newSumOfRatings / newTotalRatings);
-        
-        await updateDoc(qRef, {
-          totalRatings: newTotalRatings,
-          sumOfRatings: newSumOfRatings,
-          difficulty: newDifficulty
-        });
-        setNotification({ message: 'Obrigado pela sua avaliação!', type: 'success' });
-      }
-    } catch (error) {
-      console.error('Erro ao avaliar questão:', error);
-      setNotification({ message: 'Erro ao enviar avaliação', type: 'error' });
-    }
-  };
-
-  const nextQuestion = async () => {
-    if (pendingRating !== null) {
-      await rateQuestion(currentExam[examIndex].id, pendingRating);
-    }
-
-    const newAnswers = [...answers, selectedOptionId!];
-    setAnswers(newAnswers);
-    setShowFeedback(false);
-    setSelectedOptionId(null);
-    setHasRatedCurrentQuestion(false);
-    setPendingRating(null);
-    
-    if (examIndex < currentExam.length - 1) {
-      const nextIdx = examIndex + 1;
-      setExamIndex(nextIdx);
-      
-      if (!isMiniSimulado) {
-        // Update active simulation state
-        debouncedSaveSimulation(user!.uid, {
-          currentIndex: nextIdx,
-          answers: newAnswers,
-          elapsedTime: elapsedTime || 0
-        });
-      } else {
-        setActiveMiniSimulation(prev => prev ? {
-          ...prev,
-          currentIndex: nextIdx,
-          answers: newAnswers,
-          elapsedTime: elapsedTime || 0
-        } : null);
-      }
-    } else {
-      finishExam(newAnswers);
-    }
-  };
-
-  const finishExam = async (finalAnswers: number[]) => {
-    let score = 0;
-    const subjectScores: Record<string, { correct: number; total: number }> = {};
-
-    currentExam.forEach((q, idx) => {
-      const isCorrect = q.correctOption === finalAnswers[idx];
-      if (isCorrect) {
-        score++;
-      }
-
-      const subject = q.law || q.category || 'Outros';
-      if (!subjectScores[subject]) {
-        subjectScores[subject] = { correct: 0, total: 0 };
-      }
-      subjectScores[subject].total++;
-      if (isCorrect) {
-        subjectScores[subject].correct++;
-      }
-    });
-
-    const result: Omit<SimulationResult, 'id'> = {
-      userId: user!.uid,
-      score,
-      totalQuestions: currentExam.length,
-      date: serverTimestamp(),
-      anonymousName: profile!.anonymousName,
-      elapsedTime: elapsedTime || 0,
-      subjectScores,
-      isMiniSimulado: isMiniSimulado || false
-    };
-
-    try {
-      const batch = writeBatch(db);
-      
-      // 1. Add simulation result
-      const simulationRef = doc(collection(db, 'simulations'));
-      batch.set(simulationRef, result);
-      
-      // 2. Delete active simulation state
-      if (!isMiniSimulado) {
-        batch.delete(doc(db, 'active_simulations', user!.uid));
-      } else {
-        setActiveMiniSimulation(null);
-      }
-      
-      await batch.commit();
-      setExamFinished(true);
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, 'simulations');
-    }
-  };
+  // Simulation functions are now in useSimulation hook.
 
   if (loading) {
     return (
@@ -781,6 +559,32 @@ export default function App() {
       </div>
     );
   }
+
+  const handleViewChange = (newView: typeof view) => {
+    if (view === 'simulation' && isMiniSimulado && !examFinished) {
+      setConfirmModal({
+        title: 'Sair do Mini-Simulado?',
+        message: 'Se você sair agora, todo o seu progresso no mini-simulado será perdido. Deseja continuar?',
+        onConfirm: () => {
+          // Reset all simulation states
+          setExamFinished(false);
+          setAnswers([]);
+          setExamIndex(0);
+          setElapsedTime(0);
+          setShowFeedback(false);
+          setSelectedOptionId(null);
+          setHasRatedCurrentQuestion(false);
+          setPendingRating(null);
+          
+          setIsMiniSimulado(false);
+          setActiveMiniSimulations([]);
+          setView(newView);
+        }
+      });
+    } else {
+      setView(newView);
+    }
+  };
 
   return (
     <ErrorBoundary>
@@ -860,30 +664,24 @@ export default function App() {
             <span className="text-xl font-bold text-slate-900">SimulaCFS</span>
           </div>
 
-          <NavItem active={view === 'dashboard'} onClick={() => setView('dashboard')} icon={<LayoutDashboard />} label="Dashboard" />
+          <NavItem active={view === 'dashboard'} onClick={() => handleViewChange('dashboard')} icon={<LayoutDashboard />} label="Dashboard" />
           <NavItem 
             active={view === 'simulation' && !isMiniSimulado} 
-            onClick={activeSimulation ? resumeSimulation : startSimulation} 
+            onClick={activeSimulation ? resumeSimulation : () => startSimulation(false)} 
             icon={<Play className="w-5 h-5" />} 
             label="Simulado Completo" 
           />
-          <NavItem active={view === 'mini_simulados'} onClick={() => setView('mini_simulados')} icon={<Target />} label="Mini-Simulados" />
-          <NavItem active={view === 'history'} onClick={() => setView('history')} icon={<History />} label="Histórico" />
-          <NavItem active={view === 'performance'} onClick={() => setView('performance')} icon={<BarChart2 />} label="Desempenho" />
-          <NavItem active={view === 'ranking'} onClick={() => setView('ranking')} icon={<Trophy />} label="Ranking" />
-          <NavItem active={view === 'contato'} onClick={() => setView('contato')} icon={<MessageCircle />} label="Contato" />
+          <NavItem active={view === 'mini_simulados'} onClick={() => handleViewChange('mini_simulados')} icon={<Target />} label="Mini-Simulados" />
+          <NavItem active={view === 'history'} onClick={() => handleViewChange('history')} icon={<History />} label="Histórico" />
+          <NavItem active={view === 'performance'} onClick={() => handleViewChange('performance')} icon={<BarChart2 />} label="Desempenho" />
+          <NavItem active={view === 'ranking'} onClick={() => handleViewChange('ranking')} icon={<Trophy />} label="Ranking" />
+          <NavItem active={view === 'contato'} onClick={() => handleViewChange('contato')} icon={<MessageCircle />} label="Contato" />
           {!profile?.isUpgraded && (
-            <NavItem active={view === 'upgrade'} onClick={() => setView('upgrade')} icon={<Zap />} label="Upgrade" />
+            <NavItem active={view === 'upgrade'} onClick={() => handleViewChange('upgrade')} icon={<Zap />} label="Upgrade" />
           )}
           
           {(profile?.role === 'admin' || user?.email === 'allanjonesms@gmail.com') && (
-            <>
-              <div className="hidden md:block mt-8 mb-2 px-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Admin</div>
-              <div className="md:hidden w-px h-8 bg-slate-200 mx-1 self-center shrink-0"></div>
-              <NavItem active={view === 'admin_users'} onClick={() => setView('admin_users')} icon={<Users />} label="Usuários" />
-              <NavItem active={view === 'admin_questions'} onClick={() => setView('admin_questions')} icon={<PlusCircle />} label="Questões" />
-              <NavItem active={view === 'admin_errors'} onClick={() => setView('admin_errors')} icon={<AlertTriangle />} label="Erros" />
-            </>
+            <NavItem active={view === 'admin'} onClick={() => handleViewChange('admin')} icon={<ShieldCheck />} label="Admin" />
           )}
 
           <div className="hidden md:block mt-auto pt-6 border-t border-slate-100">
@@ -907,6 +705,69 @@ export default function App() {
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto p-4 md:p-10 pb-24 md:pb-10">
           <AnimatePresence mode="wait">
+            {view === 'instructions' && (
+              <motion.div key="instructions" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="max-w-2xl mx-auto">
+                <div className="bg-white p-10 rounded-3xl shadow-2xl border border-slate-100 text-center">
+                  <div className="w-20 h-20 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-8">
+                    <BookOpen className="w-10 h-10 text-indigo-600" />
+                  </div>
+                  <h2 className="text-3xl font-bold text-slate-900 mb-6">Instruções do Simulado</h2>
+                  
+                  <div className="space-y-6 text-left mb-10">
+                    <div className="flex items-start gap-4 p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                      <Zap className="w-6 h-6 text-amber-600 shrink-0 mt-1" />
+                      <div>
+                        <p className="text-amber-900 font-bold mb-1">Aviso Importante:</p>
+                        <p className="text-amber-800 text-sm leading-relaxed">
+                          As questões atualmente estão sendo classificadas em dificuldade e as questões de muita facilidade serão excluídas para aumentar o nível do aprendizado.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                      <CheckCircle2 className="w-6 h-6 text-indigo-600 shrink-0 mt-1" />
+                      <div>
+                        <p className="text-slate-900 font-bold mb-1">Formato do Simulado:</p>
+                        <p className="text-slate-600 text-sm leading-relaxed">
+                          {pendingSimulationType === 'full' 
+                            ? 'O simulado completo contém questões de todas as matérias e o tempo é cronometrado.' 
+                            : `O mini-simulado de ${pendingSubject} contém 10 questões focadas e rápidas.`}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <button 
+                      onClick={() => {
+                        setView(pendingSimulationType === 'mini' ? 'mini_simulados' : 'dashboard');
+                        setPendingSimulationType(null);
+                        setPendingSubject(null);
+                      }}
+                      className="flex-1 px-8 py-4 rounded-2xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all"
+                    >
+                      Voltar
+                    </button>
+                    <button 
+                      onClick={() => {
+                        if (pendingSimulationType === 'full') {
+                          startSimulation(false);
+                        } else if (pendingSimulationType === 'mini' && pendingSubject) {
+                          // We need to trigger the mini simulation start. 
+                          // Since startMiniSimulation is inside MiniSimulado, we'll handle it via state or props.
+                          // For now, let's assume we can trigger it.
+                          setPendingSimulationType('start_mini'); 
+                        }
+                        setPendingSimulationType(null);
+                      }}
+                      className="flex-1 px-8 py-4 rounded-2xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200"
+                    >
+                      Começar Agora
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
             {view === 'dashboard' && (
               <motion.div key="dashboard" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
@@ -915,7 +776,10 @@ export default function App() {
                     <p className="text-slate-500">Bem-vindo de volta ao seu painel de estudos.</p>
                   </div>
                   <button 
-                    onClick={activeSimulation ? resumeSimulation : startSimulation}
+                    onClick={activeSimulation ? resumeSimulation : () => {
+                      setPendingSimulationType('full');
+                      setView('instructions');
+                    }}
                     className="flex items-center justify-center gap-2 bg-indigo-600 text-white px-8 py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95"
                   >
                     <Play className="w-5 h-5 fill-current" />
@@ -923,10 +787,26 @@ export default function App() {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                  <StatCard label="Simulados Realizados" value={history.filter(s => !s.isMiniSimulado).length} icon={<History className="text-indigo-600" />} />
-                  <StatCard label="Média de Acertos" value={history.filter(s => !s.isMiniSimulado).length > 0 ? `${(history.filter(s => !s.isMiniSimulado).reduce((a, b) => a + b.score, 0) / history.filter(s => !s.isMiniSimulado).length).toFixed(1)}` : '0'} icon={<CheckCircle2 className="text-emerald-600" />} />
-                  <StatCard label="Status da Conta" value={profile?.isUpgraded ? 'Premium' : 'Gratuito'} icon={<ShieldCheck className="text-amber-600" />} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+                  <StatCard 
+                    label="Simulados" 
+                    value={history.filter(s => !s.isMiniSimulado).length} 
+                    subValue={allSimulations.filter(s => !s.isMiniSimulado).length}
+                    subLabel="Seus / Total Geral"
+                    icon={<History className="text-indigo-600" />} 
+                  />
+                  <StatCard 
+                    label="Média de Acertos" 
+                    value={history.filter(s => !s.isMiniSimulado).length > 0 ? `${(history.filter(s => !s.isMiniSimulado).reduce((a, b) => a + b.score, 0) / history.filter(s => !s.isMiniSimulado).length).toFixed(1)}` : '0'} 
+                    subValue={allSimulations.filter(s => !s.isMiniSimulado).length > 0 ? `${(allSimulations.filter(s => !s.isMiniSimulado).reduce((a, b) => a + b.score, 0) / allSimulations.filter(s => !s.isMiniSimulado).length).toFixed(1)}` : '0'}
+                    subLabel="Sua / Geral"
+                    icon={<CheckCircle2 className="text-emerald-600" />} 
+                  />
+                  <StatCard 
+                    label="Status da Conta" 
+                    value={profile?.isUpgraded ? 'Premium' : 'Gratuito'} 
+                    icon={<ShieldCheck className="text-indigo-600" />} 
+                  />
                 </div>
 
                 {!profile?.isUpgraded && (
@@ -935,7 +815,7 @@ export default function App() {
                       <h3 className="text-2xl font-bold mb-2">Desbloqueie todo o seu potencial!</h3>
                       <p className="text-indigo-100 mb-6 max-w-md">Faça o upgrade para o plano Premium e tenha acesso ilimitado a simulados, ranking completo e estatísticas detalhadas.</p>
                       <button 
-                        onClick={() => setView('upgrade')}
+                        onClick={() => handleViewChange('upgrade')}
                         className="bg-white text-indigo-600 px-6 py-3 rounded-xl font-bold hover:bg-indigo-50 transition-colors"
                       >
                         Fazer Upgrade Agora
@@ -944,6 +824,16 @@ export default function App() {
                     <Trophy className="absolute right-[-20px] bottom-[-20px] w-64 h-64 text-white/10 rotate-12" />
                   </div>
                 )}
+
+                <div className="bg-indigo-50 border border-indigo-100 rounded-3xl p-6 mb-8">
+                  <h4 className="text-lg font-bold text-indigo-900 mb-2">Atenção aos estudos!</h4>
+                  <p className="text-indigo-800 text-sm leading-relaxed">
+                    As questões estão sendo reavaliadas e classificadas em nível de dificuldade pelos próprios usuários para que aumente o nível de exigência para um melhor aprendizado. 
+                    Solicitamos que, se possível, sempre avaliem as questões conforme seu nível de dificuldade.
+                    <br/><br/>
+                    <span className="font-bold">Questões de todas as matérias já estão disponíveis.</span>
+                  </p>
+                </div>
 
                 <h3 className="text-xl font-bold text-slate-900 mb-6">Últimas Atividades</h3>
                 <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
@@ -998,7 +888,7 @@ export default function App() {
                   allSimulations={allSimulations} 
                   allUsers={allUsers}
                   profile={profile} 
-                  onUpgrade={() => setView('upgrade')} 
+                  onUpgrade={() => handleViewChange('upgrade')} 
                 />
               </motion.div>
             )}
@@ -1009,8 +899,8 @@ export default function App() {
                 questions={questions} 
                 isMiniSimulado={isMiniSimulado}
                 setIsMiniSimulado={setIsMiniSimulado}
-                activeMiniSimulation={activeMiniSimulation}
-                setActiveMiniSimulation={setActiveMiniSimulation}
+                activeMiniSimulations={activeMiniSimulations}
+                setActiveMiniSimulations={setActiveMiniSimulations}
                 setNotification={setNotification}
                 setView={setView}
                 setCurrentExam={setCurrentExam}
@@ -1024,6 +914,10 @@ export default function App() {
                 setPendingRating={setPendingRating}
                 setConfirmModal={setConfirmModal}
                 user={user}
+                setPendingSimulationType={setPendingSimulationType}
+                setPendingSubject={setPendingSubject}
+                pendingSimulationType={pendingSimulationType}
+                pendingSubject={pendingSubject}
               />
             )}
 
@@ -1037,11 +931,11 @@ export default function App() {
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         <div className="flex items-center gap-4">
-                          <div className="bg-indigo-100 text-indigo-700 px-4 py-1 rounded-full font-bold text-sm">
+                          <div className="bg-emerald-100 text-emerald-600 px-6 py-2 rounded-full font-black text-lg">
                             {Math.floor(elapsedTime / 60).toString().padStart(2, '0')}:{ (elapsedTime % 60).toString().padStart(2, '0')}
                           </div>
-                          <span className="bg-indigo-100 text-indigo-700 px-4 py-1 rounded-full font-bold text-sm">
-                            Questão {examIndex + 1} de {currentExam.length}
+                          <span className="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-full font-bold text-sm flex items-center gap-1">
+                            Questão <span className="text-4xl font-black">{examIndex + 1}</span>/{currentExam.length}
                           </span>
                         </div>
                         <div className="flex items-center gap-4">
@@ -1055,7 +949,7 @@ export default function App() {
                                     if (user && !isMiniSimulado) {
                                       await deleteDoc(doc(db, 'active_simulations', user.uid));
                                     } else if (isMiniSimulado) {
-                                      setActiveMiniSimulation(null);
+                                      setActiveMiniSimulations([]);
                                     }
                                     setExamFinished(true);
                                     setAnswers([]);
@@ -1082,7 +976,7 @@ export default function App() {
                             className="flex items-center gap-2 text-red-500 hover:text-red-600 text-sm font-bold transition-colors"
                           >
                             <AlertTriangle className="w-4 h-4" />
-                            Informar Erro na Questão
+                            Erro
                           </button>
                         </div>
                       </div>
@@ -1090,8 +984,15 @@ export default function App() {
 
                     <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 mb-6">
                       {currentExam[examIndex]?.law && (
-                        <div className="mb-4 inline-block px-3 py-1 bg-indigo-50 text-indigo-600 text-xs font-bold rounded-lg uppercase tracking-wider border border-indigo-100">
-                          {currentExam[examIndex].law}
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="inline-block px-3 py-1 bg-indigo-50 text-indigo-600 text-xs font-bold rounded-lg uppercase tracking-wider border border-indigo-100">
+                            {currentExam[examIndex].law}
+                          </div>
+                          <div className="flex items-center gap-0.5">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className={`w-4 h-4 ${i < (currentExam[examIndex].difficulty || 1) ? 'text-amber-400 fill-amber-400' : 'text-slate-300'}`} />
+                            ))}
+                          </div>
                         </div>
                       )}
                       <p className="text-xl text-slate-800 font-medium leading-relaxed mb-8" translate="no">
@@ -1099,7 +1000,7 @@ export default function App() {
                       </p>
                       
                       <div className="grid grid-cols-1 gap-4">
-                        {currentExam[examIndex]?.shuffledOptions.map((option, idx) => {
+                        {currentExam[examIndex]?.shuffledOptions?.map((option, idx) => {
                           const isSelected = selectedOptionId === option.id;
                           const isCorrect = option.id === currentExam[examIndex].correctOption;
                           
@@ -1199,7 +1100,7 @@ export default function App() {
                           </div>
 
                           <button 
-                            onClick={nextQuestion}
+                            onClick={() => nextQuestion(isMiniSimulado)}
                             className="w-full mt-6 bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
                           >
                             {examIndex < currentExam.length - 1 ? 'Próxima Questão' : 'Ver Resultado Final'}
@@ -1269,7 +1170,7 @@ export default function App() {
                 processedRanking={processedRanking} 
                 profile={profile} 
                 user={user} 
-                onUpgradeClick={() => setView('upgrade')} 
+                onUpgradeClick={() => handleViewChange('upgrade')} 
               />
             )}
 
@@ -1287,27 +1188,20 @@ export default function App() {
                 />
               </motion.div>
             )}
-            {view === 'admin_users' && profile?.role === 'admin' && (
-              <UsersPage allSimulations={allSimulations} allUsers={allUsers} setAllUsers={setAllUsers} />
-
-            )}
-
-            {view === 'admin_questions' && profile?.role === 'admin' && (
-              <motion.div key="admin_questions" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-                <AdminQuestions 
-                  profile={profile}
-                  setNotification={setNotification}
-                  setConfirmModal={setConfirmModal}
-                  downloadPDF={downloadPDF}
-                  onBack={() => setView('dashboard')}
-                />
-              </motion.div>
-            )}
-            {view === 'admin_errors' && (profile?.role === 'admin' || user?.email === 'allanjonesms@gmail.com') && (
-              <ErrorReportPage 
-                allErrors={allErrors} 
-                setNotification={setNotification} 
-                setConfirmModal={setConfirmModal} 
+            {view === 'admin' && (profile?.role === 'admin' || user?.email === 'allanjonesms@gmail.com') && (
+              <AdminPage 
+                user={user}
+                profile={profile}
+                allSimulations={allSimulations}
+                allUsers={allUsers}
+                setAllUsers={setAllUsers}
+                allErrors={allErrors}
+                setAllErrors={setAllErrors}
+                setAllSimulations={setAllSimulations}
+                setNotification={setNotification}
+                setConfirmModal={setConfirmModal}
+                downloadPDF={downloadPDF}
+                onBack={() => setView('dashboard')}
               />
             )}
           </AnimatePresence>

@@ -7,8 +7,8 @@ export const useMiniSimulado = (
   questions: any[],
   isMiniSimulado: boolean,
   setIsMiniSimulado: (isMini: boolean) => void,
-  activeMiniSimulation: any | null,
-  setActiveMiniSimulation: (active: any | null) => void,
+  activeMiniSimulations: any[],
+  setActiveMiniSimulations: (active: any[]) => void,
   setNotification: (notif: { message: string; type: 'success' | 'error' } | null) => void,
   setView: (view: any) => void,
   setCurrentExam: (exam: any[]) => void,
@@ -24,18 +24,23 @@ export const useMiniSimulado = (
   user: any
 ) => {
   const startNewMiniSimulation = (subject: string) => {
-    const subjectQuestions = questions.filter(q => (q.law || q.category || 'Sem Matéria') === subject || (subject === 'Provas Anteriores' && q.law === 'Leis'));
+    const subjectQuestions = (questions || []).filter(q => (q.law || q.category || 'Sem Matéria') === subject || (subject === 'Provas Anteriores' && q.law === 'Leis'));
     const shuffled = [...subjectQuestions].sort(() => 0.5 - Math.random()).slice(0, 10);
+    const examQuestions = shuffled.map(q => ({
+      ...q,
+      shuffledOptions: q.options.map((text: string, index: number) => ({ id: index, text }))
+    }));
     
     setIsMiniSimulado(true);
-    setActiveMiniSimulation({
+    const newSim = {
       subject,
-      questions: shuffled,
+      questions: examQuestions,
       currentIndex: 0,
       answers: [],
       elapsedTime: 0
-    });
-    setCurrentExam(shuffled);
+    };
+    setActiveMiniSimulations([...activeMiniSimulations, newSim]);
+    setCurrentExam(examQuestions);
     setExamIndex(0);
     setAnswers([]);
     setElapsedTime(0);
@@ -58,12 +63,13 @@ export const useMiniSimulado = (
       return;
     }
 
-    if (activeMiniSimulation?.subject === subject) {
+    const activeSim = activeMiniSimulations.find(s => s.subject === subject);
+    if (activeSim) {
       setIsMiniSimulado(true);
-      setCurrentExam(activeMiniSimulation.questions);
-      setExamIndex(activeMiniSimulation.currentIndex);
-      setAnswers(activeMiniSimulation.answers);
-      setElapsedTime(activeMiniSimulation.elapsedTime);
+      setCurrentExam(activeSim.questions);
+      setExamIndex(activeSim.currentIndex);
+      setAnswers(activeSim.answers);
+      setElapsedTime(activeSim.elapsedTime);
       setExamFinished(false);
       setShowFeedback(false);
       setSelectedOptionId(null);
@@ -73,14 +79,8 @@ export const useMiniSimulado = (
       return;
     }
 
-    if (activeMiniSimulation && activeMiniSimulation.subject !== subject) {
-      setConfirmModal({
-        title: 'Novo Mini-Simulado',
-        message: `Você já tem um mini-simulado de "${activeMiniSimulation.subject}" em andamento. Deseja iniciar um novo de "${subject}" e perder o progresso atual?`,
-        onConfirm: () => {
-          startNewMiniSimulation(subject);
-        }
-      });
+    if (activeMiniSimulations.length >= 2) {
+      setNotification({ message: 'Você já tem dois mini-simulados ativos. Encerre um para iniciar outro.', type: 'error' });
       return;
     }
 
@@ -88,8 +88,8 @@ export const useMiniSimulado = (
   };
 
   return {
-    activeMiniSimulation,
-    setActiveMiniSimulation,
+    activeMiniSimulations,
+    setActiveMiniSimulations,
     startMiniSimulation,
     startNewMiniSimulation
   };

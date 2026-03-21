@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   PlusCircle, Database, Search, BookOpen, X, Save,
   Book, ChevronLeft, Download, Eye, Edit2, Trash2,
-  CheckCircle2, Loader2
+  CheckCircle2, Loader2, Star, Zap
 } from 'lucide-react';
 import { 
   doc, deleteDoc, updateDoc, addDoc, collection, serverTimestamp 
@@ -201,6 +201,45 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
                 <PlusCircle className="w-5 h-5" />
                 Nova Questão
               </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+              <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fácil</p>
+                <p className="text-xl font-black text-slate-900">{questions.filter(q => (q.difficulty || 0) > 0 && (q.difficulty || 0) <= 2).length}</p>
+              </div>
+            </div>
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+              <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
+                <Star className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Média</p>
+                <p className="text-xl font-black text-slate-900">{questions.filter(q => (q.difficulty || 0) === 3).length}</p>
+              </div>
+            </div>
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+              <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-600">
+                <Zap className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Difícil</p>
+                <p className="text-xl font-black text-slate-900">{questions.filter(q => (q.difficulty || 0) >= 4).length}</p>
+              </div>
+            </div>
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+              <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400">
+                <Database className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sem Classificação</p>
+                <p className="text-xl font-black text-slate-900">{questions.filter(q => !q.difficulty || q.difficulty === 0).length}</p>
+              </div>
             </div>
           </div>
 
