@@ -94,6 +94,8 @@ interface ActiveSimulation {
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { MaintenancePage } from './components/MaintenancePage';
 import { SergeantIcon } from './components/SergeantIcon';
+import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
 
 // --- Main App ---
 
@@ -914,7 +916,7 @@ export default function App() {
             )}
             {view === 'upgrade' && (
               <motion.div key="upgrade" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                <UpgradePage onBack={() => setView('dashboard')} userId={user.uid} email={user.email || ''} />
+                <UpgradePage onBack={() => setView('dashboard')} userId={user.uid} email={user.email || ''} displayName={profile?.displayName || 'Usuário'} />
               </motion.div>
             )}
 
@@ -1028,9 +1030,9 @@ export default function App() {
                           <DifficultyStars difficulty={currentExam[examIndex].difficulty || 0} size="md" />
                         </div>
                       )}
-                      <p className="text-xl text-slate-800 font-medium leading-relaxed mb-8" translate="no">
-                        {currentExam[examIndex]?.text}
-                      </p>
+                      <div className="text-xl text-slate-800 font-medium leading-relaxed mb-8 markdown-body" translate="no">
+                        <ReactMarkdown rehypePlugins={[rehypeRaw]}>{currentExam[examIndex]?.text}</ReactMarkdown>
+                      </div>
                       
                       <div className="grid grid-cols-1 gap-4">
                         {currentExam[examIndex]?.shuffledOptions?.map((option, idx) => {
@@ -1062,7 +1064,9 @@ export default function App() {
                               <span className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold transition-colors ${iconClass}`}>
                                 {String.fromCharCode(65 + idx)}
                               </span>
-                              <span className="flex-1 text-slate-700 font-medium" translate="no">{option.text}</span>
+                              <span className="flex-1 text-slate-700 font-medium markdown-body" translate="no">
+                                <ReactMarkdown rehypePlugins={[rehypeRaw]}>{option.text}</ReactMarkdown>
+                              </span>
                               {showFeedback && isCorrect && <CheckCircle2 className="w-6 h-6 text-emerald-500" />}
                               {showFeedback && isSelected && !isCorrect && <XCircle className="w-6 h-6 text-red-500" />}
                             </button>

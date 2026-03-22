@@ -1,14 +1,17 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { CheckCircle2, CreditCard, Zap } from 'lucide-react';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebase';
 
 interface UpgradePageProps {
   onBack: () => void;
   userId: string;
   email: string;
+  displayName: string;
 }
 
-export default function UpgradePage({ onBack, userId, email }: UpgradePageProps) {
+export default function UpgradePage({ onBack, userId, email, displayName }: UpgradePageProps) {
   const [cpf, setCpf] = React.useState('');
 
   const handlePayment = async (method: 'pix' | 'card') => {
@@ -17,6 +20,15 @@ export default function UpgradePage({ onBack, userId, email }: UpgradePageProps)
       return;
     }
     try {
+      // Add to upgrade_requests
+      await addDoc(collection(db, 'upgrade_requests'), {
+        userId,
+        email,
+        displayName,
+        createdAt: serverTimestamp(),
+        isNew: true
+      });
+
       console.log("Initiating payment with:", { userId, email, cpf, method });
       const response = await fetch(`/api/create-preference`, {
         method: 'POST',

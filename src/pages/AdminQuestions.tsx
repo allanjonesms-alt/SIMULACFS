@@ -11,7 +11,7 @@ import {
   doc, deleteDoc, updateDoc, addDoc, collection, serverTimestamp 
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
-import { Question, UserProfile } from '../types';
+import { Question, UserProfile, SimulationResult } from '../types';
 import { useQuestions } from '../hooks/useQuestions';
 import SubjectPage from '../components/SubjectPage';
 import Lei1102 from './subjects/Lei1102';
@@ -25,6 +25,7 @@ import Leis from './subjects/Leis';
 
 interface AdminQuestionsProps {
   profile: UserProfile | null;
+  allSimulations: SimulationResult[];
   setNotification: (notif: { message: string; type: 'success' | 'error' } | null) => void;
   setConfirmModal: (modal: { title: string; message: string; onConfirm: () => void } | null) => void;
   downloadPDF: (law: string) => void;
@@ -40,6 +41,7 @@ const FormatButtons = ({ onInsert }: { onInsert: (start: string, end: string) =>
 
 const AdminQuestions: React.FC<AdminQuestionsProps> = ({
   profile,
+  allSimulations,
   setNotification,
   setConfirmModal,
   downloadPDF,
@@ -116,8 +118,11 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
     }
     setIsSaving(true);
     try {
+      const optionsToSave = [...(newQuestion.options || ['', '', '', '', ''])];
+      optionsToSave[4] = null;
       await addDoc(collection(db, 'questions'), {
         ...newQuestion,
+        options: optionsToSave,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
@@ -342,7 +347,7 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
             case 'Provas Anteriores':
               return <Leis {...props} isAdmin={true} />;
             default:
-              return <SubjectPage law={selectedAdminLaw} {...props} isAdmin={true} />;
+              return <SubjectPage law={selectedAdminLaw} {...props} allSimulations={allSimulations} isAdmin={true} />;
           }
         })()
       )}
@@ -554,13 +559,13 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
                           onChange={(e) => setNewQuestion(prev => ({...prev, text: e.target.value}))}
                         />
                       </div>
-                      {newQuestion.options?.map((opt, i) => (
+                      {newQuestion.options?.slice(0, 4).map((opt, i) => (
                         <div key={i}>
                           <label className="block text-sm font-bold text-slate-700 mb-1">Alternativa {String.fromCharCode(65 + i)}</label>
                           <input 
                             type="text" 
                             className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none"
-                            value={opt}
+                            value={opt || ''}
                             translate="no"
                             onChange={(e) => {
                               const newOpts = [...(newQuestion.options || [])];
@@ -588,10 +593,10 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-1">Índice da Correta (0-4)</label>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Índice da Correta (0-3)</label>
                         <input 
                           type="number" 
-                          min="0" max="4"
+                          min="0" max="3"
                           className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none"
                           value={newQuestion.correctOption}
                           onChange={(e) => setNewQuestion({...newQuestion, correctOption: parseInt(e.target.value)})}

@@ -53,7 +53,10 @@ service cloud.firestore {
              data.correctOption >= 0 && data.correctOption <= 4 &&
              (!('category' in data) || data.category is string) &&
              (!('law' in data) || data.law is string) &&
-             (!('justification' in data) || data.justification is string);
+             (!('justification' in data) || data.justification is string) &&
+             (!('totalRatings' in data) || data.totalRatings is int) &&
+             (!('sumOfRatings' in data) || data.sumOfRatings is int) &&
+             (!('difficulty' in data) || data.difficulty is int);
     }
 
     function isValidSimulation(data) {
@@ -76,6 +79,14 @@ service cloud.firestore {
              data.status in ['pending', 'resolved'];
     }
 
+    function isOnlyUpdatingRatingFields(requestData, resourceData) {
+      let allowedRatingFields = ['totalRatings', 'sumOfRatings', 'difficulty'];
+      return requestData.diff(resourceData).affectedKeys().hasOnly(allowedRatingFields) &&
+             (!('totalRatings' in requestData) || requestData.totalRatings is int) &&
+             (!('sumOfRatings' in requestData) || requestData.sumOfRatings is int) &&
+             (!('difficulty' in requestData) || requestData.difficulty is int);
+    }
+
     // Rules
     match /users {
       allow list: if isAdmin();
@@ -89,7 +100,9 @@ service cloud.firestore {
 
     match /questions/{questionId} {
       allow read: if true;
-      allow create, update: if isAdmin() && isValidQuestion(request.resource.data);
+      allow create: if isAdmin() && isValidQuestion(request.resource.data);
+      allow update: if (isAdmin() && isValidQuestion(request.resource.data)) || 
+                       (isAuthenticated() && isOnlyUpdatingRatingFields(request.resource.data, resource));
       allow delete: if isAdmin();
     }
 
@@ -111,6 +124,16 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow create: if isAuthenticated() && isValidQuestionError(request.resource.data);
       allow update, delete: if isAdmin();
+    }
+
+    match /upgrade_requests/{requestId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    match /page_visits/{visitId} {
+      allow read, write: if isAuthenticated();
     }
   }
 }

@@ -4,8 +4,7 @@ import { Users, PlusCircle, AlertTriangle, ChevronLeft, LayoutDashboard } from '
 import UsersPage from './Users';
 import AdminQuestions from './AdminQuestions';
 import { ErrorReportPage } from '../components/ErrorReportPage';
-import InactiveUsersPage from './InactiveUsers';
-import { UserProfile, SimulationResult, QuestionError, Question } from '../types';
+import { UserProfile, SimulationResult, QuestionError } from '../types';
 import StatCard from '../components/StatCard';
 
 interface AdminProps {
@@ -39,7 +38,7 @@ const AdminPage: React.FC<AdminProps> = ({
   downloadPDF,
   onBack
 }) => {
-  const [adminView, setAdminView] = React.useState<'users' | 'questions' | 'errors' | 'inactive' | null>(null);
+  const [adminView, setAdminView] = React.useState<'users' | 'questions' | 'errors' | null>(null);
 
   const todayVisits = React.useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
@@ -79,14 +78,12 @@ const AdminPage: React.FC<AdminProps> = ({
       </div>
 
       {adminView === 'users' && (
-        <UsersPage allSimulations={allSimulations} allUsers={allUsers} setAllUsers={setAllUsers} onViewChange={(view) => setAdminView(view)} />
-      )}
-      {adminView === 'inactive' && (
-        <InactiveUsersPage allSimulations={allSimulations} allUsers={allUsers} onBack={() => setAdminView('users')} />
+        <UsersPage allSimulations={allSimulations} allUsers={allUsers} setAllUsers={setAllUsers} />
       )}
       {adminView === 'questions' && (
         <AdminQuestions 
           profile={profile} 
+          allSimulations={allSimulations}
           setNotification={setNotification} 
           setConfirmModal={setConfirmModal} 
           downloadPDF={downloadPDF} 

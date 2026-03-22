@@ -14,7 +14,7 @@ export interface UserProfile {
 export interface Question {
   id: string;
   text: string;
-  options: string[];
+  options: (string | null)[];
   correctOption: number;
   category?: string;
   law?: string;
@@ -22,6 +22,8 @@ export interface Question {
   difficulty?: number;
   totalRatings?: number;
   sumOfRatings?: number;
+  totalResponses?: number;
+  totalCorrects?: number;
   createdAt: any;
 }
 
@@ -47,4 +49,13 @@ export interface SimulationResult {
   subjectScores?: Record<string, { correct: number; total: number }>;
   diff?: number;
   isMiniSimulado?: boolean;
+}
+
+export interface UpgradeRequest {
+  id: string;
+  userId: string;
+  displayName: string;
+  email: string;
+  createdAt: any;
+  isNew: boolean;
 }

@@ -301,6 +301,16 @@ export const useSimulation = (
       const simulationRef = doc(collection(db, 'simulations'));
       batch.set(simulationRef, result);
       
+      // Update question stats
+      currentExam.forEach((q, idx) => {
+        const isCorrect = q.correctOption === finalAnswers[idx];
+        const qRef = doc(db, 'questions', q.id);
+        batch.update(qRef, {
+          totalResponses: (q.totalResponses || 0) + 1,
+          totalCorrects: (q.totalCorrects || 0) + (isCorrect ? 1 : 0)
+        });
+      });
+      
       if (!isMiniSimulado) {
         batch.delete(doc(db, 'active_simulations', user!.uid));
       }

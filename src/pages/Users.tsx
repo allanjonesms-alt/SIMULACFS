@@ -1,19 +1,42 @@
 import React from 'react';
-import { updateDoc, doc, collection, query, where, getDocs, writeBatch, getDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, onSnapshot, deleteDoc, doc, updateDoc, writeBatch, where, getDocs } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
-import { UserProfile, SimulationResult } from '../types';
-import { Users as UsersIcon, Zap, UserCheck, UserX, Trash2, Search, FileText, Award, MessageCircle, UserMinus } from 'lucide-react';
+import { UserProfile, SimulationResult, UpgradeRequest } from '../types';
+import { Users as UsersIcon, Zap, UserCheck, UserX, Trash2, FileText, Award, MessageCircle, UserMinus, User } from 'lucide-react';
 import { motion } from 'motion/react';
 import StatCard from '../components/StatCard';
+import InactiveUsersPage from './InactiveUsers';
+import UpgradeRequestsPage from './UpgradeRequests';
 
 interface UsersProps {
   allSimulations: SimulationResult[];
   allUsers: UserProfile[];
   setAllUsers: React.Dispatch<React.SetStateAction<UserProfile[]>>;
-  onViewChange: (view: 'inactive') => void;
 }
 
-const UsersPage: React.FC<UsersProps> = ({ allSimulations, allUsers, setAllUsers, onViewChange }) => {
+const UsersPage: React.FC<UsersProps> = ({ allSimulations, allUsers, setAllUsers }) => {
+  const [showInactive, setShowInactive] = React.useState(false);
+  const [showUpgradeRequests, setShowUpgradeRequests] = React.useState(false);
+  const [hasNewRequests, setHasNewRequests] = React.useState(false);
+  const [searchTerm, setSearchTerm] = React.useState('');
+  
+  React.useEffect(() => {
+    const q = query(collection(db, 'upgrade_requests'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UpgradeRequest));
+      setHasNewRequests(requests.some(r => r.isNew));
+    }, (e) => handleFirestoreError(e, OperationType.LIST, 'upgrade_requests'));
+    return () => unsubscribe();
+  }, []);
+
+  if (showInactive) {
+    return <InactiveUsersPage allSimulations={allSimulations} allUsers={allUsers} onBack={() => setShowInactive(false)} />;
+  }
+
+  if (showUpgradeRequests) {
+    return <UpgradeRequestsPage onBack={() => setShowUpgradeRequests(false)} />;
+  }
+
   const deleteUserSimulations = async (userId: string) => {
     if (!window.confirm('Tem certeza que deseja deletar todos os mini-simulados deste usuário?')) return;
     try {
@@ -25,8 +48,6 @@ const UsersPage: React.FC<UsersProps> = ({ allSimulations, allUsers, setAllUsers
       alert('Mini-simulados deletados com sucesso!');
     } catch (e) { handleFirestoreError(e, OperationType.DELETE, 'simulations'); }
   };
-
-  const [searchTerm, setSearchTerm] = React.useState('');
   
   const deleteUserAccount = async (userId: string) => {
     if (!window.confirm('Tem certeza que deseja excluir permanentemente este usuário e todos os seus dados? Esta ação não pode ser desfeita.')) return;
@@ -60,9 +81,14 @@ const UsersPage: React.FC<UsersProps> = ({ allSimulations, allUsers, setAllUsers
     <motion.div key="admin_users" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-3xl font-bold text-slate-900">Gestão de Usuários</h2>
-        <button onClick={() => onViewChange('inactive')} className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">
-          <UserMinus className="w-5 h-5" /> Usuários Inativos
-        </button>
+        <div className="flex gap-3">
+          <button onClick={() => setShowUpgradeRequests(true)} className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-white ${hasNewRequests ? 'bg-orange-500 hover:bg-orange-600' : 'bg-indigo-600 hover:bg-indigo-700'}`}>
+            <User className="w-5 h-5" /> Cliente
+          </button>
+          <button onClick={() => setShowInactive(true)} className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">
+            <UserMinus className="w-5 h-5" /> Usuários Inativos
+          </button>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Question } from '../types';
+import { Question, SimulationResult } from '../types';
 import { useQuestions } from '../hooks/useQuestions';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
@@ -9,6 +9,7 @@ import DifficultyStars from './DifficultyStars';
 interface SubjectPageProps {
   law: string;
   questions?: Question[];
+  allSimulations?: SimulationResult[];
   onBack: () => void;
   onDownloadPDF: (law: string) => void;
   onPreview?: (q: Question) => void;
@@ -22,6 +23,7 @@ interface SubjectPageProps {
 const SubjectPage: React.FC<SubjectPageProps> = ({
   law,
   questions: propQuestions,
+  allSimulations = [],
   onBack,
   onDownloadPDF,
   onPreview,
@@ -118,6 +120,9 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
                     </span>
                   )}
                   <DifficultyStars difficulty={q.difficulty || 0} size="sm" />
+                  <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded uppercase">
+                    {(q.totalCorrects || 0)}/{(q.totalResponses || 0)}
+                  </span>
                 </div>
                 <div className="font-bold text-slate-900 whitespace-pre-wrap" translate="no">
                   <ReactMarkdown rehypePlugins={[rehypeRaw]}>{q.text}</ReactMarkdown>
