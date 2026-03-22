@@ -74,3 +74,15 @@ export async function sendNotification(userId: string, title: string, message: s
     handleFirestoreError(e, OperationType.CREATE, 'notifications');
   }
 }
+
+export async function logPageVisit(userId: string, pageName: string) {
+  try {
+    await addDoc(collection(db, 'page_visits'), {
+      userId,
+      pageName,
+      createdAt: serverTimestamp()
+    });
+  } catch (e) {
+    handleFirestoreError(e, OperationType.CREATE, 'page_visits');
+  }
+}

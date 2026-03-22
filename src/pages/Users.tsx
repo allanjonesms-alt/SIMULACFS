@@ -2,7 +2,7 @@ import React from 'react';
 import { updateDoc, doc, collection, query, where, getDocs, writeBatch, getDoc, deleteDoc } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { UserProfile, SimulationResult } from '../types';
-import { Users as UsersIcon, Zap, UserCheck, UserX, Trash2, Search, FileText, Award, MessageCircle } from 'lucide-react';
+import { Users as UsersIcon, Zap, UserCheck, UserX, Trash2, Search, FileText, Award, MessageCircle, UserMinus } from 'lucide-react';
 import { motion } from 'motion/react';
 import StatCard from '../components/StatCard';
 
@@ -10,9 +10,10 @@ interface UsersProps {
   allSimulations: SimulationResult[];
   allUsers: UserProfile[];
   setAllUsers: React.Dispatch<React.SetStateAction<UserProfile[]>>;
+  onViewChange: (view: 'inactive') => void;
 }
 
-const UsersPage: React.FC<UsersProps> = ({ allSimulations, allUsers, setAllUsers }) => {
+const UsersPage: React.FC<UsersProps> = ({ allSimulations, allUsers, setAllUsers, onViewChange }) => {
   const deleteUserSimulations = async (userId: string) => {
     if (!window.confirm('Tem certeza que deseja deletar todos os mini-simulados deste usuário?')) return;
     try {
@@ -57,7 +58,12 @@ const UsersPage: React.FC<UsersProps> = ({ allSimulations, allUsers, setAllUsers
 
   return (
     <motion.div key="admin_users" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-      <h2 className="text-3xl font-bold text-slate-900 mb-8">Gestão de Usuários</h2>
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-3xl font-bold text-slate-900">Gestão de Usuários</h2>
+        <button onClick={() => onViewChange('inactive')} className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">
+          <UserMinus className="w-5 h-5" /> Usuários Inativos
+        </button>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard label="Total de Simulados" value={allSimulations.filter(s => !s.isMiniSimulado).length} icon={<UsersIcon className="text-indigo-600" />} />

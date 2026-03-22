@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { 
   auth, db, googleProvider, 
-  handleFirestoreError, OperationType, sendNotification 
+  handleFirestoreError, OperationType, sendNotification, logPageVisit
 } from './firebase';
 import { 
   onAuthStateChanged, signInWithPopup, signOut, User 
@@ -40,15 +40,19 @@ import {
   Search,
   Target,
   Database,
-  MessageCircle
+  MessageCircle,
+  FileText,
+  Clock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { UserProfile, Question, SimulationResult, QuestionError } from './types';
+import DifficultyStars from './components/DifficultyStars';
 import AdminPage from './pages/Admin';
 import UpgradePage from './components/UpgradePage';
 import StatCard from './components/StatCard';
+import ScheduleCard from './components/ScheduleCard';
 import PerformancePage from './pages/Performance';
 import ContatoPage from './pages/Contato';
 import { RankingPage } from './components/RankingPage';
@@ -114,6 +118,7 @@ export default function App() {
   const [history, setHistory] = useState<SimulationResult[]>([]);
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const [allSimulations, setAllSimulations] = useState<SimulationResult[]>([]);
+  const [allPageVisits, setAllPageVisits] = useState<any[]>([]);
   const [allErrors, setAllErrors] = useState<QuestionError[]>([]);
   
   // Computed Ranking
@@ -247,7 +252,7 @@ export default function App() {
     // All simulations: Load initially and refresh every 15 minutes
     const fetchAllSimulations = async () => {
       try {
-        const snapshot = await getDocs(query(collection(db, 'simulations'), limit(50)));
+        const snapshot = await getDocs(query(collection(db, 'simulations')));
         const sList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SimulationResult));
         setAllSimulations(sList);
       } catch (error) {
@@ -292,6 +297,12 @@ export default function App() {
         const eList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as QuestionError));
         setAllErrors(eList);
       }).catch(error => handleFirestoreError(error, OperationType.LIST, 'question_errors'));
+
+      // Admin: Page visits listener: Load once
+      getDocs(collection(db, 'page_visits')).then(snapshot => {
+        const vList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setAllPageVisits(vList);
+      }).catch(error => handleFirestoreError(error, OperationType.LIST, 'page_visits'));
     }
 
     return () => {
@@ -342,7 +353,10 @@ export default function App() {
   // Pause/resume timer based on view
   useEffect(() => {
     setIsPaused(view !== 'simulation');
-  }, [view, setIsPaused]);
+    if (view === 'dashboard' && user) {
+      logPageVisit(user.uid, 'dashboard');
+    }
+  }, [view, setIsPaused, user]);
 
   const [confirmModal, setConfirmModal] = useState<{title: string, message: string, onConfirm: () => void} | null>(null);
 
@@ -727,12 +741,34 @@ export default function App() {
                     <div className="flex items-start gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                       <CheckCircle2 className="w-6 h-6 text-indigo-600 shrink-0 mt-1" />
                       <div>
-                        <p className="text-slate-900 font-bold mb-1">Formato do Simulado:</p>
-                        <p className="text-slate-600 text-sm leading-relaxed">
-                          {pendingSimulationType === 'full' 
-                            ? 'O simulado completo contém questões de todas as matérias e o tempo é cronometrado.' 
-                            : `O mini-simulado de ${pendingSubject} contém 10 questões focadas e rápidas.`}
-                        </p>
+                        <p className="text-slate-900 font-bold mb-2">Formato do Simulado:</p>
+                        <div className="text-slate-600 text-sm leading-relaxed space-y-3">
+                          {pendingSimulationType === 'full' ? (
+                            <>
+                              <div className="flex items-start gap-2">
+                                <FileText className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                                <span><strong>50 Questões:</strong> 20 de português e 30 de Legislação Específica.</span>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <BookOpen className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                                <span><strong>Conteúdo:</strong> Segue o conteúdo programático contido no edital.</span>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <Clock className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                                <span><strong>Cronometrado:</strong> Organize-se quanto ao tempo gasto.</span>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <MessageCircle className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                                <span><strong>Feedback:</strong> Deixe sua opinião sobre a dificuldade ao responder.</span>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="flex items-start gap-2">
+                              <Zap className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                              <span>{`O mini-simulado de ${pendingSubject} contém 10 questões focadas e rápidas.`}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -802,6 +838,7 @@ export default function App() {
                     subLabel="Sua / Geral"
                     icon={<CheckCircle2 className="text-emerald-600" />} 
                   />
+                  <ScheduleCard />
                   <StatCard 
                     label="Status da Conta" 
                     value={profile?.isUpgraded ? 'Premium' : 'Gratuito'} 
@@ -988,11 +1025,7 @@ export default function App() {
                           <div className="inline-block px-3 py-1 bg-indigo-50 text-indigo-600 text-xs font-bold rounded-lg uppercase tracking-wider border border-indigo-100">
                             {currentExam[examIndex].law}
                           </div>
-                          <div className="flex items-center gap-0.5">
-                            {[...Array(5)].map((_, i) => (
-                              <Star key={i} className={`w-4 h-4 ${i < (currentExam[examIndex].difficulty || 1) ? 'text-amber-400 fill-amber-400' : 'text-slate-300'}`} />
-                            ))}
-                          </div>
+                          <DifficultyStars difficulty={currentExam[examIndex].difficulty || 0} size="md" />
                         </div>
                       )}
                       <p className="text-xl text-slate-800 font-medium leading-relaxed mb-8" translate="no">
@@ -1198,6 +1231,7 @@ export default function App() {
                 allErrors={allErrors}
                 setAllErrors={setAllErrors}
                 setAllSimulations={setAllSimulations}
+                allPageVisits={allPageVisits}
                 setNotification={setNotification}
                 setConfirmModal={setConfirmModal}
                 downloadPDF={downloadPDF}

@@ -79,7 +79,8 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
     text: '',
     options: ['', '', '', '', ''],
     correctOption: 0,
-    law: ''
+    law: '',
+    difficulty: 0
   });
 
   const handleSaveQuestion = async () => {
@@ -414,6 +415,10 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
                         </div>
                       ))}
                       <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Dificuldade</label>
+                        <p className="text-sm text-slate-600">{(editingQuestion.difficulty || 0).toFixed(2).replace('.', ',')} estrelas</p>
+                      </div>
+                      <div>
                         <label className="block text-sm font-bold text-slate-700 mb-1">Índice da Correta (0-4)</label>
                         <input 
                           type="number" 
@@ -565,6 +570,23 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
                           />
                         </div>
                       ))}
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Dificuldade (1-5 estrelas)</label>
+                        <div className="flex gap-2">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              onClick={() => setNewQuestion({...newQuestion, difficulty: star})}
+                              className={`p-2 rounded-full transition-colors ${
+                                (newQuestion.difficulty || 0) >= star ? 'text-amber-400' : 'text-slate-300'
+                              }`}
+                            >
+                              <Star className="w-8 h-8 fill-current" />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                       <div>
                         <label className="block text-sm font-bold text-slate-700 mb-1">Índice da Correta (0-4)</label>
                         <input 

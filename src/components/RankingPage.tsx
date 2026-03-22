@@ -64,8 +64,8 @@ export const RankingPage: React.FC<RankingPageProps> = ({ processedRanking, prof
                     {idx + 1}
                   </div>
                 </td>
-                <td className="px-6 py-4 font-bold text-slate-900">
-                  {r.anonymousName} {r.userId === user.uid && <span className="text-xs font-normal text-indigo-600 ml-2">(Você)</span>}
+                <td className={`px-6 py-4 font-bold ${r.userId === user.uid ? 'text-emerald-600' : 'text-slate-300'}`}>
+                  {r.anonymousName} {r.userId === user.uid && <span className="text-xs font-normal text-emerald-600 ml-2">(Você)</span>}
                 </td>
                 <td className="px-6 py-4">
                   <span className="text-lg font-black text-indigo-600">

@@ -248,7 +248,7 @@ export const useSimulation = (
       const nextIdx = examIndex + 1;
       setExamIndex(nextIdx);
       
-      if (!isMiniSimulado && newAnswers.length % 10 === 0) {
+      if (!isMiniSimulado) {
         saveSimulation(user!.uid, {
           currentIndex: nextIdx,
           answers: newAnswers,

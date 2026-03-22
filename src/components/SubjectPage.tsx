@@ -3,7 +3,8 @@ import { Question } from '../types';
 import { useQuestions } from '../hooks/useQuestions';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
-import { Star, Download, Play, Settings, XCircle, ChevronLeft, Search } from 'lucide-react';
+import { Download, Play, Settings, XCircle, ChevronLeft, Search } from 'lucide-react';
+import DifficultyStars from './DifficultyStars';
 
 interface SubjectPageProps {
   law: string;
@@ -116,18 +117,7 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
                       {q.category}
                     </span>
                   )}
-                  <div className="flex items-center gap-1 ml-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`w-3 h-3 ${
-                          (q.difficulty || 0) >= star
-                            ? 'fill-amber-400 text-amber-400'
-                            : 'text-slate-300'
-                        }`}
-                      />
-                    ))}
-                  </div>
+                  <DifficultyStars difficulty={q.difficulty || 0} size="sm" />
                 </div>
                 <div className="font-bold text-slate-900 whitespace-pre-wrap" translate="no">
                   <ReactMarkdown rehypePlugins={[rehypeRaw]}>{q.text}</ReactMarkdown>
