@@ -35,6 +35,7 @@ export interface QuestionError {
   userEmail: string;
   description: string;
   status: 'pending' | 'resolved';
+  solution?: string;
   createdAt: any;
 }
 

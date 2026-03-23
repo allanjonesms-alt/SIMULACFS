@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Target, Play } from 'lucide-react';
-import { useMiniSimulado } from '../hooks/useMiniSimulado';
+// useMiniSimulado is now used in App.tsx and passed via props
 
 interface MiniSimuladoPageProps {
   profile: any;
@@ -23,48 +23,18 @@ interface MiniSimuladoPageProps {
   setPendingRating: (rating: number | null) => void;
   setConfirmModal: (modal: any) => void;
   user: any;
-  setPendingSimulationType: (type: 'full' | 'mini' | 'start_mini' | null) => void;
+  setPendingSimulationType: (type: 'full' | 'mini' | null) => void;
   setPendingSubject: (subject: string | null) => void;
-  pendingSimulationType: 'full' | 'mini' | 'start_mini' | null;
+  pendingSimulationType: 'full' | 'mini' | null;
   pendingSubject: string | null;
+  startMiniSimulation: (subject: string) => void;
 }
 
 export const MiniSimuladoPage: React.FC<MiniSimuladoPageProps> = (props) => {
   const {
     activeMiniSimulations,
-    setActiveMiniSimulations,
     startMiniSimulation,
-  } = useMiniSimulado(
-    props.profile,
-    props.questions,
-    props.isMiniSimulado,
-    props.setIsMiniSimulado,
-    props.activeMiniSimulations,
-    props.setActiveMiniSimulations,
-    props.setNotification,
-    props.setView,
-    props.setCurrentExam,
-    props.setExamIndex,
-    props.setAnswers,
-    props.setElapsedTime,
-    props.setExamFinished,
-    props.setShowFeedback,
-    props.setSelectedOptionId,
-    props.setHasRatedCurrentQuestion,
-    props.setPendingRating,
-    props.setConfirmModal,
-    props.user
-  );
-
-  // Handle starting mini simulation after instructions
-  React.useEffect(() => {
-    // @ts-ignore - we're using a special value to trigger start
-    if (props.pendingSimulationType === 'start_mini' && props.pendingSubject) {
-      startMiniSimulation(props.pendingSubject);
-      props.setPendingSimulationType(null);
-      props.setPendingSubject(null);
-    }
-  }, [props.pendingSimulationType, props.pendingSubject, startMiniSimulation]);
+  } = props;
 
   return (
     <motion.div key="mini_simulados" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>

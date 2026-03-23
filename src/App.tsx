@@ -101,6 +101,7 @@ import rehypeRaw from 'rehype-raw';
 
 import { useQuestions } from './hooks/useQuestions';
 import { useSimulation } from './hooks/useSimulation';
+import { useMiniSimulado } from './hooks/useMiniSimulado';
 
 export default function App() {
   const { questions } = useQuestions();
@@ -109,7 +110,7 @@ export default function App() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'dashboard' | 'simulation' | 'history' | 'performance' | 'ranking' | 'admin' | 'upgrade' | 'mini_simulados' | 'conselho_disciplina' | 'contato' | 'instructions'>('dashboard');
-  const [pendingSimulationType, setPendingSimulationType] = useState<'full' | 'mini' | 'start_mini' | null>(null);
+  const [pendingSimulationType, setPendingSimulationType] = useState<'full' | 'mini' | null>(null);
   const [pendingSubject, setPendingSubject] = useState<string | null>(null);
   
   if (isMaintenanceMode) {
@@ -120,6 +121,7 @@ export default function App() {
   const [history, setHistory] = useState<SimulationResult[]>([]);
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const [allSimulations, setAllSimulations] = useState<SimulationResult[]>([]);
+  const [allActiveSimulations, setAllActiveSimulations] = useState<any[]>([]);
   const [allPageVisits, setAllPageVisits] = useState<any[]>([]);
   const [allErrors, setAllErrors] = useState<QuestionError[]>([]);
   
@@ -305,6 +307,12 @@ export default function App() {
         const vList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setAllPageVisits(vList);
       }).catch(error => handleFirestoreError(error, OperationType.LIST, 'page_visits'));
+
+      // Admin: Active simulations listener: Load once
+      getDocs(collection(db, 'active_simulations')).then(snapshot => {
+        const aList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setAllActiveSimulations(aList);
+      }).catch(error => handleFirestoreError(error, OperationType.LIST, 'active_simulations'));
     }
 
     return () => {
@@ -352,6 +360,32 @@ export default function App() {
     setHasRatedCurrentQuestion
   } = useSimulation(user, profile, questions, history, setNotification, setView);
 
+  const [confirmModal, setConfirmModal] = useState<{title: string, message: string, onConfirm: () => void} | null>(null);
+
+  const {
+    startMiniSimulation,
+  } = useMiniSimulado(
+    profile,
+    questions,
+    isMiniSimulado,
+    setIsMiniSimulado,
+    activeMiniSimulations,
+    setActiveMiniSimulations,
+    setNotification,
+    setView,
+    setCurrentExam,
+    setExamIndex,
+    setAnswers,
+    setElapsedTime,
+    setExamFinished,
+    setShowFeedback,
+    setSelectedOptionId,
+    setHasRatedCurrentQuestion,
+    setPendingRating,
+    setConfirmModal,
+    user
+  );
+
   // Pause/resume timer based on view
   useEffect(() => {
     setIsPaused(view !== 'simulation');
@@ -359,8 +393,6 @@ export default function App() {
       logPageVisit(user.uid, 'dashboard');
     }
   }, [view, setIsPaused, user]);
-
-  const [confirmModal, setConfirmModal] = useState<{title: string, message: string, onConfirm: () => void} | null>(null);
 
   const downloadPDF = (law: string) => {
     const doc = new jsPDF();
@@ -375,8 +407,8 @@ export default function App() {
     const tableData = filteredQuestions.map((q, index) => [
       `${index + 1}`,
       q.text,
-      q.options.map((opt, i) => `${String.fromCharCode(65 + i)}) ${opt}`).join('\n'),
-      `${String.fromCharCode(65 + q.correctOption)}`,
+      q.options.filter(opt => opt && opt.trim() !== '').map((opt, i) => `${String.fromCharCode(65 + i)}) ${opt}`).join('\n'),
+      `${String.fromCharCode(65 + q.options.filter((opt, i) => i <= q.correctOption && (opt && opt.trim() !== '' || i < q.correctOption)).length - 1)}`,
       q.justification || 'N/A'
     ]);
 
@@ -412,8 +444,8 @@ export default function App() {
     const tableData = filteredQuestions.map((q, index) => [
       `${index + 1}`,
       q.text,
-      q.options.map((opt, i) => `${String.fromCharCode(65 + i)}) ${opt}`).join('\n'),
-      `${String.fromCharCode(65 + q.correctOption)}`,
+      q.options.filter(opt => opt && opt.trim() !== '').map((opt, i) => `${String.fromCharCode(65 + i)}) ${opt}`).join('\n'),
+      `${String.fromCharCode(65 + q.options.filter((opt, i) => i <= q.correctOption && (opt && opt.trim() !== '' || i < q.correctOption)).length - 1)}`,
       q.justification || 'N/A'
     ]);
 
@@ -791,12 +823,10 @@ export default function App() {
                         if (pendingSimulationType === 'full') {
                           startSimulation(false);
                         } else if (pendingSimulationType === 'mini' && pendingSubject) {
-                          // We need to trigger the mini simulation start. 
-                          // Since startMiniSimulation is inside MiniSimulado, we'll handle it via state or props.
-                          // For now, let's assume we can trigger it.
-                          setPendingSimulationType('start_mini'); 
+                          startMiniSimulation(pendingSubject);
                         }
                         setPendingSimulationType(null);
+                        setPendingSubject(null);
                       }}
                       className="flex-1 px-8 py-4 rounded-2xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200"
                     >
@@ -957,6 +987,7 @@ export default function App() {
                 setPendingSubject={setPendingSubject}
                 pendingSimulationType={pendingSimulationType}
                 pendingSubject={pendingSubject}
+                startMiniSimulation={startMiniSimulation}
               />
             )}
 
@@ -964,20 +995,20 @@ export default function App() {
               <motion.div key="simulation" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-3xl mx-auto">
                 {!examFinished ? (
                   <>
-                    <div className="flex items-center justify-between mb-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                       <div className="flex flex-col">
-                        <h2 className="text-2xl font-bold text-slate-900">Simulado em Andamento</h2>
+                        <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Simulado em Andamento</h2>
                       </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <div className="flex items-center gap-4">
-                          <div className="bg-emerald-100 text-emerald-600 px-6 py-2 rounded-full font-black text-lg">
+                      <div className="flex flex-col items-start sm:items-end gap-3">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <div className="bg-emerald-100 text-emerald-600 px-4 sm:px-6 py-1.5 sm:py-2 rounded-full font-black text-base sm:text-lg">
                             {Math.floor(elapsedTime / 60).toString().padStart(2, '0')}:{ (elapsedTime % 60).toString().padStart(2, '0')}
                           </div>
-                          <span className="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-full font-bold text-sm flex items-center gap-1">
-                            Questão <span className="text-4xl font-black">{examIndex + 1}</span>/{currentExam.length}
+                          <span className="bg-indigo-100 text-indigo-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-bold text-xs sm:text-sm flex items-center gap-1">
+                            Questão <span className="text-2xl sm:text-4xl font-black">{examIndex + 1}</span>/{currentExam.length}
                           </span>
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-4 flex-wrap">
                           <button 
                             onClick={() => {
                               setConfirmModal({
@@ -1002,17 +1033,17 @@ export default function App() {
                                 }
                               });
                             }}
-                            className="flex items-center gap-2 text-slate-500 hover:text-slate-600 text-sm font-bold transition-colors"
+                            className="flex items-center gap-2 text-slate-500 hover:text-slate-600 text-xs sm:text-sm font-bold transition-colors"
                           >
                             <XCircle className="w-4 h-4" />
-                            {isMiniSimulado ? 'Cancelar Mini-Simulado' : 'Cancelar Simulado'}
+                            {isMiniSimulado ? 'Cancelar Mini' : 'Cancelar Simulado'}
                           </button>
                           <button 
                             onClick={() => {
                               setReportingQuestion(currentExam[examIndex]);
                               setIsReportingError(true);
                             }}
-                            className="flex items-center gap-2 text-red-500 hover:text-red-600 text-sm font-bold transition-colors"
+                            className="flex items-center gap-2 text-red-500 hover:text-red-600 text-xs sm:text-sm font-bold transition-colors"
                           >
                             <AlertTriangle className="w-4 h-4" />
                             Erro
@@ -1021,7 +1052,7 @@ export default function App() {
                       </div>
                     </div>
 
-                    <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 mb-6">
+                    <div className="bg-white p-4 sm:p-8 rounded-2xl sm:rounded-3xl shadow-xl border border-slate-100 mb-6">
                       {currentExam[examIndex]?.law && (
                         <div className="flex items-center gap-3 mb-4">
                           <div className="inline-block px-3 py-1 bg-indigo-50 text-indigo-600 text-xs font-bold rounded-lg uppercase tracking-wider border border-indigo-100">
@@ -1035,7 +1066,7 @@ export default function App() {
                       </div>
                       
                       <div className="grid grid-cols-1 gap-4">
-                        {currentExam[examIndex]?.shuffledOptions?.map((option, idx) => {
+                        {currentExam[examIndex]?.shuffledOptions?.filter(o => o.text && o.text.trim() !== '').map((option, idx) => {
                           const isSelected = selectedOptionId === option.id;
                           const isCorrect = option.id === currentExam[examIndex].correctOption;
                           
@@ -1094,7 +1125,7 @@ export default function App() {
                                 </div>
                                 <div className="text-slate-600 text-sm font-medium ml-7">
                                   A resposta correta é a alternativa <span className="font-bold text-emerald-600">
-                                    {String.fromCharCode(65 + currentExam[examIndex].shuffledOptions.findIndex(o => o.id === currentExam[examIndex].correctOption))}
+                                    {String.fromCharCode(65 + currentExam[examIndex].shuffledOptions.filter(o => o.text && o.text.trim() !== '').findIndex(o => o.id === currentExam[examIndex].correctOption))}
                                   </span>
                                 </div>
                               </div>
@@ -1105,7 +1136,7 @@ export default function App() {
                             <div className="text-slate-600 text-sm leading-relaxed" translate="no">
                               <span className="font-bold block mb-1">Justificativa:</span>
                               {(() => {
-                                const correctOptionLetter = String.fromCharCode(65 + currentExam[examIndex].shuffledOptions.findIndex(o => o.id === currentExam[examIndex].correctOption));
+                                const correctOptionLetter = String.fromCharCode(65 + currentExam[examIndex].shuffledOptions.filter(o => o.text && o.text.trim() !== '').findIndex(o => o.id === currentExam[examIndex].correctOption));
                                 return currentExam[examIndex].justification.replace(/A alternativa [A-E] é a correta/gi, `A alternativa ${correctOptionLetter} é a correta`);
                               })()}
                             </div>
@@ -1236,6 +1267,7 @@ export default function App() {
                 setAllErrors={setAllErrors}
                 setAllSimulations={setAllSimulations}
                 allPageVisits={allPageVisits}
+                allActiveSimulations={allActiveSimulations}
                 setNotification={setNotification}
                 setConfirmModal={setConfirmModal}
                 downloadPDF={downloadPDF}

@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Users, PlusCircle, AlertTriangle, ChevronLeft, LayoutDashboard } from 'lucide-react';
 import UsersPage from './Users';
 import AdminQuestions from './AdminQuestions';
+import SimulationLogsPage from './SimulationLogs';
 import { ErrorReportPage } from '../components/ErrorReportPage';
 import { UserProfile, SimulationResult, QuestionError } from '../types';
 import StatCard from '../components/StatCard';
@@ -17,6 +18,7 @@ interface AdminProps {
   setAllErrors: React.Dispatch<React.SetStateAction<QuestionError[]>>;
   setAllSimulations: React.Dispatch<React.SetStateAction<SimulationResult[]>>;
   allPageVisits: any[];
+  allActiveSimulations: any[];
   setNotification: (notif: { message: string; type: 'success' | 'error' } | null) => void;
   setConfirmModal: (modal: { title: string; message: string; onConfirm: () => void } | null) => void;
   downloadPDF: (law: string) => void;
@@ -33,12 +35,13 @@ const AdminPage: React.FC<AdminProps> = ({
   setAllErrors,
   setAllSimulations,
   allPageVisits,
+  allActiveSimulations,
   setNotification,
   setConfirmModal,
   downloadPDF,
   onBack
 }) => {
-  const [adminView, setAdminView] = React.useState<'users' | 'questions' | 'errors' | null>(null);
+  const [adminView, setAdminView] = React.useState<'users' | 'questions' | 'errors' | 'logs' | null>(null);
 
   const todayVisits = React.useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
@@ -75,6 +78,9 @@ const AdminPage: React.FC<AdminProps> = ({
         <button onClick={() => setAdminView('errors')} className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold ${adminView === 'errors' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600'}`}>
           <AlertTriangle className="w-5 h-5" /> Erros
         </button>
+        <button onClick={() => setAdminView('logs')} className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold ${adminView === 'logs' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600'}`}>
+          <LayoutDashboard className="w-5 h-5" /> Logs
+        </button>
       </div>
 
       {adminView === 'users' && (
@@ -95,6 +101,14 @@ const AdminPage: React.FC<AdminProps> = ({
           allErrors={allErrors} 
           setNotification={setNotification} 
           setConfirmModal={setConfirmModal} 
+        />
+      )}
+      {adminView === 'logs' && (
+        <SimulationLogsPage 
+          allPageVisits={allPageVisits} 
+          allUsers={allUsers} 
+          allActiveSimulations={allActiveSimulations}
+          onBack={() => setAdminView(null)} 
         />
       )}
     </motion.div>

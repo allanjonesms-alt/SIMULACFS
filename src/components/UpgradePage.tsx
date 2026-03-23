@@ -21,6 +21,7 @@ export default function UpgradePage({ onBack, userId, email, displayName }: Upgr
     }
     try {
       // Add to upgrade_requests
+      console.log("Adding upgrade request:", { userId, email, displayName });
       await addDoc(collection(db, 'upgrade_requests'), {
         userId,
         email,
@@ -28,6 +29,7 @@ export default function UpgradePage({ onBack, userId, email, displayName }: Upgr
         createdAt: serverTimestamp(),
         isNew: true
       });
+      console.log("Upgrade request added successfully.");
 
       console.log("Initiating payment with:", { userId, email, cpf, method });
       const response = await fetch(`/api/create-preference`, {

@@ -16,6 +16,7 @@ const UpgradeRequestsPage: React.FC<UpgradeRequestsProps> = ({ onBack }) => {
     const q = query(collection(db, 'upgrade_requests'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UpgradeRequest));
+      console.log('Upgrade requests in UpgradeRequestsPage:', data);
       setRequests(data);
     }, (e) => handleFirestoreError(e, OperationType.LIST, 'upgrade_requests'));
     return () => unsubscribe();

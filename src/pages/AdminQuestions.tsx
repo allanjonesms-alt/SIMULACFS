@@ -8,7 +8,7 @@ import {
   CheckCircle2, Loader2, Star, Zap
 } from 'lucide-react';
 import { 
-  doc, deleteDoc, updateDoc, addDoc, collection, serverTimestamp 
+  doc, deleteDoc, updateDoc, addDoc, collection, serverTimestamp, setDoc, writeBatch 
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { Question, UserProfile, SimulationResult } from '../types';
@@ -120,8 +120,28 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
     try {
       const optionsToSave = [...(newQuestion.options || ['', '', '', '', ''])];
       optionsToSave[4] = null;
-      await addDoc(collection(db, 'questions'), {
+
+      const getSubjectCode = (law: string) => {
+        switch (law) {
+          case 'Lei 1.102/90': return 'L110';
+          case 'Lei 053/1990': return 'L053';
+          case 'Lei 127/2008': return 'L127';
+          case 'Decreto 1.093/81': return 'D109';
+          case 'RDPMMS': return 'RDPM';
+          case 'Conselho de Disciplina': return 'CEDI';
+          case 'Língua Portuguesa': return 'LPOT';
+          case 'Provas Anteriores': return 'PROV';
+          default: return 'XXXX';
+        }
+      };
+
+      const sameSubjectQuestions = questions.filter(q => q.law === newQuestion.law);
+      const count = sameSubjectQuestions.length + 1;
+      const newId = `${getSubjectCode(newQuestion.law)}-${count.toString().padStart(4, '0')}`;
+
+      await setDoc(doc(db, 'questions', newId), {
         ...newQuestion,
+        id: newId,
         options: optionsToSave,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
@@ -146,6 +166,73 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
       setNotification({ message: 'Erro ao criar questão', type: 'error' });
       setIsSaving(false);
     }
+  };
+
+  const handleMigrateIds = async () => {
+    setConfirmModal({
+      title: "Migrar IDs de Questões",
+      message: "Isso irá renomear todas as questões para o novo formato (XXXX-0000). Esta operação é irreversível e pode levar algum tempo. Tem certeza?",
+      onConfirm: async () => {
+        setIsSaving(true);
+        try {
+          const getSubjectCode = (law: string) => {
+            switch (law) {
+              case 'Lei 1.102/90': return 'L110';
+              case 'Lei 053/1990': return 'L053';
+              case 'Lei 127/2008': return 'L127';
+              case 'Decreto 1.093/81': return 'D109';
+              case 'RDPMMS': return 'RDPM';
+              case 'Conselho de Disciplina': return 'CEDI';
+              case 'Língua Portuguesa': return 'LPOT';
+              case 'Provas Anteriores': return 'PROV';
+              default: return 'XXXX';
+            }
+          };
+
+          const grouped: Record<string, Question[]> = {};
+          questions.forEach(q => {
+            const law = q.law || 'Sem Matéria';
+            if (!grouped[law]) grouped[law] = [];
+            grouped[law].push(q);
+          });
+
+          let batch = writeBatch(db);
+          let count = 0;
+          const BATCH_LIMIT = 400; // Safe limit
+
+          for (const law in grouped) {
+            const subjectCode = getSubjectCode(law);
+            grouped[law].forEach((oldQuestion, i) => {
+              const newId = `${subjectCode}-${(i + 1).toString().padStart(4, '0')}`;
+              if (oldQuestion.id === newId) return; // Already migrated
+
+              // 1. Create new
+              const newDocRef = doc(db, 'questions', newId);
+              batch.set(newDocRef, { ...oldQuestion, id: newId, updatedAt: serverTimestamp() });
+              
+              // 2. Delete old
+              const oldDocRef = doc(db, 'questions', oldQuestion.id);
+              batch.delete(oldDocRef);
+
+              count++;
+              if (count >= BATCH_LIMIT) {
+                batch.commit().then(() => {
+                  batch = writeBatch(db);
+                  count = 0;
+                });
+              }
+            });
+          }
+          await batch.commit();
+          setNotification({ message: 'IDs migrados com sucesso!', type: 'success' });
+        } catch (error) {
+          handleFirestoreError(error, OperationType.WRITE, 'questions');
+          setNotification({ message: 'Erro na migração', type: 'error' });
+        } finally {
+          setIsSaving(false);
+        }
+      }
+    });
   };
 
   const props = {
@@ -263,7 +350,10 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
           {adminSearchTerm.trim() !== '' ? (
             <SubjectPage 
               law="Resultados da Busca" 
-              questions={questions.filter(q => q.text.toLowerCase().includes(adminSearchTerm.toLowerCase()))}
+              questions={questions.filter(q => 
+                q.text.toLowerCase().includes(adminSearchTerm.toLowerCase()) ||
+                q.id.toLowerCase().includes(adminSearchTerm.toLowerCase())
+              )}
               onBack={() => setAdminSearchTerm('')}
               onDownloadPDF={() => {}}
               onPreview={(q) => {
@@ -694,7 +784,7 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
               </div>
               
               <div className="space-y-3">
-                {previewQuestion.options.map((opt, idx) => (
+                {previewQuestion.options.filter(opt => opt && opt.trim() !== '').map((opt, idx) => (
                   <button
                     key={idx}
                     onClick={() => {

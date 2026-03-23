@@ -158,7 +158,7 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
               )}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {q.options.map((opt, i) => (
+              {q.options.filter(opt => opt && opt.trim() !== '').map((opt, i) => (
                 <div key={i} className={`p-3 rounded-xl border text-sm ${i === q.correctOption ? 'bg-emerald-50 border-emerald-200 text-emerald-700 font-bold' : 'bg-slate-50 border-slate-100 text-slate-600'}`} translate="no">
                   {String.fromCharCode(65 + i)}) {opt}
                 </div>

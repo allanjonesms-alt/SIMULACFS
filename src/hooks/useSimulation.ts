@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { doc, updateDoc, serverTimestamp, setDoc, writeBatch, collection, getDoc } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../firebase';
+import { doc, updateDoc, serverTimestamp, setDoc, writeBatch, collection, getDoc, increment, deleteDoc } from 'firebase/firestore';
+import { db, handleFirestoreError, OperationType, logPageVisit } from '../firebase';
 import { Question, SimulationResult, UserProfile } from '../types';
 
 interface ShuffledOption {
@@ -163,6 +163,9 @@ export const useSimulation = (
           elapsedTime: 0
         });
       }
+      
+      // Log simulation start
+      await logPageVisit(user!.uid, isMiniSimulado ? 'mini-simulado' : 'simulado');
 
       setCurrentExam(examQuestions);
       setExamIndex(0);
@@ -181,10 +184,22 @@ export const useSimulation = (
   };
 
   const resumeSimulation = () => {
-    if (!activeSimulation) return;
-    setCurrentExam(activeSimulation.questions);
+    if (!activeSimulation || !activeSimulation.questions || activeSimulation.questions.length === 0) return;
+    
+    // Ensure all questions have shuffledOptions
+    const restoredQuestions = activeSimulation.questions.map(q => {
+      if (!q.shuffledOptions || q.shuffledOptions.length === 0) {
+        return {
+          ...q,
+          shuffledOptions: q.options.map((text, index) => ({ id: index, text }))
+        };
+      }
+      return q;
+    });
+
+    setCurrentExam(restoredQuestions);
     setExamIndex(activeSimulation.currentIndex);
-    setAnswers(activeSimulation.answers);
+    setAnswers(activeSimulation.answers || []);
     setElapsedTime(activeSimulation.elapsedTime || 0);
     setExamFinished(false);
     setShowFeedback(false);
@@ -297,25 +312,35 @@ export const useSimulation = (
     };
 
     try {
-      const batch = writeBatch(db);
+      // 1. Save the simulation result first
       const simulationRef = doc(collection(db, 'simulations'));
-      batch.set(simulationRef, result);
+      await setDoc(simulationRef, result);
       
-      // Update question stats
-      currentExam.forEach((q, idx) => {
-        const isCorrect = q.correctOption === finalAnswers[idx];
-        const qRef = doc(db, 'questions', q.id);
-        batch.update(qRef, {
-          totalResponses: (q.totalResponses || 0) + 1,
-          totalCorrects: (q.totalCorrects || 0) + (isCorrect ? 1 : 0)
-        });
-      });
-      
+      // 2. Delete active simulation if not mini
       if (!isMiniSimulado) {
-        batch.delete(doc(db, 'active_simulations', user!.uid));
+        try {
+          await deleteDoc(doc(db, 'active_simulations', user!.uid));
+        } catch (e) {
+          console.warn('Could not delete active simulation', e);
+        }
       }
       
-      await batch.commit();
+      // 3. Update question stats individually so one failure doesn't block the whole result
+      // This is crucial for simulations with old question IDs that might have been migrated
+      currentExam.forEach(async (q, idx) => {
+        try {
+          const isCorrect = q.correctOption === finalAnswers[idx];
+          const qRef = doc(db, 'questions', q.id);
+          await updateDoc(qRef, {
+            totalResponses: increment(1),
+            totalCorrects: increment(isCorrect ? 1 : 0)
+          });
+        } catch (e) {
+          // Ignore errors for individual question stats (e.g. if question was deleted/migrated)
+          console.warn(`Could not update stats for question ${q.id}`, e);
+        }
+      });
+      
       setExamFinished(true);
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'simulations');
