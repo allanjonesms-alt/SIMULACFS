@@ -47,7 +47,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { UserProfile, Question, SimulationResult, QuestionError } from './types';
+import { UserProfile, Question, SimulationResult, QuestionError, MindMap } from './types';
 import DifficultyStars from './components/DifficultyStars';
 import AdminPage from './pages/Admin';
 import UpgradePage from './components/UpgradePage';
@@ -62,6 +62,7 @@ import { MiniSimuladoPage } from './pages/MiniSimulado';
 import { HistoryPage } from './pages/HistoryPage';
 import UsersPage from './pages/Users';
 import AdminQuestions from './pages/AdminQuestions';
+import { MindMapsPage } from './pages/MindMapsPage';
 import Lei1102 from './pages/subjects/Lei1102';
 import Lei053 from './pages/subjects/Lei053';
 import Lei127 from './pages/subjects/Lei127';
@@ -93,9 +94,6 @@ interface ActiveSimulation {
 
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { MaintenancePage } from './components/MaintenancePage';
-import { SergeantIcon } from './components/SergeantIcon';
-import ReactMarkdown from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
 
 // --- Main App ---
 
@@ -109,7 +107,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'dashboard' | 'simulation' | 'history' | 'performance' | 'ranking' | 'admin' | 'upgrade' | 'mini_simulados' | 'conselho_disciplina' | 'contato' | 'instructions'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'simulation' | 'history' | 'performance' | 'ranking' | 'admin' | 'upgrade' | 'mini_simulados' | 'conselho_disciplina' | 'contato' | 'instructions' | 'mind_maps'>('dashboard');
   const [pendingSimulationType, setPendingSimulationType] = useState<'full' | 'mini' | null>(null);
   const [pendingSubject, setPendingSubject] = useState<string | null>(null);
   
@@ -122,6 +120,7 @@ export default function App() {
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const [allSimulations, setAllSimulations] = useState<SimulationResult[]>([]);
   const [allActiveSimulations, setAllActiveSimulations] = useState<any[]>([]);
+  const [mindMaps, setMindMaps] = useState<MindMap[]>([]);
   const [allPageVisits, setAllPageVisits] = useState<any[]>([]);
   const [allErrors, setAllErrors] = useState<QuestionError[]>([]);
   
@@ -315,9 +314,21 @@ export default function App() {
       }).catch(error => handleFirestoreError(error, OperationType.LIST, 'active_simulations'));
     }
 
+    // Mind Maps listener (for tips)
+    const mmQuery = query(collection(db, 'mind_maps'), orderBy('createdAt', 'desc'));
+    const mmUnsubscribe = onSnapshot(mmQuery, (snapshot) => {
+      const mmList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MindMap));
+      setMindMaps(mmList);
+    }, (error) => {
+      if (!error.message.includes('permission-denied')) {
+        handleFirestoreError(error, OperationType.LIST, 'mind_maps');
+      }
+    });
+
     return () => {
       hUnsubscribe();
       activeUnsubscribe();
+      mmUnsubscribe();
       clearInterval(simulationsInterval);
     };
   }, [user, profile]);
@@ -350,6 +361,9 @@ export default function App() {
     submitAnswer,
     setPendingRating,
     nextQuestion,
+    proceedToNext,
+    showTip,
+    setShowTip,
     setExamFinished,
     setActiveSimulation,
     setCurrentExam,
@@ -690,10 +704,7 @@ export default function App() {
         {/* Mobile Header */}
         <header className="md:hidden bg-white border-b border-slate-200 p-4 flex items-center justify-between sticky top-0 z-40">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <SergeantIcon />
-            </div>
-            <span className="text-lg font-bold text-slate-900">SimulaCFS</span>
+            <img src="https://raw.githubusercontent.com/allanjonesms-alt/SIMULACFS/d4233b8baf105cbd5698056cac65c15b1a06c02b/logosimulacfs.png" alt="SimulaCFS Logo" className="h-16 w-auto" />
           </div>
           <div className="flex items-center gap-3">
             <img src={profile?.photoURL} className="w-8 h-8 rounded-full border-2 border-white shadow-sm" alt="Avatar" />
@@ -706,10 +717,7 @@ export default function App() {
         {/* Sidebar / Bottom Nav */}
         <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 px-2 py-2 flex flex-row items-center overflow-x-auto gap-1 md:relative md:w-72 md:border-t-0 md:border-r md:p-6 md:flex-col md:items-stretch md:gap-2 md:overflow-visible md:z-auto shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] md:shadow-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <div className="hidden md:flex items-center gap-3 mb-10 px-2">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
-              <SergeantIcon />
-            </div>
-            <span className="text-xl font-bold text-slate-900">SimulaCFS</span>
+            <img src="https://raw.githubusercontent.com/allanjonesms-alt/SIMULACFS/d4233b8baf105cbd5698056cac65c15b1a06c02b/logosimulacfs.png" alt="SimulaCFS Logo" className="h-20 w-auto" />
           </div>
 
           <NavItem active={view === 'dashboard'} onClick={() => handleViewChange('dashboard')} icon={<LayoutDashboard />} label="Dashboard" />
@@ -723,6 +731,9 @@ export default function App() {
           <NavItem active={view === 'history'} onClick={() => handleViewChange('history')} icon={<History />} label="Histórico" />
           <NavItem active={view === 'performance'} onClick={() => handleViewChange('performance')} icon={<BarChart2 />} label="Desempenho" />
           <NavItem active={view === 'ranking'} onClick={() => handleViewChange('ranking')} icon={<Trophy />} label="Ranking" />
+          {profile?.isUpgraded && (
+            <NavItem active={view === 'mind_maps'} onClick={() => handleViewChange('mind_maps')} icon={<BookOpen />} label="Mapas Mentais" />
+          )}
           <NavItem active={view === 'contato'} onClick={() => handleViewChange('contato')} icon={<MessageCircle />} label="Contato" />
           {!profile?.isUpgraded && (
             <NavItem active={view === 'upgrade'} onClick={() => handleViewChange('upgrade')} icon={<Zap />} label="Upgrade" />
@@ -1062,7 +1073,7 @@ export default function App() {
                         </div>
                       )}
                       <div className="text-xl text-slate-800 font-medium leading-relaxed mb-8 markdown-body" translate="no">
-                        <ReactMarkdown rehypePlugins={[rehypeRaw]}>{currentExam[examIndex]?.text}</ReactMarkdown>
+                        <div dangerouslySetInnerHTML={{ __html: currentExam[examIndex]?.text }} />
                       </div>
                       
                       <div className="grid grid-cols-1 gap-4">
@@ -1096,7 +1107,7 @@ export default function App() {
                                 {String.fromCharCode(65 + idx)}
                               </span>
                               <span className="flex-1 text-slate-700 font-medium markdown-body" translate="no">
-                                <ReactMarkdown rehypePlugins={[rehypeRaw]}>{option.text}</ReactMarkdown>
+                                <div dangerouslySetInnerHTML={{ __html: option.text }} />
                               </span>
                               {showFeedback && isCorrect && <CheckCircle2 className="w-6 h-6 text-emerald-500" />}
                               {showFeedback && isSelected && !isCorrect && <XCircle className="w-6 h-6 text-red-500" />}
@@ -1176,6 +1187,59 @@ export default function App() {
                           </button>
                         </motion.div>
                       )}
+
+                      <AnimatePresence>
+                        {showTip && (
+                          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                            <motion.div 
+                              initial={{ scale: 0.9, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              exit={{ scale: 0.9, opacity: 0 }}
+                              className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
+                            >
+                              <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-indigo-50">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
+                                    <Zap className="w-6 h-6 text-white" />
+                                  </div>
+                                  <div>
+                                    <h3 className="text-xl font-bold text-indigo-900">Dica de Estudo</h3>
+                                    <p className="text-xs text-indigo-600 font-medium uppercase tracking-wider">Baseado nos Mapas Mentais</p>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex-1 overflow-y-auto p-6 md:p-8 max-w-none w-full">
+                                {mindMaps.length > 0 ? (
+                                  (() => {
+                                    // Use a stable random index based on current question to avoid flickering
+                                    const randomIndex = (examIndex + answers.length) % mindMaps.length;
+                                    const tip = mindMaps[randomIndex];
+                                    return (
+                                      <div className="w-full">
+                                        <h4 className="text-indigo-600 font-bold mb-4 text-sm md:text-xl">{tip.subject}</h4>
+                                        <div className="text-slate-700 leading-relaxed text-[10px] md:text-base break-words whitespace-normal prose prose-sm md:prose-indigo max-w-none w-full">
+                                          <div dangerouslySetInnerHTML={{ __html: tip.content }} />
+                                        </div>
+                                      </div>
+                                    );
+                                  })()
+                                ) : (
+                                  <p className="text-slate-500 italic text-center py-10">Prepare-se para o sucesso! Continue focado nos seus estudos.</p>
+                                )}
+                              </div>
+                              <div className="p-6 border-t border-slate-100 bg-slate-50">
+                                <button 
+                                  onClick={() => proceedToNext(answers, isMiniSimulado)}
+                                  className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-200"
+                                >
+                                  Próxima
+                                  <ChevronRight className="w-5 h-5" />
+                                </button>
+                              </div>
+                            </motion.div>
+                          </div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   </>
                 ) : (
@@ -1240,6 +1304,10 @@ export default function App() {
                 user={user} 
                 onUpgradeClick={() => handleViewChange('upgrade')} 
               />
+            )}
+
+            {view === 'mind_maps' && (
+              <MindMapsPage profile={profile} onUpgrade={() => handleViewChange('upgrade')} />
             )}
 
             {view === 'contato' && (

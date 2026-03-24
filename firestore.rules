@@ -12,6 +12,9 @@ service cloud.firestore {
     //
     // Collection: simulations
     // Fields: userId, score, totalQuestions, date, anonymousName
+    //
+    // Collection: mind_maps
+    // Fields: subject, content, createdAt, updatedAt
     // ===============================================================
 
     // Helper Functions
@@ -79,6 +82,23 @@ service cloud.firestore {
              data.status in ['pending', 'resolved'];
     }
 
+    function isValidMindMap(data) {
+      return data.keys().hasAll(['subject', 'content', 'createdAt']) &&
+             data.subject is string &&
+             data.subject.size() > 0 &&
+             data.subject.size() < 200 &&
+             data.content is string &&
+             data.content.size() > 0 &&
+             data.content.size() < 1000000; // Max 1MB
+    }
+
+    function isUpgraded() {
+      return isAuthenticated() && (
+        isAdmin() ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isUpgraded == true)
+      );
+    }
+
     function isOnlyUpdatingRatingFields(requestData, resourceData) {
       let allowedRatingFields = ['totalRatings', 'sumOfRatings', 'difficulty'];
       return requestData.diff(resourceData).affectedKeys().hasOnly(allowedRatingFields) &&
@@ -134,6 +154,13 @@ service cloud.firestore {
 
     match /page_visits/{visitId} {
       allow read, write: if isAuthenticated();
+    }
+
+    match /mind_maps/{mapId} {
+      allow read: if isUpgraded();
+      allow create: if isAdmin() && isValidMindMap(request.resource.data);
+      allow update: if isAdmin() && isValidMindMap(request.resource.data);
+      allow delete: if isAdmin();
     }
   }
 }

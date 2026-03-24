@@ -1,9 +1,10 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Users, PlusCircle, AlertTriangle, ChevronLeft, LayoutDashboard } from 'lucide-react';
+import { Users, PlusCircle, AlertTriangle, ChevronLeft, LayoutDashboard, BookOpen } from 'lucide-react';
 import UsersPage from './Users';
 import AdminQuestions from './AdminQuestions';
 import SimulationLogsPage from './SimulationLogs';
+import AdminMindMaps from './AdminMindMaps';
 import { ErrorReportPage } from '../components/ErrorReportPage';
 import { UserProfile, SimulationResult, QuestionError } from '../types';
 import StatCard from '../components/StatCard';
@@ -41,7 +42,7 @@ const AdminPage: React.FC<AdminProps> = ({
   downloadPDF,
   onBack
 }) => {
-  const [adminView, setAdminView] = React.useState<'users' | 'questions' | 'errors' | 'logs' | null>(null);
+  const [adminView, setAdminView] = React.useState<'users' | 'questions' | 'errors' | 'logs' | 'mindmaps' | null>(null);
 
   const todayVisits = React.useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
@@ -81,6 +82,9 @@ const AdminPage: React.FC<AdminProps> = ({
         <button onClick={() => setAdminView('logs')} className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold ${adminView === 'logs' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600'}`}>
           <LayoutDashboard className="w-5 h-5" /> Logs
         </button>
+        <button onClick={() => setAdminView('mindmaps')} className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold ${adminView === 'mindmaps' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600'}`}>
+          <BookOpen className="w-5 h-5" /> Mapa Mental
+        </button>
       </div>
 
       {adminView === 'users' && (
@@ -109,6 +113,12 @@ const AdminPage: React.FC<AdminProps> = ({
           allUsers={allUsers} 
           allActiveSimulations={allActiveSimulations}
           onBack={() => setAdminView(null)} 
+        />
+      )}
+      {adminView === 'mindmaps' && (
+        <AdminMindMaps 
+          setNotification={setNotification} 
+          setConfirmModal={setConfirmModal} 
         />
       )}
     </motion.div>

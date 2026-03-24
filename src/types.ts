@@ -60,3 +60,11 @@ export interface UpgradeRequest {
   createdAt: any;
   isNew: boolean;
 }
+
+export interface MindMap {
+  id: string;
+  subject: string;
+  content: string; // HTML content
+  createdAt: any;
+  updatedAt?: any;
+}

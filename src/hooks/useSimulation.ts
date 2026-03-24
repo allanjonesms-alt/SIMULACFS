@@ -41,6 +41,7 @@ export const useSimulation = (
   const [activeSimulation, setActiveSimulation] = useState<ActiveSimulation | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [showTip, setShowTip] = useState(false);
   const isSubmittingRef = useRef(false);
 
   useEffect(() => {
@@ -247,18 +248,29 @@ export const useSimulation = (
     const currentRating = pendingRating;
     const currentQuestionId = currentExam[examIndex].id;
     
-    setShowFeedback(false);
-    setSelectedOptionId(null);
-    setHasRatedCurrentQuestion(false);
-    setPendingRating(null);
-
     if (currentRating !== null) {
       await rateQuestion(currentQuestionId, currentRating);
     }
 
     const newAnswers = [...answers, selectedOptionId!];
     setAnswers(newAnswers);
-    
+
+    const isOdd = (examIndex + 1) % 2 !== 0;
+    if (isOdd && examIndex < currentExam.length - 1) {
+      setShowTip(true);
+      return;
+    }
+
+    proceedToNext(newAnswers, isMiniSimulado);
+  };
+
+  const proceedToNext = async (currentAnswers: number[], isMiniSimulado: boolean) => {
+    setShowFeedback(false);
+    setSelectedOptionId(null);
+    setHasRatedCurrentQuestion(false);
+    setPendingRating(null);
+    setShowTip(false);
+
     if (examIndex < currentExam.length - 1) {
       const nextIdx = examIndex + 1;
       setExamIndex(nextIdx);
@@ -266,14 +278,14 @@ export const useSimulation = (
       if (!isMiniSimulado) {
         saveSimulation(user!.uid, {
           currentIndex: nextIdx,
-          answers: newAnswers,
+          answers: currentAnswers,
           elapsedTime: elapsedTime || 0
         });
       }
     } else {
       isSubmittingRef.current = true;
       try {
-        await finishExam(newAnswers, isMiniSimulado);
+        await finishExam(currentAnswers, isMiniSimulado);
       } finally {
         isSubmittingRef.current = false;
       }
@@ -327,7 +339,7 @@ export const useSimulation = (
       
       // 3. Update question stats individually so one failure doesn't block the whole result
       // This is crucial for simulations with old question IDs that might have been migrated
-      currentExam.forEach(async (q, idx) => {
+      const updatePromises = currentExam.map(async (q, idx) => {
         try {
           const isCorrect = q.correctOption === finalAnswers[idx];
           const qRef = doc(db, 'questions', q.id);
@@ -340,6 +352,7 @@ export const useSimulation = (
           console.warn(`Could not update stats for question ${q.id}`, e);
         }
       });
+      await Promise.all(updatePromises);
       
       setExamFinished(true);
     } catch (error) {
@@ -366,6 +379,9 @@ export const useSimulation = (
     submitAnswer,
     setPendingRating,
     nextQuestion,
+    proceedToNext,
+    showTip,
+    setShowTip,
     setExamFinished,
     setActiveSimulation,
     setCurrentExam,

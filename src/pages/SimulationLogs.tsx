@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Crown, User } from 'lucide-react';
 import { motion } from 'motion/react';
 import { UserProfile } from '../types';
 
@@ -26,14 +26,18 @@ const SimulationLogsPage: React.FC<SimulationLogsProps> = ({ allPageVisits, allU
   }, [allPageVisits, allUsers]);
 
   const activeSimulationsList = React.useMemo(() => {
-    return allActiveSimulations.map(a => {
-      const user = allUsers.find(u => u.uid === a.userId);
-      return {
-        ...a,
-        userName: user?.displayName || 'Desconhecido',
-        currentQuestion: a.currentIndex + 1
-      };
-    });
+    return allActiveSimulations
+      .map(a => {
+        const user = allUsers.find(u => u.uid === a.userId);
+        return {
+          ...a,
+          userName: user?.displayName || 'Desconhecido',
+          userEmail: user?.email || 'Sem email',
+          isUpgraded: user?.isUpgraded || false,
+          currentQuestion: a.currentIndex + 1
+        };
+      })
+      .sort((a, b) => b.currentIndex - a.currentIndex);
   }, [allActiveSimulations, allUsers]);
 
   return (
@@ -46,7 +50,17 @@ const SimulationLogsPage: React.FC<SimulationLogsProps> = ({ allPageVisits, allU
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mb-12">
         {activeSimulationsList.map((sim, index) => (
           <div key={index} className="flex items-center justify-between p-6 border-b border-slate-100 last:border-0">
-            <p className="font-bold text-slate-900">{sim.userName}</p>
+            <div className="flex items-center gap-3">
+              {sim.isUpgraded ? (
+                <Crown className="w-5 h-5 text-amber-500" />
+              ) : (
+                <User className="w-5 h-5 text-slate-400" />
+              )}
+              <div>
+                <p className="font-bold text-slate-900">{sim.userName}</p>
+                <p className="text-sm text-slate-500">{sim.userEmail}</p>
+              </div>
+            </div>
             <div className="text-sm font-bold text-indigo-600">
               Questão: {sim.currentQuestion}
             </div>

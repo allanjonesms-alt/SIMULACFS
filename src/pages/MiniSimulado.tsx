@@ -78,26 +78,26 @@ export const MiniSimuladoPage: React.FC<MiniSimuladoPageProps> = (props) => {
                     props.setView('instructions');
                   }
                 }}
-                className={`p-6 rounded-2xl border shadow-sm flex flex-col cursor-pointer transition-all group ${
+                className={`p-6 rounded-3xl border shadow-sm flex flex-col cursor-pointer transition-all group ${
                   activeMiniSimulations.some(s => s.subject === subject)
-                    ? 'bg-emerald-50 border-emerald-500 hover:shadow-md' 
+                    ? 'bg-white border-indigo-500 ring-2 ring-indigo-500/20' 
                     : 'bg-white border-slate-200 hover:border-indigo-600 hover:shadow-md'
                 }`}
               >
-                <h3 className={`text-lg font-bold mb-2 transition-colors ${
+                <h3 className={`text-xl font-bold mb-2 transition-colors ${
                   activeMiniSimulations.some(s => s.subject === subject)
-                    ? 'text-emerald-700' 
+                    ? 'text-indigo-600' 
                     : 'text-slate-800 group-hover:text-indigo-600'
                 }`}>{subject}</h3>
                 <div className="flex items-center justify-between mt-auto">
                   <p className={`text-sm font-medium ${
-                    activeMiniSimulations.some(s => s.subject === subject) ? 'text-emerald-600' : 'text-slate-500'
+                    activeMiniSimulations.some(s => s.subject === subject) ? 'text-indigo-500' : 'text-slate-500'
                   }`}>
                     {activeMiniSimulations.some(s => s.subject === subject) ? 'Em andamento' : 'Clique para iniciar'}
                   </p>
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
                     activeMiniSimulations.some(s => s.subject === subject)
-                      ? 'bg-emerald-100 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white' 
+                      ? 'bg-indigo-600 text-white' 
                       : 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white'
                   }`}>
                     <Play className="w-5 h-5" />

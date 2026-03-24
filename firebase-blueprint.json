@@ -88,6 +88,18 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "title", "message", "type", "read", "createdAt"]
+    },
+    "MindMap": {
+      "title": "Mind Map",
+      "description": "Visual summary for study",
+      "type": "object",
+      "properties": {
+        "subject": { "type": "string" },
+        "content": { "type": "string", "description": "HTML content" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["subject", "content", "createdAt"]
     }
   },
   "firestore": {
@@ -114,6 +126,10 @@
     "/notifications/{notificationId}": {
       "schema": "Notification",
       "description": "User notifications"
+    },
+    "/mind_maps/{mapId}": {
+      "schema": "MindMap",
+      "description": "Study mind maps"
     }
   }
 }

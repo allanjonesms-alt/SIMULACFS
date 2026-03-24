@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { SergeantIcon } from './SergeantIcon';
 
 export const MaintenancePage = () => {
   const calculateTimeLeft = useCallback(() => {
@@ -35,7 +34,6 @@ export const MaintenancePage = () => {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full border border-slate-100 text-center">
         <div className="flex justify-center mb-6">
-          <SergeantIcon />
         </div>
         <h1 className="text-3xl font-bold text-slate-900 mb-4">Contratempo no Banco de Dados</h1>
         <p className="text-slate-600 mb-6">
