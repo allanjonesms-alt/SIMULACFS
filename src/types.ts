@@ -50,7 +50,22 @@ export interface SimulationResult {
   subjectScores?: Record<string, { correct: number; total: number }>;
   diff?: number;
   isMiniSimulado?: boolean;
+  questions?: any[]; // Array of questions
+  answers?: number[]; // Array of user answers
 }
+
+export const calculateDifficulty = (q: any): number => {
+  const totalResponses = q.totalResponses || 0;
+  if (totalResponses === 0) return q.difficulty || 0;
+
+  const c = (q.totalCorrects || 0) / totalResponses;
+  const aa = 5 - (c * 5);
+  
+  const totalRatings = (q.totalRatings || 0) + 1; // +1 for the automatic assessment
+  const sumOfRatings = (q.sumOfRatings || 0) + aa;
+  
+  return Math.round(sumOfRatings / totalRatings);
+};
 
 export interface UpgradeRequest {
   id: string;

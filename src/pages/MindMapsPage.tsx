@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, ChevronRight, Search, X } from 'lucide-react';
+import { BookOpen, Search, X, ChevronRight, ChevronLeft, Shuffle } from 'lucide-react';
 import { collection, query, orderBy, onSnapshot, limit } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { MindMap } from '../types';
@@ -14,24 +14,64 @@ export const MindMapsPage: React.FC<MindMapsPageProps> = ({ profile, onUpgrade }
   const [mindMaps, setMindMaps] = useState<MindMap[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedMap, setSelectedMap] = useState<MindMap | null>(null);
+  const [currentIndex, setCurrentIndex] = useState<number>(-1);
 
   useEffect(() => {
-    const q = query(collection(db, 'mind_maps'), orderBy('createdAt', 'desc'), limit(50));
+    if (!profile?.isUpgraded) {
+      setLoading(false);
+      return;
+    }
+
+    const q = query(collection(db, 'mind_maps'), orderBy('createdAt', 'desc'), limit(100));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const maps = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MindMap));
       setMindMaps(maps);
+      if (maps.length > 0 && currentIndex === -1) {
+        setCurrentIndex(Math.floor(Math.random() * maps.length));
+      }
       setLoading(false);
     }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'mind_maps');
+      // Ignore permission errors as we handle them in the UI
+      if (!error.message.toLowerCase().includes('permission') && !error.message.toLowerCase().includes('denied')) {
+        handleFirestoreError(error, OperationType.LIST, 'mind_maps');
+      }
       setLoading(false);
     });
     return unsubscribe;
-  }, []);
+  }, [profile?.isUpgraded]);
 
-  const filteredMaps = mindMaps.filter(map => 
-    map.subject.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredMaps = React.useMemo(() => {
+    return mindMaps.filter(map => 
+      map.subject.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [mindMaps, searchTerm]);
+
+  // If search term changes, reset index if current map is no longer in filtered list
+  useEffect(() => {
+    if (filteredMaps.length > 0) {
+      const currentMap = mindMaps[currentIndex];
+      const stillExists = currentMap && filteredMaps.some(m => m.id === currentMap.id);
+      if (!stillExists) {
+        setCurrentIndex(0);
+      }
+    } else {
+      setCurrentIndex(-1);
+    }
+  }, [searchTerm, filteredMaps]);
+
+  const handleNext = () => {
+    if (filteredMaps.length <= 1) return;
+    let nextIndex;
+    do {
+      nextIndex = Math.floor(Math.random() * filteredMaps.length);
+    } while (nextIndex === filteredMaps.indexOf(filteredMaps.find(m => m.id === filteredMaps[currentIndex]?.id) || filteredMaps[0]) && filteredMaps.length > 1);
+    
+    const nextMap = filteredMaps[nextIndex];
+    const globalIndex = mindMaps.findIndex(m => m.id === nextMap.id);
+    setCurrentIndex(globalIndex);
+  };
+
+  const currentMap = mindMaps[currentIndex];
 
   if (!profile?.isUpgraded) {
     return (
@@ -59,21 +99,11 @@ export const MindMapsPage: React.FC<MindMapsPageProps> = ({ profile, onUpgrade }
   }
 
   return (
-    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="p-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="p-6 max-w-6xl mx-auto">
+      <div className="flex items-center justify-between gap-6 mb-10">
         <div>
-          <h2 className="text-3xl font-bold text-slate-900">Mapas Mentais</h2>
-          <p className="text-slate-500">Resumos visuais para facilitar seu aprendizado.</p>
-        </div>
-        <div className="relative w-full md:w-72">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-          <input 
-            type="text" 
-            placeholder="Buscar assunto..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white shadow-sm"
-          />
+          <h2 className="text-3xl font-bold text-slate-900">Galeria de Mapas Mentais</h2>
+          <p className="text-slate-500">Explore resumos visuais um por um.</p>
         </div>
       </div>
 
@@ -81,7 +111,7 @@ export const MindMapsPage: React.FC<MindMapsPageProps> = ({ profile, onUpgrade }
         <div className="flex items-center justify-center py-20">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
         </div>
-      ) : filteredMaps.length === 0 ? (
+      ) : !currentMap ? (
         <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center">
           <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <BookOpen className="w-8 h-8 text-slate-300" />
@@ -89,54 +119,45 @@ export const MindMapsPage: React.FC<MindMapsPageProps> = ({ profile, onUpgrade }
           <p className="text-slate-500 font-medium">Nenhum mapa mental encontrado.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredMaps.map((map) => (
-            <motion.div 
-              key={map.id}
-              whileHover={{ y: -5 }}
-              onClick={() => setSelectedMap(map)}
-              className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer group"
-            >
-              <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-indigo-600 transition-colors">
-                <BookOpen className="w-6 h-6 text-indigo-600 group-hover:text-white transition-colors" />
+        <div className="space-y-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white">
+                <BookOpen className="w-5 h-5" />
               </div>
-              <h3 className="text-lg font-bold text-slate-800 mb-2 group-hover:text-indigo-600 transition-colors line-clamp-2">
-                {map.subject}
-              </h3>
-              <div className="flex items-center justify-between mt-4">
-                <span className="text-xs text-slate-400">Clique para visualizar</span>
-                <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-600 transition-colors" />
+              <h3 className="text-xl font-bold text-slate-900">{currentMap.subject}</h3>
+            </div>
+            <div className="text-sm font-bold text-slate-400">
+              {filteredMaps.indexOf(currentMap) + 1} / {filteredMaps.length}
+            </div>
+          </div>
+
+          <AnimatePresence mode="wait">
+            <motion.div 
+              key={currentMap.id}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.05 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden flex flex-col w-full md:max-w-2xl md:mx-auto"
+            >
+              <div className="flex-1 p-4 md:p-8 bg-white flex items-center justify-center">
+                <div className="w-full [&_img]:w-full [&_img]:h-auto [&_img]:object-contain" dangerouslySetInnerHTML={{ __html: currentMap.content }} />
               </div>
             </motion.div>
-          ))}
+          </AnimatePresence>
+
+          <div className="flex justify-center gap-4 pt-6">
+            <button 
+              onClick={handleNext}
+              className="flex items-center gap-3 bg-indigo-600 text-white px-8 py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg active:scale-95 group"
+            >
+              <Shuffle className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
+              PROXIMO
+            </button>
+          </div>
         </div>
       )}
-
-      <AnimatePresence>
-        {selectedMap && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 md:p-10">
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-3xl w-full max-w-5xl h-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
-            >
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                <h3 className="text-xl font-bold text-slate-900">{selectedMap.subject}</h3>
-                <button 
-                  onClick={() => setSelectedMap(null)}
-                  className="p-2 hover:bg-slate-200 rounded-xl transition-colors"
-                >
-                  <X className="w-6 h-6 text-slate-500" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-8 md:p-12 prose prose-indigo max-w-none break-words whitespace-normal">
-                <div dangerouslySetInnerHTML={{ __html: selectedMap.content }} />
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 };

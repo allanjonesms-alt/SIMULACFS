@@ -4,6 +4,7 @@ import { Plus, Trash2, Save, Edit2, X, BookOpen, Eye, Layout } from 'lucide-reac
 import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, limit } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { MindMap } from '../types';
+import { useQuestions } from '../hooks/useQuestions';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 
@@ -19,6 +20,7 @@ const AdminMindMaps: React.FC<AdminMindMapsProps> = ({ setNotification, setConfi
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
+  const { questions } = useQuestions();
 
   const quillModules = {
     toolbar: [
@@ -48,6 +50,13 @@ const AdminMindMaps: React.FC<AdminMindMapsProps> = ({ setNotification, setConfi
     
     if (!currentMap.subject?.trim() || isContentEmpty) {
       setNotification({ message: 'Preencha o assunto e o conteúdo do mapa mental.', type: 'error' });
+      return;
+    }
+
+    // Check size before saving
+    const contentSize = new Blob([currentMap.content]).size;
+    if (contentSize > 900 * 1024) {
+      setNotification({ message: 'O conteúdo é muito grande (mais de 900KB). Tente remover algumas imagens ou reduzir o tamanho.', type: 'error' });
       return;
     }
 
@@ -104,6 +113,49 @@ const AdminMindMaps: React.FC<AdminMindMapsProps> = ({ setNotification, setConfi
     });
   };
 
+  const subjects = React.useMemo(() => {
+    const set = new Set<string>();
+    
+    // Add base subjects
+    const baseSubjects = [
+      'Lei 1.102/90',
+      'Lei 053/1990',
+      'Lei 127/2008',
+      'Decreto 1.093/81',
+      'RDPMMS',
+      'Conselho de Disciplina',
+      'Língua Portuguesa',
+      'Leis Extravagantes',
+      'Provas Anteriores'
+    ];
+    baseSubjects.forEach(s => set.add(s));
+
+    // Add subjects from questions
+    questions.forEach(q => {
+      if (q.law) set.add(q.law);
+      if (q.category) set.add(q.category);
+    });
+
+    // Add subjects from existing mind maps
+    mindMaps.forEach(m => {
+      if (m.subject) set.add(m.subject);
+    });
+
+    return Array.from(set).filter(s => s && s.trim() !== '').sort();
+  }, [questions, mindMaps]);
+
+  const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
+
+  const groupedMaps = React.useMemo(() => {
+    const grouped: Record<string, MindMap[]> = {};
+    mindMaps.forEach(map => {
+      const subject = map.subject || 'Sem Matéria';
+      if (!grouped[subject]) grouped[subject] = [];
+      grouped[subject].push(map);
+    });
+    return grouped;
+  }, [mindMaps]);
+
   return (
     <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm p-6">
       <div className="flex justify-between items-center mb-6">
@@ -113,7 +165,7 @@ const AdminMindMaps: React.FC<AdminMindMapsProps> = ({ setNotification, setConfi
         {!isEditing && (
           <button 
             onClick={() => {
-              setCurrentMap({ subject: '', content: '' });
+              setCurrentMap({ subject: subjects[0], content: '' });
               setIsEditing(true);
             }}
             className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-indigo-700 transition-all"
@@ -126,15 +178,22 @@ const AdminMindMaps: React.FC<AdminMindMapsProps> = ({ setNotification, setConfi
       {isEditing ? (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
           <div>
-            <label className="block text-sm font-bold text-slate-700 mb-1">Assunto</label>
-            <input 
-              type="text" 
+            <label className="block text-sm font-bold text-slate-700 mb-1">Matéria</label>
+            <select 
               value={currentMap.subject}
               onChange={(e) => setCurrentMap(prev => ({ ...prev, subject: e.target.value }))}
-              className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="Ex: Lei 11.02/90 - Direitos"
+              className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
               disabled={saving}
-            />
+            >
+              <option value="" disabled>Selecione uma matéria</option>
+              {subjects.map(subject => (
+                <option key={subject} value={subject}>{subject}</option>
+              ))}
+              {/* Allow existing subjects that might not be in the list yet */}
+              {currentMap.subject && !subjects.includes(currentMap.subject) && (
+                <option value={currentMap.subject}>{currentMap.subject}</option>
+              )}
+            </select>
           </div>
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -198,36 +257,64 @@ const AdminMindMaps: React.FC<AdminMindMapsProps> = ({ setNotification, setConfi
           ) : mindMaps.length === 0 ? (
             <div className="text-center py-10 text-slate-400">Nenhum mapa mental cadastrado.</div>
           ) : (
-            <div className="grid grid-cols-1 gap-4">
-              {mindMaps.map((map) => (
-                <div key={map.id} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 hover:border-indigo-200 transition-all group">
-                  <div>
-                    <h4 className="font-bold text-slate-800">{map.subject}</h4>
-                    <p className="text-xs text-slate-400">
-                      Criado em: {map.createdAt?.toDate?.()?.toLocaleDateString() || 'Recente'}
-                    </p>
-                  </div>
-                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button 
-                      onClick={() => {
-                        setCurrentMap({
-                          ...map,
-                          subject: map.subject || '',
-                          content: map.content || ''
-                        });
-                        setIsEditing(true);
-                      }}
-                      className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+            <div className="space-y-3">
+              {Object.entries(groupedMaps).map(([subject, maps]) => (
+                <div key={subject} className="border border-slate-100 rounded-2xl overflow-hidden">
+                  <button 
+                    onClick={() => setExpandedSubject(expandedSubject === subject ? null : subject)}
+                    className={`w-full flex items-center justify-between p-4 font-bold transition-all ${expandedSubject === subject ? 'bg-indigo-50 text-indigo-600' : 'bg-white text-slate-700 hover:bg-slate-50'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-2 h-6 rounded-full ${expandedSubject === subject ? 'bg-indigo-600' : 'bg-slate-200'}`} />
+                      {subject}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs bg-white px-2 py-1 rounded-lg border border-slate-200 text-slate-400">
+                        {maps.length} {maps.length === 1 ? 'item' : 'itens'}
+                      </span>
+                      <Layout className={`w-4 h-4 transition-transform ${expandedSubject === subject ? 'rotate-180' : ''}`} />
+                    </div>
+                  </button>
+                  
+                  {expandedSubject === subject && (
+                    <motion.div 
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      className="bg-slate-50/50 p-4 space-y-2 border-t border-slate-100"
                     >
-                      <Edit2 className="w-5 h-5" />
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(map.id)}
-                      className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  </div>
+                      {maps.map((map) => (
+                        <div key={map.id} className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-100 hover:border-indigo-200 transition-all group">
+                          <div>
+                            <h4 className="font-bold text-slate-800 text-sm">{map.subject}</h4>
+                            <p className="text-[10px] text-slate-400">
+                              Criado em: {map.createdAt?.toDate?.()?.toLocaleDateString() || 'Recente'}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <button 
+                              onClick={() => {
+                                setCurrentMap({
+                                  ...map,
+                                  subject: map.subject || '',
+                                  content: map.content || ''
+                                });
+                                setIsEditing(true);
+                              }}
+                              className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => handleDelete(map.id)}
+                              className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
                 </div>
               ))}
             </div>

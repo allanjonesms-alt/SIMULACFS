@@ -69,21 +69,21 @@ const AdminPage: React.FC<AdminProps> = ({
         <StatCard label="Visitantes (Hoje)" value={todayVisits} icon={<LayoutDashboard className="text-indigo-600" />} />
       </div>
 
-      <div className="flex gap-4 mb-8">
-        <button onClick={() => setAdminView('users')} className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold ${adminView === 'users' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600'}`}>
-          <Users className="w-5 h-5" /> Usuários
+      <div className="flex flex-wrap gap-2 mb-8 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
+        <button onClick={() => setAdminView('users')} className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm ${adminView === 'users' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+          <Users className="w-4 h-4" /> Usuários
         </button>
-        <button onClick={() => setAdminView('questions')} className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold ${adminView === 'questions' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600'}`}>
-          <PlusCircle className="w-5 h-5" /> Questões
+        <button onClick={() => setAdminView('questions')} className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm ${adminView === 'questions' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+          <PlusCircle className="w-4 h-4" /> Questões
         </button>
-        <button onClick={() => setAdminView('errors')} className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold ${adminView === 'errors' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600'}`}>
-          <AlertTriangle className="w-5 h-5" /> Erros
+        <button onClick={() => setAdminView('errors')} className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm ${adminView === 'errors' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+          <AlertTriangle className="w-4 h-4" /> Erros
         </button>
-        <button onClick={() => setAdminView('logs')} className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold ${adminView === 'logs' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600'}`}>
-          <LayoutDashboard className="w-5 h-5" /> Logs
+        <button onClick={() => setAdminView('logs')} className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm ${adminView === 'logs' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+          <LayoutDashboard className="w-4 h-4" /> Logs
         </button>
-        <button onClick={() => setAdminView('mindmaps')} className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold ${adminView === 'mindmaps' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600'}`}>
-          <BookOpen className="w-5 h-5" /> Mapa Mental
+        <button onClick={() => setAdminView('mindmaps')} className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm ${adminView === 'mindmaps' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+          <BookOpen className="w-4 h-4" /> Mapa Mental
         </button>
       </div>
 
@@ -112,6 +112,8 @@ const AdminPage: React.FC<AdminProps> = ({
           allPageVisits={allPageVisits} 
           allUsers={allUsers} 
           allActiveSimulations={allActiveSimulations}
+          setNotification={setNotification}
+          setConfirmModal={setConfirmModal}
           onBack={() => setAdminView(null)} 
         />
       )}

@@ -279,12 +279,14 @@ export default function App() {
         setActiveSimulation(null);
       }
     }, (error) => {
-      if (!error.message.includes('permission-denied')) {
+      if (!error.message.toLowerCase().includes('permission') && !error.message.toLowerCase().includes('denied')) {
         handleFirestoreError(error, OperationType.GET, 'active_simulations');
       }
     });
 
-    // Admin: Users listener: Load once
+    let activeSimsUnsubscribe: (() => void) | undefined;
+
+    // Admin listeners
     if (profile.role === 'admin') {
       getDocs(collection(db, 'users')).then(snapshot => {
         const uList = snapshot.docs.map(doc => doc.data() as UserProfile);
@@ -295,40 +297,43 @@ export default function App() {
         handleFirestoreError(error, OperationType.LIST, 'users');
       });
 
-      // Admin: Question errors listener: Load once
       getDocs(collection(db, 'question_errors')).then(snapshot => {
         const eList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as QuestionError));
         setAllErrors(eList);
       }).catch(error => handleFirestoreError(error, OperationType.LIST, 'question_errors'));
 
-      // Admin: Page visits listener: Load once
       getDocs(collection(db, 'page_visits')).then(snapshot => {
         const vList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setAllPageVisits(vList);
       }).catch(error => handleFirestoreError(error, OperationType.LIST, 'page_visits'));
 
-      // Admin: Active simulations listener: Load once
-      getDocs(collection(db, 'active_simulations')).then(snapshot => {
-        const aList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      // Admin: Active simulations listener: Real-time
+      const activeSimsQuery = collection(db, 'active_simulations');
+      activeSimsUnsubscribe = onSnapshot(activeSimsQuery, (snapshot) => {
+        const aList = snapshot.docs.map(doc => ({ id: doc.id, userId: doc.id, ...doc.data() }));
         setAllActiveSimulations(aList);
-      }).catch(error => handleFirestoreError(error, OperationType.LIST, 'active_simulations'));
+      }, (error) => handleFirestoreError(error, OperationType.LIST, 'active_simulations'));
     }
 
     // Mind Maps listener (for tips)
-    const mmQuery = query(collection(db, 'mind_maps'), orderBy('createdAt', 'desc'));
-    const mmUnsubscribe = onSnapshot(mmQuery, (snapshot) => {
-      const mmList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MindMap));
-      setMindMaps(mmList);
-    }, (error) => {
-      if (!error.message.includes('permission-denied')) {
-        handleFirestoreError(error, OperationType.LIST, 'mind_maps');
-      }
-    });
+    let mmUnsubscribe: (() => void) | undefined;
+    if (profile.isUpgraded) {
+      const mmQuery = query(collection(db, 'mind_maps'), orderBy('createdAt', 'desc'));
+      mmUnsubscribe = onSnapshot(mmQuery, (snapshot) => {
+        const mmList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MindMap));
+        setMindMaps(mmList);
+      }, (error) => {
+        if (!error.message.toLowerCase().includes('permission') && !error.message.toLowerCase().includes('denied')) {
+          handleFirestoreError(error, OperationType.LIST, 'mind_maps');
+        }
+      });
+    }
 
     return () => {
       hUnsubscribe();
       activeUnsubscribe();
-      mmUnsubscribe();
+      if (mmUnsubscribe) mmUnsubscribe();
+      if (activeSimsUnsubscribe) activeSimsUnsubscribe();
       clearInterval(simulationsInterval);
     };
   }, [user, profile]);

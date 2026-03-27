@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { doc, updateDoc, serverTimestamp, setDoc, writeBatch, collection, getDoc, increment, deleteDoc } from 'firebase/firestore';
+import { doc, updateDoc, serverTimestamp, setDoc, writeBatch, collection, getDoc, increment, deleteDoc, runTransaction } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType, logPageVisit } from '../firebase';
 import { Question, SimulationResult, UserProfile } from '../types';
 
@@ -160,6 +160,7 @@ export const useSimulation = (
           questions: examQuestions,
           currentIndex: 0,
           answers: [],
+          createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           elapsedTime: 0
         });
@@ -222,20 +223,24 @@ export const useSimulation = (
     setHasRatedCurrentQuestion(true);
     try {
       const qRef = doc(db, 'questions', questionId);
-      const qDoc = await getDoc(qRef);
-      if (qDoc.exists()) {
+      
+      await runTransaction(db, async (transaction) => {
+        const qDoc = await transaction.get(qRef);
+        if (!qDoc.exists()) throw new Error("Document does not exist!");
+        
         const data = qDoc.data() as Question;
         const newTotalRatings = (data.totalRatings || 0) + 1;
         const newSumOfRatings = (data.sumOfRatings || 0) + rating;
         const newDifficulty = Math.round(newSumOfRatings / newTotalRatings);
         
-        await updateDoc(qRef, {
+        transaction.update(qRef, {
           totalRatings: newTotalRatings,
           sumOfRatings: newSumOfRatings,
           difficulty: newDifficulty
         });
-        setNotification({ message: 'Obrigado pela sua avaliação!', type: 'success' });
-      }
+      });
+      
+      setNotification({ message: 'Obrigado pela sua avaliação!', type: 'success' });
     } catch (error) {
       console.error('Erro ao avaliar questão:', error);
       setNotification({ message: 'Erro ao enviar avaliação', type: 'error' });
@@ -320,7 +325,9 @@ export const useSimulation = (
       anonymousName: profile!.anonymousName,
       elapsedTime: elapsedTime || 0,
       subjectScores,
-      isMiniSimulado: isMiniSimulado || false
+      isMiniSimulado: isMiniSimulado || false,
+      questions: currentExam,
+      answers: finalAnswers
     };
 
     try {

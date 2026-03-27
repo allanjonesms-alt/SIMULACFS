@@ -11,7 +11,7 @@ import {
   doc, deleteDoc, updateDoc, addDoc, collection, serverTimestamp, setDoc, writeBatch 
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
-import { Question, UserProfile, SimulationResult } from '../types';
+import { Question, UserProfile, SimulationResult, calculateDifficulty } from '../types';
 import { useQuestions } from '../hooks/useQuestions';
 import SubjectPage from '../components/SubjectPage';
 import Lei1102 from './subjects/Lei1102';
@@ -66,6 +66,7 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
   };
 
   const [selectedAdminLaw, setSelectedAdminLaw] = useState<string | null>(null);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<number | null>(null); // 0: Sem, 1: Fácil, 2: Média, 3: Difícil
   const [adminSearchTerm, setAdminSearchTerm] = useState('');
   const [isSeeding, setIsSeeding] = useState(false);
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
@@ -298,7 +299,10 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+            <div 
+              onClick={() => setSelectedDifficulty(1)}
+              className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 cursor-pointer hover:border-indigo-600 transition-all"
+            >
               <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
                 <CheckCircle2 className="w-5 h-5" />
               </div>
@@ -307,7 +311,10 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
                 <p className="text-xl font-black text-slate-900">{questions.filter(q => (q.difficulty || 0) > 0 && (q.difficulty || 0) <= 2).length}</p>
               </div>
             </div>
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+            <div 
+              onClick={() => setSelectedDifficulty(2)}
+              className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 cursor-pointer hover:border-indigo-600 transition-all"
+            >
               <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
                 <Star className="w-5 h-5" />
               </div>
@@ -316,7 +323,10 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
                 <p className="text-xl font-black text-slate-900">{questions.filter(q => (q.difficulty || 0) === 3).length}</p>
               </div>
             </div>
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+            <div 
+              onClick={() => setSelectedDifficulty(3)}
+              className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 cursor-pointer hover:border-indigo-600 transition-all"
+            >
               <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-600">
                 <Zap className="w-5 h-5" />
               </div>
@@ -325,7 +335,10 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
                 <p className="text-xl font-black text-slate-900">{questions.filter(q => (q.difficulty || 0) >= 4).length}</p>
               </div>
             </div>
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+            <div 
+              onClick={() => setSelectedDifficulty(0)}
+              className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 cursor-pointer hover:border-indigo-600 transition-all"
+            >
               <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400">
                 <Database className="w-5 h-5" />
               </div>
@@ -347,14 +360,20 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
             />
           </div>
 
-          {adminSearchTerm.trim() !== '' ? (
+          {adminSearchTerm.trim() !== '' || selectedDifficulty !== null ? (
             <SubjectPage 
-              law="Resultados da Busca" 
-              questions={questions.filter(q => 
-                q.text.toLowerCase().includes(adminSearchTerm.toLowerCase()) ||
-                q.id.toLowerCase().includes(adminSearchTerm.toLowerCase())
-              )}
-              onBack={() => setAdminSearchTerm('')}
+              law={selectedDifficulty !== null ? `Dificuldade ${selectedDifficulty === 1 ? 'Fácil' : selectedDifficulty === 2 ? 'Média' : selectedDifficulty === 3 ? 'Difícil' : 'Sem Classificação'}` : "Resultados da Busca"} 
+              questions={questions.filter(q => {
+                if (selectedDifficulty !== null) {
+                  if (selectedDifficulty === 1) return (q.difficulty || 0) > 0 && (q.difficulty || 0) <= 2;
+                  if (selectedDifficulty === 2) return (q.difficulty || 0) === 3;
+                  if (selectedDifficulty === 3) return (q.difficulty || 0) >= 4;
+                  return !q.difficulty || q.difficulty === 0;
+                }
+                return q.text.toLowerCase().includes(adminSearchTerm.toLowerCase()) ||
+                       q.id.toLowerCase().includes(adminSearchTerm.toLowerCase());
+              })}
+              onBack={() => { setAdminSearchTerm(''); setSelectedDifficulty(null); }}
               onDownloadPDF={() => {}}
               onPreview={(q) => {
                 setPreviewQuestion(q);
@@ -381,6 +400,7 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
                 setIsAddingQuestion(true);
               }}
               disableLawFilter={true}
+              isAdmin={true}
             />
           ) : (
             <>
@@ -510,8 +530,22 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
                         </div>
                       ))}
                       <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-1">Dificuldade</label>
-                        <p className="text-sm text-slate-600">{(editingQuestion.difficulty || 0).toFixed(2).replace('.', ',')} estrelas</p>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">Dificuldade (1-5 estrelas)</label>
+                        <p className="text-sm text-slate-600 mb-2">Calculada automaticamente: {calculateDifficulty(editingQuestion)} estrelas</p>
+                        <div className="flex gap-2">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              onClick={() => setEditingQuestion(prev => prev ? {...prev, difficulty: star} : null)}
+                              className={`p-2 rounded-full transition-colors ${
+                                (editingQuestion.difficulty || 0) >= star ? 'text-amber-400' : 'text-slate-300'
+                              }`}
+                            >
+                              <Star className="w-8 h-8 fill-current" />
+                            </button>
+                          ))}
+                        </div>
                       </div>
                       <div>
                         <label className="block text-sm font-bold text-slate-700 mb-1">Índice da Correta (0-4)</label>
@@ -545,6 +579,7 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
                           <option value="RDPMMS">RDPMMS</option>
                           <option value="Conselho de Disciplina">Conselho de Disciplina</option>
                           <option value="Língua Portuguesa">Língua Portuguesa</option>
+                          <option value="Leis Extravagantes">Leis Extravagantes</option>
                           <option value="Provas Anteriores">Provas Anteriores</option>
                         </select>
                       </div>
@@ -714,6 +749,7 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
                           <option value="RDPMMS">RDPMMS</option>
                           <option value="Conselho de Disciplina">Conselho de Disciplina</option>
                           <option value="Língua Portuguesa">Língua Portuguesa</option>
+                          <option value="Leis Extravagantes">Leis Extravagantes</option>
                           <option value="Provas Anteriores">Provas Anteriores</option>
                         </select>
                       </div>
