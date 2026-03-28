@@ -10,7 +10,7 @@ import 'react-quill-new/dist/quill.snow.css';
 
 interface AdminMindMapsProps {
   setNotification: (notif: { message: string; type: 'success' | 'error' } | null) => void;
-  setConfirmModal: (modal: { title: string; message: string; onConfirm: () => void } | null) => void;
+  setConfirmModal: (modal: { title: string; message: React.ReactNode; onConfirm: () => void } | null) => void;
 }
 
 const AdminMindMaps: React.FC<AdminMindMapsProps> = ({ setNotification, setConfirmModal }) => {

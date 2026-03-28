@@ -11,7 +11,7 @@ interface ErrorReportModalProps {
   onClose: () => void;
   question: Question | null;
   user: User | null;
-  setConfirmModal: (modal: { title: string; message: string; onConfirm: () => void } | null) => void;
+  setConfirmModal: (modal: { title: string; message: React.ReactNode; onConfirm: () => void } | null) => void;
 }
 
 export const ErrorReportModal: React.FC<ErrorReportModalProps> = ({ isOpen, onClose, question, user, setConfirmModal }) => {

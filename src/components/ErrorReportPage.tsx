@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { Trash2, AlertTriangle, X, CheckCircle2, Database } from 'lucide-react';
-import { collection, doc, updateDoc, deleteDoc, serverTimestamp, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, doc, updateDoc, deleteDoc, serverTimestamp, onSnapshot, query, orderBy, getDocs } from 'firebase/firestore';
 import { AnimatePresence } from 'motion/react';
 import { db, OperationType, handleFirestoreError, sendNotification } from '../firebase';
 

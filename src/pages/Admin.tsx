@@ -23,7 +23,7 @@ interface AdminProps {
   allPageVisits: any[];
   allActiveSimulations: any[];
   setNotification: (notif: { message: string; type: 'success' | 'error' } | null) => void;
-  setConfirmModal: (modal: { title: string; message: string; onConfirm: () => void } | null) => void;
+  setConfirmModal: (modal: { title: string; message: React.ReactNode; onConfirm: () => void } | null) => void;
   downloadPDF: (law: string) => void;
   onBack: () => void;
 }

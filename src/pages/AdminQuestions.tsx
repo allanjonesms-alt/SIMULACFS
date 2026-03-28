@@ -27,7 +27,7 @@ interface AdminQuestionsProps {
   profile: UserProfile | null;
   allSimulations: SimulationResult[];
   setNotification: (notif: { message: string; type: 'success' | 'error' } | null) => void;
-  setConfirmModal: (modal: { title: string; message: string; onConfirm: () => void } | null) => void;
+  setConfirmModal: (modal: { title: string; message: React.ReactNode; onConfirm: () => void } | null) => void;
   downloadPDF: (law: string) => void;
   onBack: () => void;
 }
@@ -70,8 +70,6 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
   const [adminSearchTerm, setAdminSearchTerm] = useState('');
   const [isSeeding, setIsSeeding] = useState(false);
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
-  const [isBulkAdding, setIsBulkAdding] = useState(false);
-  const [bulkJson, setBulkJson] = useState('');
   const editingTextareaRef = useRef<HTMLTextAreaElement>(null);
   const newQuestionTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
@@ -114,6 +112,15 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
     }
   };
 
+  const getSubjectCode = (law: string) => {
+    const code = law.substring(0, 4).toUpperCase().replace(/[^A-Z0-9]/g, '');
+    return code.length >= 3 ? code : 'XXXX';
+  };
+
+  const cleanText = (text: string) => {
+    return text.replace(/^#\d+\s*/, '').trim();
+  };
+
   const handleCreateQuestion = async () => {
     if (!newQuestion.text || !newQuestion.law) {
       setNotification({ message: 'Preencha o enunciado e a lei', type: 'error' });
@@ -124,26 +131,12 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
       const optionsToSave = [...(newQuestion.options || ['', '', '', '', ''])];
       optionsToSave[4] = null;
 
-      const getSubjectCode = (law: string) => {
-        switch (law) {
-          case 'Lei 1.102/90': return 'L110';
-          case 'Lei 053/1990': return 'L053';
-          case 'Lei 127/2008': return 'L127';
-          case 'Decreto 1.093/81': return 'D109';
-          case 'RDPMMS': return 'RDPM';
-          case 'Conselho de Disciplina': return 'CEDI';
-          case 'Língua Portuguesa': return 'LPOT';
-          case 'Provas Anteriores': return 'PROV';
-          default: return 'XXXX';
-        }
-      };
-
-      const sameSubjectQuestions = questions.filter(q => q.law === newQuestion.law);
-      const count = sameSubjectQuestions.length + 1;
-      const newId = `${getSubjectCode(newQuestion.law)}-${count.toString().padStart(4, '0')}`;
+      const maxId = questions.reduce((max, q) => Math.max(max, parseInt(q.id) || 0), 0);
+      const newId = (maxId + 1).toString().padStart(4, '0');
 
       await setDoc(doc(db, 'questions', newId), {
         ...newQuestion,
+        text: cleanText(newQuestion.text || ''),
         id: newId,
         options: optionsToSave,
         createdAt: serverTimestamp(),
@@ -238,6 +231,48 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
     });
   };
 
+  const handleRenumberQuestions = async () => {
+    setConfirmModal({
+      title: "Renumerar Questões",
+      message: "Isso irá renumerar todas as questões de 0001 a 9999. Esta operação é irreversível. Tem certeza?",
+      onConfirm: async () => {
+        setIsSaving(true);
+        try {
+          const sortedQuestions = [...questions].sort((a, b) => {
+            if (a.law !== b.law) return (a.law || '').localeCompare(b.law || '');
+            return (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0);
+          });
+
+          let batch = writeBatch(db);
+          let count = 0;
+          const BATCH_LIMIT = 400;
+
+          for (const oldQuestion of sortedQuestions) {
+            count++;
+            const newId = count.toString().padStart(4, '0');
+            if (oldQuestion.id === newId) continue;
+
+            const newDocRef = doc(db, 'questions', newId);
+            batch.set(newDocRef, { ...oldQuestion, id: newId, updatedAt: serverTimestamp() });
+            batch.delete(doc(db, 'questions', oldQuestion.id));
+
+            if (count % BATCH_LIMIT === 0) {
+              await batch.commit();
+              batch = writeBatch(db);
+            }
+          }
+          await batch.commit();
+          setNotification({ message: 'Questões renumeradas!', type: 'success' });
+        } catch (error) {
+          handleFirestoreError(error, OperationType.WRITE, 'questions');
+          setNotification({ message: 'Erro ao renumerar', type: 'error' });
+        } finally {
+          setIsSaving(false);
+        }
+      }
+    });
+  };
+
   const props = {
     onBack: () => setSelectedAdminLaw(null),
     onDownloadPDF: downloadPDF,
@@ -287,13 +322,7 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
               <h2 className="text-3xl font-bold text-slate-900">BANCO DE QUESTÕES</h2>
             </div>
               <div className="flex flex-wrap gap-3">
-              <button 
-                onClick={() => setIsBulkAdding(true)}
-                className="flex items-center gap-2 bg-slate-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-slate-700 transition-all shadow-md"
-              >
-                <Database className="w-5 h-5" />
-                Bulk Add
-              </button>
+
               <button 
                 onClick={() => {
                   setNewQuestion({ ...newQuestion, law: '' });
@@ -303,6 +332,13 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
               >
                 <PlusCircle className="w-5 h-5" />
                 Nova Questão
+              </button>
+              <button 
+                onClick={handleRenumberQuestions}
+                className="flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-purple-700 transition-all shadow-md"
+              >
+                <Database className="w-5 h-5" />
+                Renumerar Questões
               </button>
             </div>
           </div>
@@ -812,77 +848,6 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Modal Bulk Add */}
-      <AnimatePresence>
-        {isBulkAdding && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto relative"
-            >
-              <button 
-                onClick={() => setIsBulkAdding(false)} 
-                className="absolute right-6 top-6 p-2 hover:bg-slate-100 rounded-full transition-colors"
-              >
-                <X className="w-6 h-6 text-slate-400" />
-              </button>
-              <h3 className="text-2xl font-bold mb-6">Bulk Add de Questões</h3>
-              <p className="text-slate-500 mb-4">Cole o JSON das questões abaixo:</p>
-              <textarea 
-                className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none font-mono text-sm" 
-                rows={10}
-                value={bulkJson}
-                onChange={(e) => setBulkJson(e.target.value)}
-                placeholder='[{"text": "...", "options": [...], "correctOption": 0, "law": "...", "category": "...", "justification": "...", "difficulty": 3}]'
-              />
-              <button 
-                onClick={async () => {
-                  setIsSaving(true);
-                  try {
-                    const questionsToAdd = JSON.parse(bulkJson);
-                    const batch = writeBatch(db);
-                    const sameSubjectQuestions = questions.filter(q => q.law === 'Língua Portuguesa');
-                    let count = sameSubjectQuestions.length;
-
-                    for (const q of questionsToAdd) {
-                      count++;
-                      const newId = `LPOT-${count.toString().padStart(4, '0')}`;
-                      const docRef = doc(db, 'questions', newId);
-                      batch.set(docRef, {
-                        ...q,
-                        id: newId,
-                        createdAt: serverTimestamp(),
-                        updatedAt: serverTimestamp()
-                      });
-                    }
-                    await batch.commit();
-                    setNotification({ message: 'Questões adicionadas com sucesso!', type: 'success' });
-                    setBulkJson('');
-                    setIsBulkAdding(false);
-                  } catch (error) {
-                    console.error(error);
-                    setNotification({ message: 'Erro ao adicionar questões. Verifique o formato JSON.', type: 'error' });
-                  } finally {
-                    setIsSaving(false);
-                  }
-                }}
-                disabled={isSaving || !bulkJson}
-                className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 mt-4"
-              >
-                {isSaving ? 'Adicionando...' : 'Adicionar Questões'}
-              </button>
-              <button 
-                onClick={() => setIsBulkAdding(false)}
-                className="w-full py-3 mt-2 border rounded-xl font-bold hover:bg-slate-50 transition-all"
-              >
-                Cancelar
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       {/* Modal Preview */}
       {previewQuestion && (

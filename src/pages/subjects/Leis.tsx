@@ -13,7 +13,7 @@ interface LeisProps {
   isAdmin?: boolean;
   profile: UserProfile | null;
   setNotification: (notif: { message: string; type: 'success' | 'error' } | null) => void;
-  setConfirmModal: (modal: { title: string; message: string; onConfirm: () => void } | null) => void;
+  setConfirmModal: (modal: { title: string; message: React.ReactNode; onConfirm: () => void } | null) => void;
 }
 
 const Leis: React.FC<LeisProps> = (props) => {

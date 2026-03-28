@@ -379,7 +379,7 @@ export default function App() {
     setHasRatedCurrentQuestion
   } = useSimulation(user, profile, questions, history, setNotification, setView);
 
-  const [confirmModal, setConfirmModal] = useState<{title: string, message: string, onConfirm: () => void} | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{title: string, message: React.ReactNode, onConfirm: () => void} | null>(null);
 
   const {
     startMiniSimulation,
