@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { Trash2, AlertTriangle, X, CheckCircle2 } from 'lucide-react';
-import { doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { Trash2, AlertTriangle, X, CheckCircle2, Database } from 'lucide-react';
+import { collection, doc, updateDoc, deleteDoc, serverTimestamp, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { AnimatePresence } from 'motion/react';
 import { db, OperationType, handleFirestoreError, sendNotification } from '../firebase';
 
@@ -14,6 +14,22 @@ interface ErrorReportPageProps {
 export const ErrorReportPage: React.FC<ErrorReportPageProps> = ({ allErrors, setNotification, setConfirmModal }) => {
   const [resolvingError, setResolvingError] = React.useState<any>(null);
   const [solutionText, setSolutionText] = React.useState('');
+  const [systemErrors, setSystemErrors] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchErrors();
+  }, []);
+
+  const fetchErrors = async () => {
+    try {
+      const q = query(collection(db, 'system_errors'), orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
+      const eList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setSystemErrors(eList);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, 'system_errors');
+    }
+  };
 
   const handleResolve = async () => {
     if (!resolvingError || !solutionText.trim()) return;
@@ -44,15 +60,64 @@ export const ErrorReportPage: React.FC<ErrorReportPageProps> = ({ allErrors, set
     <motion.div key="admin_errors" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <h2 className="text-3xl font-bold text-slate-900 uppercase tracking-tight">Erros Relatados</h2>
-        <div className="bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-sm">
-          <span className="text-sm font-bold text-slate-500">Total: {allErrors.length}</span>
+        <div className="flex gap-4">
+          <div className="bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-sm">
+            <span className="text-sm font-bold text-slate-500">Questões: {allErrors.length}</span>
+          </div>
+          <div className="bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-sm">
+            <span className="text-sm font-bold text-slate-500">Sistema: {systemErrors.length}</span>
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6">
+        <h3 className="text-xl font-bold text-slate-700 mt-4">Erros de Sistema (Salvamento de Simulado)</h3>
+        {systemErrors.length > 0 ? (
+          systemErrors.map((err) => (
+            <div key={err.id} className="bg-red-50 p-6 rounded-3xl border border-red-100 shadow-sm">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h4 className="font-bold text-red-900">Erro de Sistema: {err.operationType}</h4>
+                  <p className="text-xs text-red-600 font-mono">Usuário: {err.userEmail || err.userId}</p>
+                  <p className="text-xs text-red-400">Data: {err.createdAt?.toDate ? err.createdAt.toDate().toLocaleString() : 'Recent'}</p>
+                </div>
+                <button 
+                  onClick={() => {
+                    setConfirmModal({
+                      title: "Excluir Erro de Sistema",
+                      message: "Deseja excluir este log de erro permanentemente?",
+                      onConfirm: async () => {
+                        try {
+                          await deleteDoc(doc(db, 'system_errors', err.id));
+                          setNotification({ message: 'Log excluído', type: 'success' });
+                        } catch (e) {
+                          setNotification({ message: 'Erro ao excluir', type: 'error' });
+                        }
+                      }
+                    });
+                  }}
+                  className="p-2 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 transition-all"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-4 bg-white/50 rounded-2xl border border-red-100">
+                <p className="text-xs font-bold text-red-400 uppercase tracking-widest mb-2">Detalhes do Erro</p>
+                <p className="text-red-900 text-sm font-mono break-all">{err.error}</p>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="text-center p-10 bg-white rounded-3xl border border-dashed border-slate-300 text-slate-400">
+            Nenhum erro de sistema registrado.
+          </div>
+        )}
+
+        <h3 className="text-xl font-bold text-slate-700 mt-8">Erros nas Questões</h3>
         {allErrors.length > 0 ? (
           allErrors.map((err) => (
             <div key={err.id} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
+              {/* ... (existing question error display) ... */}
               <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
@@ -135,7 +200,7 @@ export const ErrorReportPage: React.FC<ErrorReportPageProps> = ({ allErrors, set
           ))
         ) : (
           <div className="text-center p-20 bg-white rounded-3xl border border-dashed border-slate-300 text-slate-400">
-            Nenhum erro relatado até o momento.
+            Nenhum erro de questão relatado até o momento.
           </div>
         )}
       </div>

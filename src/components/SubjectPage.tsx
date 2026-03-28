@@ -36,6 +36,7 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
   const { questions: fetchedQuestions, loading } = useQuestions();
   const questions = propQuestions || fetchedQuestions;
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<'difficulty' | 'createdAt' | 'totalRatings'>('createdAt');
 
   const filteredQuestions = useMemo(() => {
     let filtered = disableLawFilter ? questions : questions.filter(q => (q.law || q.category || 'Sem Matéria') === law);
@@ -43,8 +44,22 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
       const lowerSearch = searchTerm.toLowerCase();
       filtered = filtered.filter(q => q.text.toLowerCase().includes(lowerSearch));
     }
+    
+    filtered.sort((a, b) => {
+      if (sortBy === 'difficulty') {
+        return (b.difficulty || 0) - (a.difficulty || 0);
+      } else if (sortBy === 'totalRatings') {
+        return (b.totalRatings || 0) - (a.totalRatings || 0);
+      } else {
+        // createdAt
+        const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+        const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+        return dateB.getTime() - dateA.getTime();
+      }
+    });
+
     return filtered;
-  }, [questions, law, searchTerm, disableLawFilter]);
+  }, [questions, law, searchTerm, disableLawFilter, sortBy]);
 
   if (loading) {
     return (
@@ -91,15 +106,26 @@ const SubjectPage: React.FC<SubjectPageProps> = ({
         </div>
       </div>
 
-      <div className="relative max-w-xl">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-        <input
-          type="text"
-          placeholder="Buscar no enunciado da questão..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none transition-all shadow-sm"
-        />
+      <div className="relative max-w-xl flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Buscar no enunciado da questão..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none transition-all shadow-sm"
+          />
+        </div>
+        <select 
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value as any)}
+          className="bg-white border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold text-slate-600 focus:ring-2 focus:ring-indigo-600 outline-none shadow-sm"
+        >
+          <option value="createdAt">Data de Criação</option>
+          <option value="difficulty">Dificuldade</option>
+          <option value="totalRatings">Qtd. Avaliações</option>
+        </select>
       </div>
 
       <div className="grid grid-cols-1 gap-6">

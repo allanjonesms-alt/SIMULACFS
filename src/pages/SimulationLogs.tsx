@@ -1,5 +1,5 @@
-import React from 'react';
-import { ChevronLeft, Crown, User, Trash2, Clock } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { ChevronLeft, Crown, User, Trash2, Clock, Search } from 'lucide-react';
 import { motion } from 'motion/react';
 import { UserProfile } from '../types';
 import { doc, deleteDoc } from 'firebase/firestore';
@@ -22,7 +22,9 @@ const SimulationLogsPage: React.FC<SimulationLogsProps> = ({
   setConfirmModal,
   onBack 
 }) => {
-  const simulationLogs = React.useMemo(() => {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const simulationLogs = useMemo(() => {
     return allPageVisits
       .filter(v => v.pageName === 'simulado')
       .map(v => {
@@ -33,10 +35,14 @@ const SimulationLogsPage: React.FC<SimulationLogsProps> = ({
           userEmail: user?.email || 'Sem email',
         };
       })
+      .filter(log => 
+        log.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        log.userEmail.toLowerCase().includes(searchTerm.toLowerCase())
+      )
       .sort((a, b) => b.createdAt?.toDate?.() - a.createdAt?.toDate?.());
-  }, [allPageVisits, allUsers]);
+  }, [allPageVisits, allUsers, searchTerm]);
 
-  const activeSimulationsList = React.useMemo(() => {
+  const activeSimulationsList = useMemo(() => {
     return allActiveSimulations
       .map(a => {
         const user = allUsers.find(u => u.uid === a.userId);
@@ -48,8 +54,12 @@ const SimulationLogsPage: React.FC<SimulationLogsProps> = ({
           currentQuestion: a.currentIndex + 1
         };
       })
+      .filter(sim => 
+        sim.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        sim.userEmail.toLowerCase().includes(searchTerm.toLowerCase())
+      )
       .sort((a, b) => b.currentIndex - a.currentIndex);
-  }, [allActiveSimulations, allUsers]);
+  }, [allActiveSimulations, allUsers, searchTerm]);
 
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="p-6">
@@ -57,7 +67,21 @@ const SimulationLogsPage: React.FC<SimulationLogsProps> = ({
         <ChevronLeft className="w-5 h-5" /> Voltar
       </button>
       
-      <h2 className="text-3xl font-bold text-slate-900 mb-8">Simulados Ativos ({activeSimulationsList.length})</h2>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <h2 className="text-3xl font-bold text-slate-900">Logs de Simulado</h2>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Buscar por nome ou e-mail..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-600 transition-all shadow-sm w-full md:w-80"
+          />
+        </div>
+      </div>
+
+      <h3 className="text-xl font-bold text-slate-900 mb-4">Simulados Ativos ({activeSimulationsList.length})</h3>
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mb-12">
         {activeSimulationsList.map((sim, index) => (
           <div key={index} className="flex items-center justify-between p-6 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors group">
@@ -120,10 +144,10 @@ const SimulationLogsPage: React.FC<SimulationLogsProps> = ({
         {activeSimulationsList.length === 0 && <p className="p-6 text-slate-500">Nenhum simulado ativo no momento.</p>}
       </div>
 
-      <h2 className="text-3xl font-bold text-slate-900 mb-8">Histórico de Simulados Completos</h2>
+      <h3 className="text-xl font-bold text-slate-900 mb-4">Histórico de Simulados Completos ({simulationLogs.length})</h3>
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
         {simulationLogs.map((log, index) => (
-          <div key={index} className="flex items-center justify-between p-6 border-b border-slate-100 last:border-0">
+          <div key={index} className="flex items-center justify-between p-6 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
             <div>
               <p className="font-bold text-slate-900">{log.userName}</p>
               <p className="text-sm text-slate-500">{log.userEmail}</p>
@@ -133,6 +157,7 @@ const SimulationLogsPage: React.FC<SimulationLogsProps> = ({
             </div>
           </div>
         ))}
+        {simulationLogs.length === 0 && <p className="p-6 text-slate-500">Nenhum histórico encontrado.</p>}
       </div>
     </motion.div>
   );

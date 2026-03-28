@@ -54,17 +54,24 @@ export interface SimulationResult {
   answers?: number[]; // Array of user answers
 }
 
-export const calculateDifficulty = (q: any): number => {
+export const calculateDifficulty = (q: any, currentUserRating?: number): number => {
+  const initial = q.difficulty || 0;
   const totalResponses = q.totalResponses || 0;
-  if (totalResponses === 0) return q.difficulty || 0;
+  
+  // Se não houver dados de desempenho nem avaliações, retorna a dificuldade inicial
+  if (totalResponses === 0 && currentUserRating === undefined && (q.totalRatings || 0) === 0) {
+    return initial;
+  }
 
-  const c = (q.totalCorrects || 0) / totalResponses;
+  const c = totalResponses > 0 ? (q.totalCorrects || 0) / totalResponses : 0;
   const aa = 5 - (c * 5);
   
-  const totalRatings = (q.totalRatings || 0) + 1; // +1 for the automatic assessment
-  const sumOfRatings = (q.sumOfRatings || 0) + aa;
+  let userRating = currentUserRating;
+  if (userRating === undefined) {
+    userRating = (q.totalRatings || 0) > 0 ? (q.sumOfRatings || 0) / q.totalRatings : 0;
+  }
   
-  return Math.round(sumOfRatings / totalRatings);
+  return (initial + aa + userRating) / 3;
 };
 
 export interface UpgradeRequest {

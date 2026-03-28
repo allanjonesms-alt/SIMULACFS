@@ -37,7 +37,7 @@ export interface FirestoreErrorInfo {
   }
 }
 
-export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+export async function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null, userId?: string, userEmail?: string) {
   const errInfo: FirestoreErrorInfo = {
     error: error instanceof Error ? error.message : String(error),
     authInfo: {
@@ -57,6 +57,19 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     path
   }
   console.error('Firestore Error: ', JSON.stringify(errInfo));
+  
+  // Salvar erro no Firestore para visualização no Admin
+  try {
+    await addDoc(collection(db, 'system_errors'), {
+      ...errInfo,
+      userId: userId || auth.currentUser?.uid,
+      userEmail: userEmail || auth.currentUser?.email,
+      createdAt: serverTimestamp()
+    });
+  } catch (e) {
+    console.error("Falha ao salvar erro no Firestore:", e);
+  }
+
   throw new Error(JSON.stringify(errInfo));
 }
 

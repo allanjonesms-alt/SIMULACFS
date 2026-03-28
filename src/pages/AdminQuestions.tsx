@@ -70,6 +70,8 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
   const [adminSearchTerm, setAdminSearchTerm] = useState('');
   const [isSeeding, setIsSeeding] = useState(false);
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
+  const [isBulkAdding, setIsBulkAdding] = useState(false);
+  const [bulkJson, setBulkJson] = useState('');
   const editingTextareaRef = useRef<HTMLTextAreaElement>(null);
   const newQuestionTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
@@ -284,7 +286,14 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
               </button>
               <h2 className="text-3xl font-bold text-slate-900">BANCO DE QUESTÕES</h2>
             </div>
-            <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-3">
+              <button 
+                onClick={() => setIsBulkAdding(true)}
+                className="flex items-center gap-2 bg-slate-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-slate-700 transition-all shadow-md"
+              >
+                <Database className="w-5 h-5" />
+                Bulk Add
+              </button>
               <button 
                 onClick={() => {
                   setNewQuestion({ ...newQuestion, law: '' });
@@ -798,6 +807,78 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
                   </motion.div>
                 )}
               </AnimatePresence>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal Bulk Add */}
+      <AnimatePresence>
+        {isBulkAdding && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto relative"
+            >
+              <button 
+                onClick={() => setIsBulkAdding(false)} 
+                className="absolute right-6 top-6 p-2 hover:bg-slate-100 rounded-full transition-colors"
+              >
+                <X className="w-6 h-6 text-slate-400" />
+              </button>
+              <h3 className="text-2xl font-bold mb-6">Bulk Add de Questões</h3>
+              <p className="text-slate-500 mb-4">Cole o JSON das questões abaixo:</p>
+              <textarea 
+                className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none font-mono text-sm" 
+                rows={10}
+                value={bulkJson}
+                onChange={(e) => setBulkJson(e.target.value)}
+                placeholder='[{"text": "...", "options": [...], "correctOption": 0, "law": "...", "category": "...", "justification": "...", "difficulty": 3}]'
+              />
+              <button 
+                onClick={async () => {
+                  setIsSaving(true);
+                  try {
+                    const questionsToAdd = JSON.parse(bulkJson);
+                    const batch = writeBatch(db);
+                    const sameSubjectQuestions = questions.filter(q => q.law === 'Língua Portuguesa');
+                    let count = sameSubjectQuestions.length;
+
+                    for (const q of questionsToAdd) {
+                      count++;
+                      const newId = `LPOT-${count.toString().padStart(4, '0')}`;
+                      const docRef = doc(db, 'questions', newId);
+                      batch.set(docRef, {
+                        ...q,
+                        id: newId,
+                        createdAt: serverTimestamp(),
+                        updatedAt: serverTimestamp()
+                      });
+                    }
+                    await batch.commit();
+                    setNotification({ message: 'Questões adicionadas com sucesso!', type: 'success' });
+                    setBulkJson('');
+                    setIsBulkAdding(false);
+                  } catch (error) {
+                    console.error(error);
+                    setNotification({ message: 'Erro ao adicionar questões. Verifique o formato JSON.', type: 'error' });
+                  } finally {
+                    setIsSaving(false);
+                  }
+                }}
+                disabled={isSaving || !bulkJson}
+                className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 mt-4"
+              >
+                {isSaving ? 'Adicionando...' : 'Adicionar Questões'}
+              </button>
+              <button 
+                onClick={() => setIsBulkAdding(false)}
+                className="w-full py-3 mt-2 border rounded-xl font-bold hover:bg-slate-50 transition-all"
+              >
+                Cancelar
+              </button>
             </motion.div>
           </div>
         )}

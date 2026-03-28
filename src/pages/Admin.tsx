@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Users, PlusCircle, AlertTriangle, ChevronLeft, LayoutDashboard, BookOpen } from 'lucide-react';
+import { Users, PlusCircle, AlertTriangle, ChevronLeft, LayoutDashboard, BookOpen, BarChart3, RefreshCw } from 'lucide-react';
+import { collection, getDocs, query } from 'firebase/firestore';
+import { db, handleFirestoreError, OperationType } from '../firebase';
 import UsersPage from './Users';
 import AdminQuestions from './AdminQuestions';
 import SimulationLogsPage from './SimulationLogs';
@@ -59,6 +61,62 @@ const AdminPage: React.FC<AdminProps> = ({
     return uniqueUsers.size;
   }, [allPageVisits]);
 
+  const refreshSimulations = async () => {
+    try {
+      setNotification({ message: 'Atualizando dados...', type: 'success' });
+      const snapshot = await getDocs(query(collection(db, 'simulations')));
+      const sList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SimulationResult));
+      setAllSimulations(sList);
+      setNotification({ message: 'Dados atualizados!', type: 'success' });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, 'simulations');
+      setNotification({ message: 'Erro ao atualizar dados.', type: 'error' });
+    }
+  };
+
+  const showSimulationCounts = () => {
+    const counts: Record<string, number> = {};
+    
+    // Inicializa com 0 para todos os usuários
+    allUsers.forEach(user => {
+      counts[user.uid] = 0;
+    });
+
+    // Conta apenas simulados completos
+    allSimulations.forEach(sim => {
+      if (sim.isMiniSimulado !== true) {
+        if (counts.hasOwnProperty(sim.userId)) {
+          counts[sim.userId] += 1;
+        }
+      }
+    });
+
+    const list = Object.entries(counts).map(([userId, count]) => {
+      const user = allUsers.find(u => u.uid === userId);
+      return {
+        name: user?.displayName || 'Desconhecido',
+        email: user?.email || 'Sem e-mail',
+        count
+      };
+    }).sort((a, b) => b.count - a.count);
+
+    setConfirmModal({
+      title: "Simulados Finalizados por Usuário",
+      message: list.length > 0 ? (
+        <div className="max-h-96 overflow-y-auto text-sm">
+          {list.map((item, index) => (
+            <div key={index} className="mb-2 p-2 border-b border-slate-100">
+              <span className="font-bold">{index + 1}. {item.name}</span> 
+              <span className="text-slate-500"> ({item.email})</span>: 
+              <span className="font-bold text-indigo-600"> {item.count} simulados</span>
+            </div>
+          ))}
+        </div>
+      ) : "Nenhum usuário encontrado.",
+      onConfirm: () => setConfirmModal(null)
+    });
+  };
+
   return (
     <motion.div key="admin" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="p-6">
       <button onClick={onBack} className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 mb-6 font-bold">
@@ -67,6 +125,26 @@ const AdminPage: React.FC<AdminProps> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard label="Visitantes (Hoje)" value={todayVisits} icon={<LayoutDashboard className="text-indigo-600" />} />
+        <button 
+            onClick={showSimulationCounts}
+            className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center justify-between hover:border-indigo-300 transition-all cursor-pointer"
+        >
+            <div className="text-left">
+                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Verificar Simulados</p>
+                <p className="text-2xl font-bold text-slate-900">Por Usuário</p>
+            </div>
+            <BarChart3 className="text-indigo-600 w-8 h-8" />
+        </button>
+        <button 
+            onClick={refreshSimulations}
+            className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center justify-between hover:border-indigo-300 transition-all cursor-pointer"
+        >
+            <div className="text-left">
+                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Atualizar</p>
+                <p className="text-2xl font-bold text-slate-900">Dados</p>
+            </div>
+            <RefreshCw className="text-indigo-600 w-8 h-8" />
+        </button>
       </div>
 
       <div className="flex flex-wrap gap-2 mb-8 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
