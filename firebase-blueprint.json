@@ -96,10 +96,22 @@
       "properties": {
         "subject": { "type": "string" },
         "content": { "type": "string", "description": "HTML content" },
+        "questionNumber": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["subject", "content", "createdAt"]
+    },
+    "CutoffPoll": {
+      "title": "Cutoff Poll",
+      "description": "User opinion on cutoff score",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "score": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "score", "createdAt"]
     }
   },
   "firestore": {
@@ -130,6 +142,10 @@
     "/mind_maps/{mapId}": {
       "schema": "MindMap",
       "description": "Study mind maps"
+    },
+    "/cutoff_polls/{pollId}": {
+      "schema": "CutoffPoll",
+      "description": "User votes for cutoff score"
     }
   }
 }

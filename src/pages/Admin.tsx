@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Users, PlusCircle, AlertTriangle, ChevronLeft, LayoutDashboard, BookOpen, BarChart3, RefreshCw } from 'lucide-react';
+import { Users, PlusCircle, AlertTriangle, ChevronLeft, LayoutDashboard, BookOpen, BarChart3, RefreshCw, FileText } from 'lucide-react';
 import { collection, getDocs, query } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import UsersPage from './Users';
 import AdminQuestions from './AdminQuestions';
 import SimulationLogsPage from './SimulationLogs';
 import AdminMindMaps from './AdminMindMaps';
+import VersionControl from './VersionControl';
 import { ErrorReportPage } from '../components/ErrorReportPage';
 import { UserProfile, SimulationResult, QuestionError } from '../types';
 import StatCard from '../components/StatCard';
@@ -44,7 +45,7 @@ const AdminPage: React.FC<AdminProps> = ({
   downloadPDF,
   onBack
 }) => {
-  const [adminView, setAdminView] = React.useState<'users' | 'questions' | 'errors' | 'logs' | 'mindmaps' | null>(null);
+  const [adminView, setAdminView] = React.useState<'users' | 'questions' | 'errors' | 'logs' | 'mindmaps' | 'versions' | null>(null);
 
   const todayVisits = React.useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
@@ -147,22 +148,28 @@ const AdminPage: React.FC<AdminProps> = ({
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-8 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
-        <button onClick={() => setAdminView('users')} className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm ${adminView === 'users' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
-          <Users className="w-4 h-4" /> Usuários
-        </button>
-        <button onClick={() => setAdminView('questions')} className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm ${adminView === 'questions' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
-          <PlusCircle className="w-4 h-4" /> Questões
-        </button>
-        <button onClick={() => setAdminView('errors')} className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm ${adminView === 'errors' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
-          <AlertTriangle className="w-4 h-4" /> Erros
-        </button>
-        <button onClick={() => setAdminView('logs')} className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm ${adminView === 'logs' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
-          <LayoutDashboard className="w-4 h-4" /> Logs
-        </button>
-        <button onClick={() => setAdminView('mindmaps')} className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm ${adminView === 'mindmaps' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
-          <BookOpen className="w-4 h-4" /> Mapa Mental
-        </button>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+        {[
+          { id: 'users', label: 'Usuários', icon: <Users className="w-6 h-6" />, color: 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100' },
+          { id: 'questions', label: 'Questões', icon: <PlusCircle className="w-6 h-6" />, color: 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' },
+          { id: 'errors', label: 'Erros', icon: <AlertTriangle className="w-6 h-6" />, color: 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100' },
+          { id: 'logs', label: 'Logs', icon: <LayoutDashboard className="w-6 h-6" />, color: 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100' },
+          { id: 'mindmaps', label: 'Mapa Mental', icon: <BookOpen className="w-6 h-6" />, color: 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100' },
+          { id: 'versions', label: 'Versão', icon: <FileText className="w-6 h-6" />, color: 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' },
+        ].map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setAdminView(item.id as any)}
+            className={`flex flex-col items-center justify-center gap-3 p-6 rounded-3xl border-2 transition-all ${
+              adminView === item.id 
+                ? `${item.color.replace('hover:', '')} ring-2 ring-offset-2 ring-indigo-500` 
+                : `${item.color} border-transparent`
+            }`}
+          >
+            {item.icon}
+            <span className="font-bold text-sm">{item.label}</span>
+          </button>
+        ))}
       </div>
 
       {adminView === 'users' && (
@@ -201,6 +208,10 @@ const AdminPage: React.FC<AdminProps> = ({
           setConfirmModal={setConfirmModal} 
         />
       )}
+      {adminView === 'versions' && (
+        <VersionControl setNotification={setNotification} />
+      )}
+
     </motion.div>
   );
 };

@@ -4,7 +4,8 @@ import { getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs, o
 import firebaseConfig from '../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+console.log("Firestore Database ID:", firebaseConfig.firestoreDatabaseId);
+export const db = getFirestore(app, 'simulacfs');
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
@@ -70,7 +71,7 @@ export async function handleFirestoreError(error: unknown, operationType: Operat
     console.error("Falha ao salvar erro no Firestore:", e);
   }
 
-  throw new Error(JSON.stringify(errInfo));
+  // throw new Error(JSON.stringify(errInfo));
 }
 
 export async function sendNotification(userId: string, title: string, message: string, type: 'info' | 'success' | 'warning') {

@@ -53,6 +53,7 @@ import AdminPage from './pages/Admin';
 import UpgradePage from './components/UpgradePage';
 import StatCard from './components/StatCard';
 import ScheduleCard from './components/ScheduleCard';
+import { CutoffPoll } from './components/CutoffPoll';
 import PerformancePage from './pages/Performance';
 import ContatoPage from './pages/Contato';
 import { RankingPage } from './components/RankingPage';
@@ -238,7 +239,16 @@ export default function App() {
       }
       setLoading(false);
     });
-    return unsubscribe;
+
+    // Timeout to force loading to false if Firebase hangs
+    const timeout = setTimeout(() => {
+      setLoading(false);
+    }, 5000);
+
+    return () => {
+      unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   // Real-time listeners
@@ -910,15 +920,7 @@ export default function App() {
                   </div>
                 )}
 
-                <div className="bg-indigo-50 border border-indigo-100 rounded-3xl p-6 mb-8">
-                  <h4 className="text-lg font-bold text-indigo-900 mb-2">Atenção aos estudos!</h4>
-                  <p className="text-indigo-800 text-sm leading-relaxed">
-                    As questões estão sendo reavaliadas e classificadas em nível de dificuldade pelos próprios usuários para que aumente o nível de exigência para um melhor aprendizado. 
-                    Solicitamos que, se possível, sempre avaliem as questões conforme seu nível de dificuldade.
-                    <br/><br/>
-                    <span className="font-bold">Questões de todas as matérias já estão disponíveis.</span>
-                  </p>
-                </div>
+                <CutoffPoll userId={user.uid} />
 
                 <h3 className="text-xl font-bold text-slate-900 mb-6">Últimas Atividades</h3>
                 <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">

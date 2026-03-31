@@ -6,25 +6,33 @@ export const ErrorBoundary = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const handleError = (event: ErrorEvent) => {
-      if (event.error?.message?.startsWith('{')) {
-        setHasError(true);
-        setErrorInfo(event.error.message);
-      }
+      setHasError(true);
+      setErrorInfo(event.error?.message || event.message || 'Erro desconhecido');
     };
     window.addEventListener('error', handleError);
     return () => window.removeEventListener('error', handleError);
   }, []);
 
   if (hasError) {
-    const info = JSON.parse(errorInfo || '{}');
+    let info = {};
+    try {
+      if (errorInfo?.startsWith('{')) {
+        info = JSON.parse(errorInfo);
+      } else {
+        info = { message: errorInfo };
+      }
+    } catch (e) {
+      info = { message: errorInfo };
+    }
+    
     return (
       <div className="min-h-screen bg-red-50 flex items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full border border-red-100">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Erro de Permissão</h2>
+        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full border border-red-100 overflow-hidden">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Ocorreu um Erro</h2>
           <p className="text-gray-600 mb-6">
-            Ocorreu um erro ao acessar os dados. Isso pode ser devido a permissões insuficientes ou conta inativa.
+            Ocorreu um erro inesperado. Isso pode ser devido a problemas de conexão ou permissões.
           </p>
-          <div className="bg-gray-50 p-4 rounded-lg mb-6 overflow-auto max-h-40 text-xs font-mono">
+          <div className="bg-gray-50 p-4 rounded-lg mb-6 overflow-auto max-h-60 text-xs font-mono break-words">
             {JSON.stringify(info, null, 2)}
           </div>
           <button 

@@ -67,6 +67,7 @@ const AdminMindMaps: React.FC<AdminMindMapsProps> = ({ setNotification, setConfi
         await updateDoc(mapRef, {
           subject: currentMap.subject.trim(),
           content: currentMap.content,
+          questionNumber: currentMap.questionNumber || null,
           updatedAt: serverTimestamp()
         });
         setNotification({ message: 'Mapa Mental atualizado com sucesso!', type: 'success' });
@@ -74,6 +75,7 @@ const AdminMindMaps: React.FC<AdminMindMapsProps> = ({ setNotification, setConfi
         await addDoc(collection(db, 'mind_maps'), {
           subject: currentMap.subject.trim(),
           content: currentMap.content,
+          questionNumber: currentMap.questionNumber || null,
           createdAt: serverTimestamp()
         });
         setNotification({ message: 'Mapa Mental criado com sucesso!', type: 'success' });
@@ -177,6 +179,17 @@ const AdminMindMaps: React.FC<AdminMindMapsProps> = ({ setNotification, setConfi
 
       {isEditing ? (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-1">Nr da Questão</label>
+            <input 
+              type="text"
+              value={currentMap.questionNumber || ''}
+              onChange={(e) => setCurrentMap(prev => ({ ...prev, questionNumber: e.target.value }))}
+              className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+              disabled={saving}
+              placeholder="Ex: 123"
+            />
+          </div>
           <div>
             <label className="block text-sm font-bold text-slate-700 mb-1">Matéria</label>
             <select 
@@ -285,7 +298,7 @@ const AdminMindMaps: React.FC<AdminMindMapsProps> = ({ setNotification, setConfi
                       {maps.map((map) => (
                         <div key={map.id} className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-100 hover:border-indigo-200 transition-all group">
                           <div>
-                            <h4 className="font-bold text-slate-800 text-sm">{map.subject}</h4>
+                            <h4 className="font-bold text-slate-800 text-sm">{map.subject} {map.questionNumber && <span className="text-indigo-600">#{map.questionNumber}</span>}</h4>
                             <p className="text-[10px] text-slate-400">
                               Criado em: {map.createdAt?.toDate?.()?.toLocaleDateString() || 'Recente'}
                             </p>

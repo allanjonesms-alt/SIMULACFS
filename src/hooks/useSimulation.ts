@@ -221,12 +221,16 @@ export const useSimulation = (
   const rateQuestion = async (questionId: string, rating: number) => {
     if (hasRatedCurrentQuestion) return;
     setHasRatedCurrentQuestion(true);
+    console.log("Tentando avaliar questão:", questionId);
     try {
       const qRef = doc(db, 'questions', questionId);
       
       await runTransaction(db, async (transaction) => {
         const qDoc = await transaction.get(qRef);
-        if (!qDoc.exists()) throw new Error("Document does not exist!");
+        if (!qDoc.exists()) {
+          console.error("Questão não encontrada no Firestore:", questionId);
+          throw new Error(`Document does not exist! ID: ${questionId}`);
+        }
         
         const data = qDoc.data() as Question;
         const newTotalRatings = (data.totalRatings || 0) + 1;

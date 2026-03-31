@@ -87,6 +87,14 @@ export interface MindMap {
   id: string;
   subject: string;
   content: string; // HTML content
+  questionNumber?: string;
   createdAt: any;
   updatedAt?: any;
+}
+
+export interface CutoffPollData {
+  id: string;
+  userId: string;
+  score: number;
+  createdAt: any;
 }
