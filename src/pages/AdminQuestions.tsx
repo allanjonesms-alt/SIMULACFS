@@ -112,10 +112,7 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
     }
   };
 
-  const getSubjectCode = (law: string) => {
-    const code = law.substring(0, 4).toUpperCase().replace(/[^A-Z0-9]/g, '');
-    return code.length >= 3 ? code : 'XXXX';
-  };
+  const allLaws = Array.from(new Set(questions.map(q => q.law).filter(Boolean))).sort();
 
   const cleanText = (text: string) => {
     return text.replace(/^#\d+\s*/, '').trim();
@@ -617,15 +614,7 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
                           }}
                         >
                           <option value="">Sem Lei</option>
-                          <option value="Lei 1.102/90">Lei 1.102/90</option>
-                          <option value="Lei 053/1990">Lei 053/1990</option>
-                          <option value="Lei 127/2008">Lei 127/2008</option>
-                          <option value="Decreto 1.093/81">Decreto 1.093/81</option>
-                          <option value="RDPMMS">RDPMMS</option>
-                          <option value="Conselho de Disciplina">Conselho de Disciplina</option>
-                          <option value="Língua Portuguesa">Língua Portuguesa</option>
-                          <option value="Leis Extravagantes">Leis Extravagantes</option>
-                          <option value="Provas Anteriores">Provas Anteriores</option>
+                          {allLaws.map(law => <option key={law} value={law}>{law}</option>)}
                         </select>
                       </div>
                       <div>
@@ -787,15 +776,7 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
                           }}
                         >
                           <option value="">Selecione a Lei</option>
-                          <option value="Lei 1.102/90">Lei 1.102/90</option>
-                          <option value="Lei 053/1990">Lei 053/1990</option>
-                          <option value="Lei 127/2008">Lei 127/2008</option>
-                          <option value="Decreto 1.093/81">Decreto 1.093/81</option>
-                          <option value="RDPMMS">RDPMMS</option>
-                          <option value="Conselho de Disciplina">Conselho de Disciplina</option>
-                          <option value="Língua Portuguesa">Língua Portuguesa</option>
-                          <option value="Leis Extravagantes">Leis Extravagantes</option>
-                          <option value="Provas Anteriores">Provas Anteriores</option>
+                          {allLaws.map(law => <option key={law} value={law}>{law}</option>)}
                         </select>
                       </div>
                       <div>

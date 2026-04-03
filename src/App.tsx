@@ -387,7 +387,7 @@ export default function App() {
     setShowFeedback,
     setSelectedOptionId,
     setHasRatedCurrentQuestion
-  } = useSimulation(user, profile, questions, history, setNotification, setView);
+  } = useSimulation(user, profile, questions, mindMaps, history, setNotification, setView);
 
   const [confirmModal, setConfirmModal] = useState<{title: string, message: React.ReactNode, onConfirm: () => void} | null>(null);
 

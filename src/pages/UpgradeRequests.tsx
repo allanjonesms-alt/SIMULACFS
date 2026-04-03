@@ -1,5 +1,5 @@
 import React from 'react';
-import { collection, query, onSnapshot, deleteDoc, doc, updateDoc, limit } from 'firebase/firestore';
+import { collection, query, onSnapshot, deleteDoc, doc, orderBy } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { UpgradeRequest } from '../types';
 import { Trash2, ChevronLeft } from 'lucide-react';
@@ -13,7 +13,7 @@ const UpgradeRequestsPage: React.FC<UpgradeRequestsProps> = ({ onBack }) => {
   const [requests, setRequests] = React.useState<UpgradeRequest[]>([]);
 
   React.useEffect(() => {
-    const q = query(collection(db, 'upgrade_requests'), limit(50));
+    const q = query(collection(db, 'upgrade_requests'), orderBy('createdAt', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UpgradeRequest));
       console.log('Upgrade requests in UpgradeRequestsPage:', data);
@@ -23,7 +23,6 @@ const UpgradeRequestsPage: React.FC<UpgradeRequestsProps> = ({ onBack }) => {
   }, []);
 
   const removeRequest = async (id: string) => {
-    if (!window.confirm('Tem certeza que deseja remover este usuário da lista?')) return;
     try {
       await deleteDoc(doc(db, 'upgrade_requests', id));
     } catch (e) { handleFirestoreError(e, OperationType.DELETE, 'upgrade_requests'); }

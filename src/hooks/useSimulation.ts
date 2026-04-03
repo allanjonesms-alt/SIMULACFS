@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { doc, updateDoc, serverTimestamp, setDoc, writeBatch, collection, getDoc, increment, deleteDoc, runTransaction } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType, logPageVisit } from '../firebase';
-import { Question, SimulationResult, UserProfile } from '../types';
+import { Question, SimulationResult, UserProfile, MindMap } from '../types';
 
 interface ShuffledOption {
   id: number;
@@ -26,6 +26,7 @@ export const useSimulation = (
   user: any,
   profile: UserProfile | null,
   questions: Question[],
+  mindMaps: MindMap[],
   history: SimulationResult[],
   setNotification: (notif: { message: string; type: 'success' | 'error' } | null) => void,
   setView: (view: any) => void
@@ -255,7 +256,8 @@ export const useSimulation = (
     if (isSubmittingRef.current) return;
     
     const currentRating = pendingRating;
-    const currentQuestionId = currentExam[examIndex].id;
+    const currentQuestion = currentExam[examIndex];
+    const currentQuestionId = currentQuestion.id;
     
     if (currentRating !== null) {
       await rateQuestion(currentQuestionId, currentRating);
@@ -264,8 +266,10 @@ export const useSimulation = (
     const newAnswers = [...answers, selectedOptionId!];
     setAnswers(newAnswers);
 
-    const isOdd = (examIndex + 1) % 2 !== 0;
-    if (isOdd && examIndex < currentExam.length - 1) {
+    // Check if there is a mind map for this question
+    const hasMindMap = mindMaps.some(mm => mm.questionNumber === currentQuestionId);
+    
+    if (hasMindMap && examIndex < currentExam.length - 1) {
       setShowTip(true);
       return;
     }
