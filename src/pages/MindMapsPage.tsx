@@ -14,6 +14,7 @@ export const MindMapsPage: React.FC<MindMapsPageProps> = ({ profile, onUpgrade }
   const [mindMaps, setMindMaps] = useState<MindMap[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
 
   useEffect(() => {
     if (!profile?.isUpgraded) {
@@ -81,19 +82,31 @@ export const MindMapsPage: React.FC<MindMapsPageProps> = ({ profile, onUpgrade }
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between gap-6 mb-10">
         <div>
-          <h2 className="text-3xl font-bold text-slate-900">Mapas Mentais</h2>
-          <p className="text-slate-500">Organizados por matéria para facilitar seus estudos.</p>
+          <h2 className="text-3xl font-bold text-slate-900">
+            {selectedSubject ? selectedSubject : 'Mapas Mentais'}
+          </h2>
+          <p className="text-slate-500">
+            {selectedSubject ? 'Explore os mapas desta matéria.' : 'Selecione uma matéria para ver os mapas.'}
+          </p>
         </div>
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
           <input
             type="text"
-            placeholder="Buscar mapa..."
+            placeholder="Buscar..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-600 outline-none shadow-sm"
           />
         </div>
+        {selectedSubject && (
+          <button 
+            onClick={() => setSelectedSubject(null)}
+            className="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200"
+          >
+            Voltar
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -107,24 +120,29 @@ export const MindMapsPage: React.FC<MindMapsPageProps> = ({ profile, onUpgrade }
           </div>
           <p className="text-slate-500 font-medium">Nenhum mapa mental encontrado.</p>
         </div>
-      ) : (
-        <div className="space-y-10">
+      ) : !selectedSubject ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {subjects.map(subject => (
-            <div key={subject}>
-              <h3 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
-                  <BookOpen className="w-4 h-4" />
-                </div>
-                {subject}
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {groupedMaps[subject].map(map => (
-                  <div key={map.id} className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
-                    <h4 className="font-bold text-slate-900 mb-4">{map.questionNumber ? `Questão ${map.questionNumber}` : 'Mapa Mental'}</h4>
-                    <div className="w-full [&_img]:w-full [&_img]:h-auto [&_img]:object-contain" dangerouslySetInnerHTML={{ __html: map.content }} />
-                  </div>
-                ))}
+            <button
+              key={subject}
+              onClick={() => { setSelectedSubject(subject); setSearchTerm(''); }}
+              className="p-6 bg-white border border-slate-200 rounded-3xl shadow-sm hover:shadow-md transition-shadow text-left font-bold text-slate-900 flex items-center gap-4"
+            >
+              <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 shrink-0">
+                <BookOpen className="w-6 h-6" />
               </div>
+              {subject}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {groupedMaps[selectedSubject]
+            .filter(map => map.subject.toLowerCase().includes(searchTerm.toLowerCase()) || map.content.toLowerCase().includes(searchTerm.toLowerCase()))
+            .map(map => (
+            <div key={map.id} className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
+              <h4 className="font-bold text-slate-900 mb-4">{map.questionNumber ? `Questão ${map.questionNumber}` : 'Mapa Mental'}</h4>
+              <div className="w-full [&_img]:w-full [&_img]:h-auto [&_img]:object-contain" dangerouslySetInnerHTML={{ __html: map.content }} />
             </div>
           ))}
         </div>
