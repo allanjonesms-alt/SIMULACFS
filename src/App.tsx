@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
 import { 
   auth, db, googleProvider, 
   handleFirestoreError, OperationType, sendNotification, logPageVisit
@@ -1080,7 +1082,7 @@ export default function App() {
                         </div>
                       )}
                       <div className="text-xl text-slate-800 font-medium leading-relaxed mb-8 markdown-body" translate="no">
-                        <div dangerouslySetInnerHTML={{ __html: currentExam[examIndex]?.text }} />
+                        <ReactMarkdown rehypePlugins={[rehypeRaw]}>{currentExam[examIndex]?.text}</ReactMarkdown>
                       </div>
                       
                       <div className="grid grid-cols-1 gap-4">

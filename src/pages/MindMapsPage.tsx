@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, Search, X, ChevronRight, ChevronLeft, Shuffle } from 'lucide-react';
+import { motion } from 'motion/react';
+import { BookOpen, Search } from 'lucide-react';
 import { collection, query, orderBy, onSnapshot, limit } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { MindMap } from '../types';
@@ -14,7 +14,6 @@ export const MindMapsPage: React.FC<MindMapsPageProps> = ({ profile, onUpgrade }
   const [mindMaps, setMindMaps] = useState<MindMap[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentIndex, setCurrentIndex] = useState<number>(-1);
 
   useEffect(() => {
     if (!profile?.isUpgraded) {
@@ -26,12 +25,8 @@ export const MindMapsPage: React.FC<MindMapsPageProps> = ({ profile, onUpgrade }
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const maps = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MindMap));
       setMindMaps(maps);
-      if (maps.length > 0 && currentIndex === -1) {
-        setCurrentIndex(Math.floor(Math.random() * maps.length));
-      }
       setLoading(false);
     }, (error) => {
-      // Ignore permission errors as we handle them in the UI
       if (!error.message.toLowerCase().includes('permission') && !error.message.toLowerCase().includes('denied')) {
         handleFirestoreError(error, OperationType.LIST, 'mind_maps');
       }
@@ -40,38 +35,22 @@ export const MindMapsPage: React.FC<MindMapsPageProps> = ({ profile, onUpgrade }
     return unsubscribe;
   }, [profile?.isUpgraded]);
 
-  const filteredMaps = React.useMemo(() => {
-    return mindMaps.filter(map => 
-      map.subject.toLowerCase().includes(searchTerm.toLowerCase())
+  const groupedMaps = React.useMemo(() => {
+    const filtered = mindMaps.filter(map => 
+      map.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      map.content.toLowerCase().includes(searchTerm.toLowerCase())
     );
+    
+    return filtered.reduce((acc, map) => {
+      if (!acc[map.subject]) {
+        acc[map.subject] = [];
+      }
+      acc[map.subject].push(map);
+      return acc;
+    }, {} as Record<string, MindMap[]>);
   }, [mindMaps, searchTerm]);
 
-  // If search term changes, reset index if current map is no longer in filtered list
-  useEffect(() => {
-    if (filteredMaps.length > 0) {
-      const currentMap = mindMaps[currentIndex];
-      const stillExists = currentMap && filteredMaps.some(m => m.id === currentMap.id);
-      if (!stillExists) {
-        setCurrentIndex(0);
-      }
-    } else {
-      setCurrentIndex(-1);
-    }
-  }, [searchTerm, filteredMaps]);
-
-  const handleNext = () => {
-    if (filteredMaps.length <= 1) return;
-    let nextIndex;
-    do {
-      nextIndex = Math.floor(Math.random() * filteredMaps.length);
-    } while (nextIndex === filteredMaps.indexOf(filteredMaps.find(m => m.id === filteredMaps[currentIndex]?.id) || filteredMaps[0]) && filteredMaps.length > 1);
-    
-    const nextMap = filteredMaps[nextIndex];
-    const globalIndex = mindMaps.findIndex(m => m.id === nextMap.id);
-    setCurrentIndex(globalIndex);
-  };
-
-  const currentMap = mindMaps[currentIndex];
+  const subjects = Object.keys(groupedMaps).sort();
 
   if (!profile?.isUpgraded) {
     return (
@@ -102,8 +81,18 @@ export const MindMapsPage: React.FC<MindMapsPageProps> = ({ profile, onUpgrade }
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between gap-6 mb-10">
         <div>
-          <h2 className="text-3xl font-bold text-slate-900">Galeria de Mapas Mentais</h2>
-          <p className="text-slate-500">Explore resumos visuais um por um.</p>
+          <h2 className="text-3xl font-bold text-slate-900">Mapas Mentais</h2>
+          <p className="text-slate-500">Organizados por matéria para facilitar seus estudos.</p>
+        </div>
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Buscar mapa..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-600 outline-none shadow-sm"
+          />
         </div>
       </div>
 
@@ -111,7 +100,7 @@ export const MindMapsPage: React.FC<MindMapsPageProps> = ({ profile, onUpgrade }
         <div className="flex items-center justify-center py-20">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
         </div>
-      ) : !currentMap ? (
+      ) : subjects.length === 0 ? (
         <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center">
           <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <BookOpen className="w-8 h-8 text-slate-300" />
@@ -119,43 +108,25 @@ export const MindMapsPage: React.FC<MindMapsPageProps> = ({ profile, onUpgrade }
           <p className="text-slate-500 font-medium">Nenhum mapa mental encontrado.</p>
         </div>
       ) : (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white">
-                <BookOpen className="w-5 h-5" />
+        <div className="space-y-10">
+          {subjects.map(subject => (
+            <div key={subject}>
+              <h3 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                  <BookOpen className="w-4 h-4" />
+                </div>
+                {subject}
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {groupedMaps[subject].map(map => (
+                  <div key={map.id} className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
+                    <h4 className="font-bold text-slate-900 mb-4">{map.questionNumber ? `Questão ${map.questionNumber}` : 'Mapa Mental'}</h4>
+                    <div className="w-full [&_img]:w-full [&_img]:h-auto [&_img]:object-contain" dangerouslySetInnerHTML={{ __html: map.content }} />
+                  </div>
+                ))}
               </div>
-              <h3 className="text-xl font-bold text-slate-900">{currentMap.subject}</h3>
             </div>
-            <div className="text-sm font-bold text-slate-400">
-              {filteredMaps.indexOf(currentMap) + 1} / {filteredMaps.length}
-            </div>
-          </div>
-
-          <AnimatePresence mode="wait">
-            <motion.div 
-              key={currentMap.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.05 }}
-              transition={{ duration: 0.2 }}
-              className="bg-white rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden flex flex-col w-full md:max-w-2xl md:mx-auto"
-            >
-              <div className="flex-1 p-4 md:p-8 bg-white flex items-center justify-center">
-                <div className="w-full [&_img]:w-full [&_img]:h-auto [&_img]:object-contain" dangerouslySetInnerHTML={{ __html: currentMap.content }} />
-              </div>
-            </motion.div>
-          </AnimatePresence>
-
-          <div className="flex justify-center gap-4 pt-6">
-            <button 
-              onClick={handleNext}
-              className="flex items-center gap-3 bg-indigo-600 text-white px-8 py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg active:scale-95 group"
-            >
-              <Shuffle className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
-              PROXIMO
-            </button>
-          </div>
+          ))}
         </div>
       )}
     </motion.div>
