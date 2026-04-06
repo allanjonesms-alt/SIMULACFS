@@ -13,7 +13,10 @@ export const RankingPage: React.FC<RankingPageProps> = ({ processedRanking, prof
   return (
     <motion.div key="ranking" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
       <div className="flex items-center justify-between mb-8">
-        <h2 className="text-3xl font-bold text-slate-900">Ranking Geral</h2>
+        <div>
+          <h2 className="text-3xl font-bold text-slate-900">Ranking Geral</h2>
+          <p className="text-slate-500 mt-1">Aqui fica registrado sua melhor nota e o quanto evoluiu</p>
+        </div>
         <div className="flex items-center gap-4">
           <p className="text-sm text-slate-500">Ranking atualizado a cada 15 minutos.</p>
           {!profile?.isUpgraded && (

@@ -55,6 +55,8 @@ import AdminPage from './pages/Admin';
 import UpgradePage from './components/UpgradePage';
 import StatCard from './components/StatCard';
 import ScheduleCard from './components/ScheduleCard';
+import CompetitionCard from './components/CompetitionCard';
+import { CompetitionModal } from './components/CompetitionModal';
 import { CutoffPoll } from './components/CutoffPoll';
 import PerformancePage from './pages/Performance';
 import ContatoPage from './pages/Contato';
@@ -416,6 +418,8 @@ export default function App() {
     setConfirmModal,
     user
   );
+
+  const [showCompetitionModal, setShowCompetitionModal] = useState(false);
 
   // Pause/resume timer based on view
   useEffect(() => {
@@ -899,6 +903,7 @@ export default function App() {
                     icon={<CheckCircle2 className="text-emerald-600" />} 
                   />
                   <ScheduleCard />
+                  <CompetitionCard onClick={() => setShowCompetitionModal(true)} />
                   <StatCard 
                     label="Status da Conta" 
                     value={profile?.isUpgraded ? 'Premium' : 'Gratuito'} 
@@ -1364,6 +1369,11 @@ export default function App() {
         question={reportingQuestion}
         user={user}
         setConfirmModal={setConfirmModal}
+      />
+
+      <CompetitionModal 
+        isOpen={showCompetitionModal} 
+        onClose={() => setShowCompetitionModal(false)} 
       />
     </ErrorBoundary>
   );
