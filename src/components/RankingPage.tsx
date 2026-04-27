@@ -1,15 +1,24 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Trophy, Lock } from 'lucide-react';
+import { Trophy, Lock, RefreshCw } from 'lucide-react';
 
 interface RankingPageProps {
   processedRanking: any[];
   profile: any;
   user: any;
+  allUsers: any[];
   onUpgradeClick: () => void;
+  refreshRanking: () => Promise<void>;
 }
 
-export const RankingPage: React.FC<RankingPageProps> = ({ processedRanking, profile, user, onUpgradeClick }) => {
+export const RankingPage: React.FC<RankingPageProps> = ({ processedRanking, profile, user, allUsers, onUpgradeClick, refreshRanking }) => {
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refreshRanking();
+    setTimeout(() => setIsRefreshing(false), 1000);
+  };
   return (
     <motion.div key="ranking" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
       <div className="flex items-center justify-between mb-8">
@@ -19,6 +28,14 @@ export const RankingPage: React.FC<RankingPageProps> = ({ processedRanking, prof
         </div>
         <div className="flex items-center gap-4">
           <p className="text-sm text-slate-500">Ranking atualizado a cada 15 minutos.</p>
+          <button 
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className={`p-2 rounded-xl transition-all ${isRefreshing ? 'bg-slate-100 text-slate-400' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm'}`}
+            title="Atualizar agora"
+          >
+            <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </button>
           {!profile?.isUpgraded && (
             <span className="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-2 rounded-xl text-sm font-bold">
               <Lock className="w-4 h-4" />
@@ -64,11 +81,17 @@ export const RankingPage: React.FC<RankingPageProps> = ({ processedRanking, prof
                     idx === 2 ? 'bg-orange-100 text-orange-700' : 
                     'text-slate-400'
                   }`}>
-                    {idx + 1}
+                    {r.position || idx + 1}
                   </div>
                 </td>
-                <td className={`px-6 py-4 font-bold ${r.userId === user.uid ? 'text-emerald-600' : 'text-slate-300'}`}>
-                  {r.anonymousName} {r.userId === user.uid && <span className="text-xs font-normal text-emerald-600 ml-2">(Você)</span>}
+                <td className={`px-6 py-4 font-bold ${r.userId === user.uid ? 'text-emerald-600' : (profile?.role === 'admin' ? 'text-slate-900' : 'text-slate-300')}`}>
+                  {profile?.role === 'admin' ? (
+                    <div className="flex flex-col">
+                      <span>{allUsers.find(u => u.uid === r.userId)?.displayName || r.anonymousName}</span>
+                      <span className="text-[10px] font-normal text-slate-400">{r.anonymousName}</span>
+                    </div>
+                  ) : r.anonymousName} 
+                  {r.userId === user.uid && <span className="text-xs font-normal text-emerald-600 ml-2">(Você)</span>}
                 </td>
                 <td className="px-6 py-4">
                   <span className="text-lg font-black text-indigo-600">

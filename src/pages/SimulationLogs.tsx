@@ -144,7 +144,7 @@ const SimulationLogsPage: React.FC<SimulationLogsProps> = ({
         {activeSimulationsList.length === 0 && <p className="p-6 text-slate-500">Nenhum simulado ativo no momento.</p>}
       </div>
 
-      <h3 className="text-xl font-bold text-slate-900 mb-4">Histórico de Simulados Completos ({simulationLogs.length})</h3>
+      <h3 className="text-xl font-bold text-slate-900 mb-4">Histórico de Inícios de Simulado ({simulationLogs.length})</h3>
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
         {simulationLogs.map((log, index) => (
           <div key={index} className="flex items-center justify-between p-6 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">

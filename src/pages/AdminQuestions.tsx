@@ -19,6 +19,8 @@ import Lei053 from './subjects/Lei053';
 import Lei127 from './subjects/Lei127';
 import Decreto1093 from './subjects/Decreto1093';
 import RDPMMS from './subjects/RDPMMS';
+import RegulamentoGeral from './subjects/RegulamentoGeral';
+import REGULAMENTO_DATA from '../data/regulamento_geral.json';
 import ConselhoDisciplina from './subjects/ConselhoDisciplina';
 import LinguaPortuguesa from './subjects/LinguaPortuguesa';
 import Leis from './subjects/Leis';
@@ -175,6 +177,7 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
               case 'Lei 127/2008': return 'L127';
               case 'Decreto 1.093/81': return 'D109';
               case 'RDPMMS': return 'RDPM';
+              case 'Regulamento Geral da PMMS': return 'RGPM';
               case 'Conselho de Disciplina': return 'CEDI';
               case 'Língua Portuguesa': return 'LPOT';
               case 'Provas Anteriores': return 'PROV';
@@ -221,48 +224,6 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
         } catch (error) {
           handleFirestoreError(error, OperationType.WRITE, 'questions');
           setNotification({ message: 'Erro na migração', type: 'error' });
-        } finally {
-          setIsSaving(false);
-        }
-      }
-    });
-  };
-
-  const handleRenumberQuestions = async () => {
-    setConfirmModal({
-      title: "Renumerar Questões",
-      message: "Isso irá renumerar todas as questões de 0001 a 9999. Esta operação é irreversível. Tem certeza?",
-      onConfirm: async () => {
-        setIsSaving(true);
-        try {
-          const sortedQuestions = [...questions].sort((a, b) => {
-            if (a.law !== b.law) return (a.law || '').localeCompare(b.law || '');
-            return (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0);
-          });
-
-          let batch = writeBatch(db);
-          let count = 0;
-          const BATCH_LIMIT = 400;
-
-          for (const oldQuestion of sortedQuestions) {
-            count++;
-            const newId = count.toString().padStart(4, '0');
-            if (oldQuestion.id === newId) continue;
-
-            const newDocRef = doc(db, 'questions', newId);
-            batch.set(newDocRef, { ...oldQuestion, id: newId, updatedAt: serverTimestamp() });
-            batch.delete(doc(db, 'questions', oldQuestion.id));
-
-            if (count % BATCH_LIMIT === 0) {
-              await batch.commit();
-              batch = writeBatch(db);
-            }
-          }
-          await batch.commit();
-          setNotification({ message: 'Questões renumeradas!', type: 'success' });
-        } catch (error) {
-          handleFirestoreError(error, OperationType.WRITE, 'questions');
-          setNotification({ message: 'Erro ao renumerar', type: 'error' });
         } finally {
           setIsSaving(false);
         }
@@ -329,13 +290,6 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
               >
                 <PlusCircle className="w-5 h-5" />
                 Nova Questão
-              </button>
-              <button 
-                onClick={handleRenumberQuestions}
-                className="flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-purple-700 transition-all shadow-md"
-              >
-                <Database className="w-5 h-5" />
-                Renumerar Questões
               </button>
             </div>
           </div>
@@ -492,6 +446,8 @@ const AdminQuestions: React.FC<AdminQuestionsProps> = ({
               return <Decreto1093 {...props} isAdmin={true} />;
             case 'RDPMMS':
               return <RDPMMS {...props} isAdmin={true} />;
+            case 'Regulamento Geral da PMMS':
+              return <RegulamentoGeral {...props} isAdmin={true} />;
             case 'Conselho de Disciplina':
               return <ConselhoDisciplina {...props} isAdmin={true} />;
             case 'Língua Portuguesa':

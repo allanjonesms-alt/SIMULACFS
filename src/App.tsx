@@ -73,6 +73,7 @@ import Lei053 from './pages/subjects/Lei053';
 import Lei127 from './pages/subjects/Lei127';
 import Decreto1093 from './pages/subjects/Decreto1093';
 import RDPMMS from './pages/subjects/RDPMMS';
+import RegulamentoGeral from './pages/subjects/RegulamentoGeral';
 import LinguaPortuguesa from './pages/subjects/LinguaPortuguesa';
 import ConselhoDisciplina from './pages/subjects/ConselhoDisciplina';
 import SubjectPage from './components/SubjectPage';
@@ -112,7 +113,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'dashboard' | 'simulation' | 'history' | 'performance' | 'ranking' | 'admin' | 'upgrade' | 'mini_simulados' | 'conselho_disciplina' | 'contato' | 'instructions' | 'mind_maps'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'simulation' | 'history' | 'performance' | 'ranking' | 'admin' | 'upgrade' | 'mini_simulados' | 'conselho_disciplina' | 'regulamento_geral' | 'contato' | 'instructions' | 'mind_maps'>('dashboard');
   const [pendingSimulationType, setPendingSimulationType] = useState<'full' | 'mini' | null>(null);
   const [pendingSubject, setPendingSubject] = useState<string | null>(null);
   
@@ -169,13 +170,16 @@ export default function App() {
     });
 
     // Final sort by score desc, then date desc
-    return rankingList.sort((a, b) => {
+    const sorted = rankingList.sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score;
       const dateA = a.date?.toMillis?.() || (a.date?.seconds ? a.date.seconds * 1000 : 0);
       const dateB = b.date?.toMillis?.() || (b.date?.seconds ? b.date.seconds * 1000 : 0);
       return dateB - dateA;
-    }).slice(0, 50);
-  }, [allSimulations]);
+    });
+
+    // Add position to each entry
+    return sorted.map((entry, idx) => ({ ...entry, position: idx + 1 }));
+  }, [allSimulations, user]);
 
   const averages = useMemo(() => {
     const fullSims = history.filter(s => !s.isMiniSimulado);
@@ -255,6 +259,16 @@ export default function App() {
     };
   }, []);
 
+  const fetchAllSimulations = async () => {
+    try {
+      const snapshot = await getDocs(query(collection(db, 'simulations')));
+      const sList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SimulationResult));
+      setAllSimulations(sList);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, 'simulations');
+    }
+  };
+
   // Real-time listeners
   useEffect(() => {
     if (!user || !profile) return;
@@ -267,16 +281,6 @@ export default function App() {
     }, (error) => handleFirestoreError(error, OperationType.LIST, 'simulations'));
 
     // All simulations: Load initially and refresh every 15 minutes
-    const fetchAllSimulations = async () => {
-      try {
-        const snapshot = await getDocs(query(collection(db, 'simulations')));
-        const sList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SimulationResult));
-        setAllSimulations(sList);
-      } catch (error) {
-        handleFirestoreError(error, OperationType.LIST, 'simulations');
-      }
-    };
-
     fetchAllSimulations();
     const simulationsInterval = setInterval(fetchAllSimulations, 15 * 60 * 1000);
 
@@ -1316,7 +1320,9 @@ export default function App() {
                 processedRanking={processedRanking} 
                 profile={profile} 
                 user={user} 
+                allUsers={allUsers}
                 onUpgradeClick={() => handleViewChange('upgrade')} 
+                refreshRanking={fetchAllSimulations}
               />
             )}
 
@@ -1332,6 +1338,17 @@ export default function App() {
               <motion.div key="conselho_disciplina" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                 <ConselhoDisciplina 
                   questions={questions.filter(q => q.law === 'Conselho de Disciplina')}
+                  onBack={() => setView('dashboard')}
+                  onDownloadPDF={downloadPDF}
+                  isAdmin={false}
+                />
+              </motion.div>
+            )}
+
+            {view === 'regulamento_geral' && (
+              <motion.div key="regulamento_geral" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                <RegulamentoGeral 
+                  questions={questions.filter(q => q.law === 'Regulamento Geral da PMMS')}
                   onBack={() => setView('dashboard')}
                   onDownloadPDF={downloadPDF}
                   isAdmin={false}

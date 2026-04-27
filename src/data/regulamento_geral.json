@@ -1,0 +1,41 @@
+[
+  {
+    "text": "De acordo com o Regulamento Geral da PMMS, a Polícia Militar é uma instituição permanente, baseada na hierarquia e na disciplina, subordinada ao:",
+    "options": [
+      "Comandante-Geral da PMMS.",
+      "Secretário de Estado de Justiça e Segurança Pública.",
+      "Governador do Estado.",
+      "Ministro da Justiça."
+    ],
+    "correctOption": 2,
+    "justification": "A PMMS é subordinada ao Governador do Estado, conforme as disposições constitucionais e regulamentares.",
+    "law": "Regulamento Geral da PMMS",
+    "category": "Regulamento Geral"
+  },
+  {
+    "text": "O Regulamento Geral da PMMS define que a precedência entre policiais-militares da ativa, do mesmo grau hierárquico, é assegurada pela:",
+    "options": [
+      "Antiguidade no posto ou graduação.",
+      "Idade do policial-militar.",
+      "Data de nascimento.",
+      "Ordem alfabética do nome de guerra."
+    ],
+    "correctOption": 0,
+    "justification": "A antiguidade é o critério básico para definir a precedência entre militares de mesmo posto ou graduação.",
+    "law": "Regulamento Geral da PMMS",
+    "category": "Regulamento Geral"
+  },
+  {
+    "text": "São manifestações essenciais do valor policial-militar, EXCETO:",
+    "options": [
+      "O patriotismo.",
+      "O civismo e o culto das tradições históricas.",
+      "O espírito de corpo.",
+      "A busca por interesses pessoais acima da missão."
+    ],
+    "correctOption": 3,
+    "justification": "O interesse público e a missão devem sempre prevalecer sobre interesses pessoais na vida militar.",
+    "law": "Regulamento Geral da PMMS",
+    "category": "Regulamento Geral"
+  }
+]
